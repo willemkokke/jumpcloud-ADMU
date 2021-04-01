@@ -503,13 +503,23 @@ $bDeleteProfile.Add_Click( {
         $Form.Close()
     })
 
+# close button
+$btn_close.Add_Click( {
+    $Form.Close()
+})
+
 # Put the list of profiles in the profile box
 $Profiles | ForEach-Object { $lvProfileList.Items.Add($_) | Out-Null }
 #===========================================================================
-# Shows the form
+# Shows the form & allow move
 #===========================================================================
 $Form.Showdialog()
+
 If ($bDeleteProfile.IsEnabled -eq $true)
 {
     Return $FormResults
 }
+
+$Form.Add_MouseLeftButtonDown({
+    $Form.DragMove()
+})
