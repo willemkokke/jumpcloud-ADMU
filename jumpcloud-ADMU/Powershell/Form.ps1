@@ -380,11 +380,6 @@ $script:ForceReboot = $false
 $cb_forcereboot.Add_Checked({$script:ForceReboot = $true})
 $cb_forcereboot.Add_Unchecked({$script:ForceReboot = $false})
 
-# Create Restore Point checkbox
-$script:CreateRestore = $false
-$cb_createrestore.Add_Checked({$script:CreateRestore = $true})
-$cb_createrestore.Add_Unchecked({$script:CreateRestore = $false})
-
 $tbJumpCloudUserName.add_TextChanged( {
         Test-Button -tbJumpCloudUserName:($tbJumpCloudUserName) -tbJumpCloudConnectKey:($tbJumpCloudConnectKey) -tbTempPassword:($tbTempPassword) -lvProfileList:($lvProfileList) -tbJumpCloudAPIKey:($tbJumpCloudAPIKey)
         If ((Test-IsNotEmpty $tbJumpCloudUserName.Text) -or (!(Test-HasNoSpaces $tbJumpCloudUserName.Text)) -or (Test-Localusername $tbJumpCloudUserName.Text))
@@ -487,7 +482,6 @@ $bDeleteProfile.Add_Click( {
         Add-Member -InputObject:($FormResults) -MemberType:('NoteProperty') -Name:('AutobindJCUser') -Value:($AutobindJCUser)
         Add-Member -InputObject:($FormResults) -MemberType:('NoteProperty') -Name:('LeaveDomain') -Value:($LeaveDomain)
         Add-Member -InputObject:($FormResults) -MemberType:('NoteProperty') -Name:('ForceReboot') -Value:($ForceReboot)
-        Add-Member -InputObject:($FormResults) -MemberType:('NoteProperty') -Name:('CreateRestore') -Value:($CreateRestore)
         # Add-Member -InputObject:($FormResults) -MemberType:('NoteProperty') -Name:('DomainUserName') -Value:($SelectedUserName.Substring($SelectedUserName.IndexOf('\') + 1))
         Add-Member -InputObject:($FormResults) -MemberType:('NoteProperty') -Name:('DomainUserName') -Value:($SelectedUserName)
         Add-Member -InputObject:($FormResults) -MemberType:('NoteProperty') -Name:('JumpCloudUserName') -Value:($tbJumpCloudUserName.Text)
@@ -508,6 +502,11 @@ $btn_close.Add_Click( {
     $Form.Close()
 })
 
+# move window
+$Form.Add_MouseLeftButtonDown({
+    $Form.DragMove()
+})
+
 # Put the list of profiles in the profile box
 $Profiles | ForEach-Object { $lvProfileList.Items.Add($_) | Out-Null }
 #===========================================================================
@@ -519,7 +518,3 @@ If ($bDeleteProfile.IsEnabled -eq $true)
 {
     Return $FormResults
 }
-
-$Form.Add_MouseLeftButtonDown({
-    $Form.DragMove()
-})
