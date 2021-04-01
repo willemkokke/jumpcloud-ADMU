@@ -1225,7 +1225,6 @@ Function Start-Migration
     [Parameter(ParameterSetName = 'cmd', Mandatory = $true)][ValidateNotNullOrEmpty()][string]$TempPassword,
     [Parameter(ParameterSetName = 'cmd', Mandatory = $false)][bool]$LeaveDomain = $false,
     [Parameter(ParameterSetName = 'cmd', Mandatory = $false)][bool]$ForceReboot = $false,
-    [Parameter(ParameterSetName = 'cmd', Mandatory = $false)][bool]$CreateRestore = $false,
     [Parameter(ParameterSetName = 'cmd', Mandatory = $false)][bool]$AzureADProfile = $false,
     [Parameter(ParameterSetName = 'cmd', Mandatory = $false)][bool]$InstallJCAgent = $false,
     [Parameter(ParameterSetName = 'cmd', Mandatory = $false)][bool]$AutobindJCUser = $false,
@@ -1259,7 +1258,6 @@ Function Start-Migration
       $AutobindJCUser = $inputObject.AutobindJCUser
       $LeaveDomain = $InputObject.LeaveDomain
       $ForceReboot = $InputObject.ForceReboot
-      $CreateRestore = $inputObject.CreateRestore
       $netBiosName = $inputObject.NetBiosName
     }
     else
@@ -1328,13 +1326,6 @@ Function Start-Migration
   {
     # Start Of Console Output
     Write-Log -Message:('Windows Profile "' + $SelectedUserName + '" is going to be converted to "' + $localComputerName + '\' + $JumpCloudUserName + '"')
-    # Create Restore
-    if ($CreateRestore -eq $true)
-    {
-      Checkpoint-Computer -Description "ADMU Convert User" -EA silentlycontinue
-      Write-host "The following restore points were found on this system:"
-      Get-ComputerRestorePoint
-    }
     #region SilentAgentInstall
     if ($InstallJCAgent -eq $true -and (!(Check_Program_Installed("Jumpcloud"))))
     {
@@ -1722,6 +1713,6 @@ Function Start-Migration
   End
   {
     Write-Log -Message:('Script finished successfully; Log file location: ' + $jcAdmuLogFile)
-    Write-Log -Message:('Tool options chosen were : ' + 'Install JC Agent = ' + $InstallJCAgent + ', Leave Domain = ' + $LeaveDomain + ', Force Reboot = ' + $ForceReboot + ', AzureADProfile = ' + $AzureADProfile + ', Create System Restore Point = ' + $CreateRestore)
+    Write-Log -Message:('Tool options chosen were : ' + 'Install JC Agent = ' + $InstallJCAgent + ', Leave Domain = ' + $LeaveDomain + ', Force Reboot = ' + $ForceReboot + ', AzureADProfile = ' + $AzureADProfile + ')
   }
 }
