@@ -250,6 +250,55 @@ function New-LocalUserProfile
   $status
 }
 
+function Remove-LocalUserProfile {
+  [CmdletBinding()]
+  param (
+      [Parameter(Mandatory = $true)]
+      [System.String]
+      $UserName
+  )
+  Begin{
+    # Validate that the user was just created by the ADMU
+    $removeUser = $false
+    $users = Get-LocalUser
+    foreach ($user in $users)
+    {
+      if ( $user.name -match $UserName -And $user.description -eq "Created By JumpCloud ADMU" )
+      {
+        Write-Host "match found"
+        $UserSid = Get-SID -User $UserName
+        $UserPath = Get-ProfileImagePath -UserSid $UserSid
+        # Set RemoveUser bool to true
+        $removeUser = $true
+      }
+    }
+    if (!$removeUser) {
+      Write-Host "match not found, not reversing"
+    }
+  }
+  Process{
+    # Remove the profile
+    if ($removeUser){
+      # Remove the User
+      Remove-LocalUser -Name $UserName
+      # Remove the User Profile
+      # TODO: if the profile SID is loaded in registry skip this and note in log
+      Remove-Item -Path $($UserPath) -Force -Recurse
+      # Remove the User SID
+      # Match the user SID
+      $matchedKey = get-childitem -path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\' | Where-Object { $_.Name -match $UserSid }
+      # Set the Matched Key Path to PSPath so Powershell can use the path
+      $matchedKeyPath = $($matchedKey.Name) -replace "HKEY_LOCAL_MACHINE", "HKLM:"
+      # Remove the UserSid Key from the ProfileList
+      Remove-Item -Path "$matchedKeyPath" -Recurse
+    }
+  }
+  End{
+    # Output some info
+    write-host "$UserName's account, profile and Registry Key SID were removed"
+  }
+}
+
 function enable-privilege
 {
   param(
@@ -1375,7 +1424,7 @@ Function Start-Migration
     ### Begin Create New User Region ###
     Write-Log -Message:('Creating New Local User ' + $localComputerName + '\' + $JumpCloudUserName)
     $newUserPassword = ConvertTo-SecureString -String $TempPassword -AsPlainText -Force
-    New-localUser -Name $JumpCloudUserName -password $newUserPassword -ErrorVariable userExitCode
+    New-localUser -Name $JumpCloudUserName -password $newUserPassword -ErrorVariable userExitCode -Description "Created By JumpCloud ADMU"
     if ($userExitCode)
     {
       Write-Log -Message:("$userExitCode")
