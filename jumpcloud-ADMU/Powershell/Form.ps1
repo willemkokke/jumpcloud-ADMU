@@ -8,8 +8,8 @@ Write-Log 'Loading Jumpcloud ADMU. Please Wait.. Loading ADMU GUI..'
 <Window
      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-     Title="JumpCloud ADMU 2.0.0" Height="669" Width="1053.775" WindowStartupLocation="CenterScreen" ResizeMode="NoResize" ForceCursor="True" WindowStyle="None" Background="White">
-     <Grid Margin="0,0,0,324">
+     Title="JumpCloud ADMU 2.0.0" Height="519" Width="919" WindowStartupLocation="CenterScreen" ResizeMode="NoResize" ForceCursor="True" WindowStyle="None" Background="White">
+     <Grid Margin="0,0,0,109">
      <Grid.RowDefinitions>
          <RowDefinition Height="25"/>
          <RowDefinition/>
@@ -27,42 +27,52 @@ Write-Log 'Loading Jumpcloud ADMU. Please Wait.. Loading ADMU GUI..'
              <Image Width="266" Height="84"
                     Source="https://jumpcloud.com/wp-content/themes/jumpcloud/assets/images/jumpcloud-press-kit/logos/05-wordmark-dark.png"/>
          </StackPanel>
+
      </StackPanel>
 
      <Grid Background="#0F0F2D" 
            Grid.ColumnSpan="2">
+
          <Grid.ColumnDefinitions>
              <ColumnDefinition/>
              <ColumnDefinition/>
              <ColumnDefinition/>
              <ColumnDefinition/>
-             <ColumnDefinition/>
-             <ColumnDefinition/>
-             <ColumnDefinition/>
-             <ColumnDefinition/>
+
+
          </Grid.ColumnDefinitions>
 
-         <TextBlock Text="JumpCloud"
+         <TextBlock Name="tbjcconsole"
+                    Text="JumpCloud Console"
+                    Foreground="White"
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    />
+
+         <TextBlock Name="tbjcadmugh"
+                    Text="JumpCloud AMDU Github"
                     Foreground="White"
                     Grid.Column="1"
                     VerticalAlignment="Center"
                     HorizontalAlignment="Center"
                     />
-
-         <TextBlock Text="JumpCloud2"
+         <TextBlock Name="tbjcsupport"
+                    Text="JumpCloud Support"
                     Foreground="White"
                     Grid.Column="2"
                     VerticalAlignment="Center"
                     HorizontalAlignment="Center"
                     />
-         <TextBlock Text="JumpCloud3"
+         <TextBlock Name="tbjc4"
+                    Text="JumpCloud4"
                     Foreground="White"
-                    Grid.Column="3"
+                    Grid.Column="5"
                     VerticalAlignment="Center"
                     HorizontalAlignment="Center"
                     />
 
-         <ListView Name="lvProfileList" Grid.ColumnSpan="8" Margin="16,185,19,-316">
+         <ListView Name="lvProfileList" Grid.ColumnSpan="8" Margin="7,180,9,-311">
              <ListView.View>
                  <GridView>
                      <GridViewColumn Header="System Accounts" DisplayMemberBinding="{Binding UserName}" Width="180"/>
@@ -76,7 +86,7 @@ Write-Log 'Loading Jumpcloud ADMU. Please Wait.. Loading ADMU GUI..'
              </ListView.View>
          </ListView>
 
-         <GroupBox Header="System Migration Options"  Height="155" Width="430" FontWeight="Bold" Grid.ColumnSpan="4" HorizontalAlignment="Left" Margin="16,347,0,-477">
+         <GroupBox Header="System Migration Options"  Height="155" Width="430" FontWeight="Bold" Grid.ColumnSpan="4" HorizontalAlignment="Left" Margin="7,351,0,-481">
              <Grid HorizontalAlignment="Left" Height="137" Margin="2,0,0,0" VerticalAlignment="Center" Width="423">
                  <Label Content="JumpCloud Connect Key :" HorizontalAlignment="Left" Margin="3,8,0,0" VerticalAlignment="Top" AutomationProperties.HelpText="https://console.jumpcloud.com/#/systems/new" ToolTip="https://console.jumpcloud.com/#/systems/new" FontWeight="Normal"/>
                  <TextBox Name="tbJumpCloudConnectKey" HorizontalAlignment="Left" Height="23" Margin="149,10,0,0" TextWrapping="Wrap" Text="Enter JumpCloud Connect Key" VerticalAlignment="Top" Width="263" Background="#FFC6CBCF" FontWeight="Bold" IsEnabled="False"/>
@@ -89,7 +99,7 @@ Write-Log 'Loading Jumpcloud ADMU. Please Wait.. Loading ADMU GUI..'
              </Grid>
          </GroupBox>
 
-         <GroupBox Header="Account Migration Information" Height="92" FontWeight="Bold" Grid.ColumnSpan="5" Margin="100,347,19,-414" Grid.Column="3">
+         <GroupBox Header="Account Migration Information" Height="92" FontWeight="Bold" Grid.ColumnSpan="3" Margin="228,351,9,-418" Grid.Column="1">
              <Grid HorizontalAlignment="Left" Height="66.859" Margin="1.212,2.564,0,0" VerticalAlignment="Top" Width="454.842">
                  <Grid.ColumnDefinitions>
                      <ColumnDefinition Width="23*"/>
@@ -102,34 +112,51 @@ Write-Log 'Loading Jumpcloud ADMU. Please Wait.. Loading ADMU GUI..'
              </Grid>
          </GroupBox>
 
-         <Button Name="bDeleteProfile" Content="Select Profile" Height="23" IsEnabled="False" Grid.ColumnSpan="2" Grid.Column="6" Margin="58,467,19,-465">
+         <Button Name="bDeleteProfile" Content="Select Profile" Height="23" IsEnabled="False" Grid.ColumnSpan="2" Grid.Column="6" Margin="96,463,9,-461">
              <Button.Effect>
                  <DropShadowEffect/>
              </Button.Effect>
          </Button>
 
-         <GroupBox Header="System Information" Margin="38,35,19,-155" FontWeight="Bold" Grid.ColumnSpan="5" Grid.Column="3">
-             <Grid HorizontalAlignment="Left" Height="120" VerticalAlignment="Top" Width="501" Margin="10,0,0,0">
-                 <Label Content="Local Computer Name:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" FontWeight="Normal"/>
-                 <Label Name="lbComputerName" Content="" HorizontalAlignment="Left" Margin="191,10,0,0" VerticalAlignment="Top" Width="120" FontWeight="Normal"/>
-                 <Label Content="Domain Name:" HorizontalAlignment="Left" Margin="10,29,0,0" VerticalAlignment="Top" FontWeight="Normal"/>
-                 <Label Name="lbDomainName" Content="" Margin="167,47,172,23" Foreground="Black" FontWeight="Normal"/>
-                 <Label Content="Secure Channel Healthy:" HorizontalAlignment="Left" Margin="10,81,0,0" VerticalAlignment="Top" FontWeight="Normal"/>
-                 <Label Name="lbsecurechannel" Content="" HorizontalAlignment="Left" Margin="167,62,0,0" VerticalAlignment="Top" Width="120" FontWeight="Normal"/>
-                 <Label Content="NetBios Name:" HorizontalAlignment="Left" Margin="10,55,0,0" VerticalAlignment="Top" FontWeight="Normal"/>
-                 <Label Name="lbNetBios" Content="" Margin="167,36,171,33" Foreground="Black" FontWeight="Normal"/>
-                 <Label Content="AzureAD Joined:" HorizontalAlignment="Left" Margin="285,10,0,0" VerticalAlignment="Top" FontWeight="Normal"/>
-                 <Label Name="lbAzureAD_Joined" Content="" Margin="168,104,171,-40" Foreground="Black" FontWeight="Normal"/>
-                 <Label Content="Workplace Joined:" HorizontalAlignment="Left" Margin="285,36,0,0" VerticalAlignment="Top" FontWeight="Normal"/>
-                 <Label Name="lbWorkplace_Joined" Content="" Margin="169,36,172,28" Foreground="Black" FontWeight="Normal"/>
-                 <Label Content="Tenant Name:" HorizontalAlignment="Left" Margin="287,62,0,0" VerticalAlignment="Top" FontWeight="Normal"/>
-                 <Label Name="lbTenantName" Content="" Margin="168,62,171,2" Foreground="Black" FontWeight="Normal"/>
+         <GroupBox Header="System Information" Margin="110,40,9,-140" Width="570" FontWeight="Bold" Grid.Column="1" Grid.ColumnSpan="3">
+
+             <Grid>
+                 <Grid.RowDefinitions>
+                     <RowDefinition Height="25"/>
+                     <RowDefinition Height="25"/>
+                     <RowDefinition Height="25"/>
+                     <RowDefinition Height="25"/>
+                 </Grid.RowDefinitions>
+
+                 <Grid.ColumnDefinitions>
+                     <ColumnDefinition/>
+                     <ColumnDefinition/>
+                     <ColumnDefinition/>
+                     <ColumnDefinition/>
+                 </Grid.ColumnDefinitions>
+
+                 <Label Content="Computer Name:" FontWeight="Normal" Grid.Column="0" Grid.Row="0"/>
+                 <Label Content="Domain Name:" FontWeight="Normal" Grid.Column="0" Grid.Row="1"/>
+                 <Label Content="NetBios Name:" FontWeight="Normal" Grid.Column="0" Grid.Row="2"/>
+                 <Label Content="Secure Channel Healthy:" FontWeight="Normal" Grid.Column="0" Grid.Row="3"/>
+                 <Label Name="lbComputerName" Content="" FontWeight="Normal" Grid.Column="1" Grid.Row="0"/>
+                 <Label Name="lbDomainName" Content="" FontWeight="Normal" Grid.Column="1" Grid.Row="1"/>
+                 <Label Name="lbNetBios" Content="" FontWeight="Normal" Grid.Column="1" Grid.Row="2"/>
+                 <Label Name="lbsecurechannel" Content="" FontWeight="Normal" Grid.Column="1" Grid.Row="3"/>
+
+                 <Label Content="AzureAD Joined:" FontWeight="Normal" Grid.Column="2" Grid.Row="0"/>
+                 <Label Content="Workplace Joined:" FontWeight="Normal" Grid.Column="2" Grid.Row="1"/>
+                 <Label Content="Azure Tenant Name:" FontWeight="Normal" Grid.Column="2" Grid.Row="2"/>
+                 <Label Name="lbAzureAD_Joined" Content="" FontWeight="Normal" Grid.Column="3" Grid.Row="0"/>
+                 <Label Name="lbWorkplace_Joined" Content="" FontWeight="Normal" Grid.Column="3" Grid.Row="1"/>
+                 <Label Name="lbTenantName" Content="" FontWeight="Normal" Grid.Column="3" Grid.Row="2"/>
+
              </Grid>
          </GroupBox>
      </Grid>
-     <Button Name="btn_close" Content="X" HorizontalAlignment="Left" Margin="424,0,0,0" VerticalAlignment="Center" Width="25" Height="25" Grid.Column="1"/>
+     <Button Name="btn_close" Content="X" Grid.Column="1" HorizontalAlignment="Left" Margin="436,0,0,0" VerticalAlignment="Center" Width="24" Height="25"/>
  </Grid>
-     </Window>
+       </Window>
 '@
 
 # Read XAML
@@ -188,7 +215,7 @@ $xaml.SelectNodes("//*[@Name]") | ForEach-Object { Set-Variable -Name ($_.Name) 
                     $Workplace_join = ($line.trimstart('WorkplaceJoined : '))
                 }
                 if ($line -match "TenantName : ") {
-                    $TenantName = ($line.trimstart('TenantName : '))
+                    $TenantName = ($line.trimstart('WorkplaceTenantName : '))
                 }
             }
         }
@@ -496,6 +523,18 @@ $bDeleteProfile.Add_Click( {
         # Close form
         $Form.Close()
     })
+
+# JCConsole Link
+$tbjcconsole.Add_PreviewMouseDown( { [System.Diagnostics.Process]::start('https://console.jumpcloud.com/login') })
+
+# JCADMUGH Link
+$tbjcadmugh.Add_PreviewMouseDown( { [System.Diagnostics.Process]::start('https://github.com/TheJumpCloud/jumpcloud-ADMU') })
+
+# JCSupport Link
+$tbjcsupport.Add_PreviewMouseDown( { [System.Diagnostics.Process]::start('https://support.jumpcloud.com/support/s/') })
+
+# JC4 Link
+$tbjc4.Add_PreviewMouseDown( { [System.Diagnostics.Process]::start('https://www.jumpcloud.com/') })
 
 # close button
 $btn_close.Add_Click( {
