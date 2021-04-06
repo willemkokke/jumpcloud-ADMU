@@ -265,7 +265,6 @@ function Remove-LocalUserProfile {
     {
       if ( $user.name -match $UserName -And $user.description -eq "Created By JumpCloud ADMU" )
       {
-        Write-Host "match found"
         $UserSid = Get-SID -User $UserName
         $UserPath = Get-ProfileImagePath -UserSid $UserSid
         # Set RemoveUser bool to true
@@ -1507,6 +1506,7 @@ Function Start-Migration
     {
       Write-Log -Message:('Could not copy Profile: ' + "$newuserprofileimagepath/NTUSER.DAT.BAK" + ' To: ' + "$olduserprofileimagepath/NTUSER.DAT.BAK")
       $admuTracker.copyRegistry = $true
+      $admuTracker.newUserInit = $true # also revert
       return
 
     }
@@ -1519,6 +1519,7 @@ Function Start-Migration
     {
       Write-Log -Message:('Could not copy Profile: ' + "$newuserprofileimagepath/AppData/Local/Microsoft/Windows/UsrClass.dat" + ' To: ' + "$olduserprofileimagepath/AppData/Local/Microsoft/Windows/UsrClass.dat")
       $admuTracker.copyRegistry = $true
+      $admuTracker.newUserInit = $true
       return
     }
     # Copy the profile containing the correct access and data to the destination profile
@@ -1573,6 +1574,7 @@ Function Start-Migration
       write-log -Message("Could not copy backup registry hives to the destination location in $($olduserprofileimagepath): Exiting...")
       write-log -Message($_.Exception.Message)
       $admuTracker.copyRegistryFiles = $true
+      $admuTracker.newUserInit = $true
       return
     }
 
@@ -1588,6 +1590,7 @@ Function Start-Migration
       write-log -Message("Could not rename original registry files for backup purposes: Exiting...")
       write-log -Message($_.Exception.Message)
       $admuTracker.renameOriginalFiles = $true
+      $admuTracker.newUserInit = $true
       return
     }
     # finally set .dat.back registry files to the .dat in the profileimagepath
@@ -1602,6 +1605,7 @@ Function Start-Migration
       write-log -Message("Could not rename backup registry files to a system recognizable name: Exiting...")
       write-log -Message($_.Exception.Message)
       $admuTracker.renameBackupFiles = $true
+      $admuTracker.newUserInit = $true
       return
     }
 
@@ -1804,20 +1808,21 @@ Function Start-Migration
   End
   {
     # if we caught any errors handle the cases here:
-    foreach ($trackedStep in $admuTracker)
+    foreach ($trackedStep in $admuTracker.Keys)
     {
-      if ($trackedStep.Values = $true)
+      if ($admuTracker[$trackedStep] -eq $true)
       {
-        "error at $($trackedStep.Keys)"
-        # TODO: cases for things we can reverse:
-        switch ($($trackedStep.Keys)) {
+        Write-Host "error in $($trackedStep)"
+        switch ($trackedStep) {
           # Case for reverting 'newUserInit' steps
           'newUserInit' {
-            #TODO: add params for removing local user profile created earlier
-            # Remove-LocalUserProfile
-            throw "some error"
+            Write-Log -Message:("Attempting to revert $($trackedStep) steps")
+            Remove-LocalUserProfile -username $JumpCloudUserName
+            Write-Log -Message:("some error") -Level Error
           }
-          Default {}
+          Default {
+            Write-Log -Message:("default error") -Level Error
+          }
         }
       }
     }
