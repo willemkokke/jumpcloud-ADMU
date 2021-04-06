@@ -179,7 +179,7 @@ $xaml.SelectNodes("//*[@Name]") | ForEach-Object { Set-Variable -Name ($_.Name) 
 # Define misc static variables
 
         $WmiComputerSystem = Get-WmiObject -Class:('Win32_ComputerSystem')
-        Write-progress 'Loading Jumpcloud ADMU. Please Wait.. Checking AzureAD Status..'
+        Write-progress -Activity 'Jumpcloud ADMU' -Status 'Loading Jumpcloud ADMU. Please Wait.. Checking AzureAD Status..' -PercentComplete 25
         Write-Log 'Loading Jumpcloud ADMU. Please Wait.. Checking AzureAD Status..'
         if ($WmiComputerSystem.PartOfDomain) {
             $WmiComputerDomain = Get-WmiObject -Class:('Win32_ntDomain')
@@ -228,8 +228,9 @@ $xaml.SelectNodes("//*[@Name]") | ForEach-Object { Set-Variable -Name ($_.Name) 
         }
 
         $FormResults = [PSCustomObject]@{ }
-
+        Write-Progress -Activity 'Jumpcloud ADMU' -Status 'Loading Jumpcloud ADMU. Please Wait.. Verifying Local Accounts & Group Membership..' -PercentComplete 50
         Write-Log 'Loading Jumpcloud ADMU. Please Wait.. Verifying Local Accounts & Group Membership..'
+        Write-Progress -Activity 'Jumpcloud ADMU' -Status 'Loading Jumpcloud ADMU. Please Wait.. Getting C:\ & Local Profile Data..' -PercentComplete 70
         Write-Log 'Loading Jumpcloud ADMU. Please Wait.. Getting C:\ & Local Profile Data..'
         # Get Valid SIDs from the Registry and build user object
         $registyProfiles = Get-ChildItem "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList"
@@ -293,10 +294,11 @@ $xaml.SelectNodes("//*[@Name]") | ForEach-Object { Set-Variable -Name ($_.Name) 
             $user.LocalProfileSize = $largeprofile
         }
 
+        Write-Progress -Activity 'Jumpcloud ADMU' -Status 'Loading Jumpcloud ADMU. Please Wait.. Building Profile Group Box Query..' -PercentComplete 85
         Write-Log 'Loading Jumpcloud ADMU. Please Wait.. Building Profile Group Box Query..'
 
         $Profiles = $users | Select-Object SID, RoamingConfigured, Loaded, IsLocalAdmin, LocalPath, LocalProfileSize, LastLogin, @{Name = "UserName"; EXPRESSION = { $_.Name } }
-
+        Write-Progress -Activity 'Jumpcloud ADMU' -Status 'Loading Jumpcloud ADMU. Please Wait.. Done!' -PercentComplete 100
         Write-Log 'Loading Jumpcloud ADMU. Please Wait.. Done!'
 
 #load UI Labels
