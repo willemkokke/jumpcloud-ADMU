@@ -690,7 +690,7 @@ Function Write-Log
   Begin
   {
     # Set VerbosePreference to Continue so that verbose messages are displayed.
-    $VerbosePreference = 'Continue'
+    $VerbosePreference = 'SilentlyContinue'
   }
   Process
   {

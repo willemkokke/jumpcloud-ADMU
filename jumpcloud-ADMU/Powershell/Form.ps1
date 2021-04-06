@@ -64,8 +64,8 @@ Write-Log 'Loading Jumpcloud ADMU. Please Wait.. Loading ADMU GUI..'
                     VerticalAlignment="Center"
                     HorizontalAlignment="Center"
                     />
-         <TextBlock Name="tbjc4"
-                    Text="JumpCloud4"
+         <TextBlock Name="tbjcadmulog"
+                    Text="JumpCloud ADMU Log"
                     Foreground="White"
                     Grid.Column="5"
                     VerticalAlignment="Center"
@@ -93,6 +93,7 @@ Write-Log 'Loading Jumpcloud ADMU. Please Wait.. Loading ADMU GUI..'
                  <CheckBox Name="cb_installjcagent" Content="Install JCAgent" HorizontalAlignment="Left" Margin="123,88,0,0" VerticalAlignment="Top" FontWeight="Normal" IsChecked="False"/>
                  <CheckBox Name="cb_leavedomain" Content="Leave Domain" HorizontalAlignment="Left" Margin="10,108,0,0" VerticalAlignment="Top" FontWeight="Normal" IsChecked="False"/>
                  <CheckBox Name="cb_forcereboot" Content="Force Reboot" HorizontalAlignment="Left" Margin="10,88,0,0" VerticalAlignment="Top" FontWeight="Normal" IsChecked="False"/>
+                 <CheckBox Name="cb_verbose" Content="Verbose" HorizontalAlignment="Left" Margin="249,88,0,0" VerticalAlignment="Top" FontWeight="Normal" IsChecked="False"/>
                  <Label Content="JumpCloud API Key :" HorizontalAlignment="Left" Margin="4,37,0,0" VerticalAlignment="Top" AutomationProperties.HelpText="https://console.jumpcloud.com/" ToolTip="https://console.jumpcloud.com/" FontWeight="Normal"/>
                  <TextBox Name="tbJumpCloudAPIKey" HorizontalAlignment="Left" Height="23" Margin="149,39,0,0" TextWrapping="Wrap" Text="Enter JumpCloud API Key" VerticalAlignment="Top" Width="263" Background="#FFC6CBCF" FontWeight="Bold" IsEnabled="False"/>
                  <CheckBox Name="cb_autobindjcuser" Content="Autobind JC User" HorizontalAlignment="Left" Margin="123,111,0,0" VerticalAlignment="Top" FontWeight="Normal" IsChecked="False"/>
@@ -178,6 +179,7 @@ $xaml.SelectNodes("//*[@Name]") | ForEach-Object { Set-Variable -Name ($_.Name) 
 # Define misc static variables
 
         $WmiComputerSystem = Get-WmiObject -Class:('Win32_ComputerSystem')
+        Write-progress 'Loading Jumpcloud ADMU. Please Wait.. Checking AzureAD Status..'
         Write-Log 'Loading Jumpcloud ADMU. Please Wait.. Checking AzureAD Status..'
         if ($WmiComputerSystem.PartOfDomain) {
             $WmiComputerDomain = Get-WmiObject -Class:('Win32_ntDomain')
@@ -378,6 +380,8 @@ Function Test-Button([object]$tbJumpCloudUserName, [object]$tbJumpCloudConnectKe
 }
 
 ## Form changes & interactions
+# Verbose checkbox
+$cb_verbose.Add_Checked({$VerbosePreference = 'Continue'})
 
 # Install JCAgent checkbox
 $script:InstallJCAgent = $false
@@ -533,8 +537,8 @@ $tbjcadmugh.Add_PreviewMouseDown( { [System.Diagnostics.Process]::start('https:/
 # JCSupport Link
 $tbjcsupport.Add_PreviewMouseDown( { [System.Diagnostics.Process]::start('https://support.jumpcloud.com/support/s/') })
 
-# JC4 Link
-$tbjc4.Add_PreviewMouseDown( { [System.Diagnostics.Process]::start('https://www.jumpcloud.com/') })
+# jcadmulog
+$tbjcadmulog.Add_PreviewMouseDown( { Invoke-Item "C:\Windows\Temp\JCADMU.log" })
 
 # close button
 $btn_close.Add_Click( {
