@@ -666,7 +666,8 @@ Function Backup-RegistryHive
   {
     write-log -Message("Could Not Backup Registry Hives in $($profileImagePath): Exiting...")
     write-log -Message($_.Exception.Message)
-    exit
+    # TODO: throw error from message above
+    throw "error"
   }
 }
 
@@ -1343,12 +1344,20 @@ Function Start-Migration
 
     # Track migration steps
     $admuTracker = @{
-      newUser = $false;
-      copyRegistry = $false;
-      renameOrginal = $false;
-      renameBackup = $false;
-      ntfsAccess = $false;
-      ntfsPermissions = $false;
+      backup              = $false;
+      newUser             = $false;
+      newUserInit         = $false;
+      copyRegistry        = $false;
+      copyRegistryFiles   = $false;
+      renameOriginalFiles = $false;
+      renameBackupFiles   = $false;
+      renameHomeDirectory = $false;
+      ntfsAccess          = $false;
+      ntfsPermissions     = $false;
+      activeSetupHKLM     = $false;
+      activeSetupHKU      = $false;
+      uwpAppXPacakges     = $false;
+      uwpDownloadExe      = $false;
     }
 
     Write-Log -Message:('Creating JCADMU Temporary Path in ' + $jcAdmuTempPath)
@@ -1418,7 +1427,13 @@ Function Start-Migration
     # Get Profile Image Path from Registry
     $oldUserProfileImagePath = Get-ProfileImagePath -UserSid $SelectedUserSID
     # Backup Registry NTUSER.DAT and UsrClass.dat files
-    Backup-RegistryHive -profileImagePath $olduserprofileimagepath
+    try{
+      Backup-RegistryHive -profileImagePath $olduserprofileimagepath
+    }
+    catch{
+      $admuTracker.backup = $true
+      return
+    }
     ### End Backup Registry for Selected User ###
 
     ### Begin Create New User Region ###
@@ -1429,7 +1444,9 @@ Function Start-Migration
     {
       Write-Log -Message:("$userExitCode")
       Write-Log -Message:("The user: $JumpCloudUserName could not be created, exiting")
-      exit
+      $admuTracker.newUser = $true
+      # TODO: Throw Error if broken out into function
+      return
     }
     # Initialize the Profile
     New-LocalUserProfile -username $JumpCloudUserName -ErrorVariable profileInit
@@ -1437,10 +1454,10 @@ Function Start-Migration
     {
       Write-Log -Message:("$profileInit")
       Write-Log -Message:("The user: $JumpCloudUserName could not be initalized, exiting")
-      exit
+      $admuTracker.newUserInit = $true
+      # TODO: Throw Error if broken out into function
+      return
     }
-    # TODO: If success, Track user creation for reversal step
-    # $admuTracker.newUser = $true
     ### End Create New User Region ###
 
     ### Begin Regedit Block ###
@@ -1469,6 +1486,8 @@ Function Start-Migration
     $acl.SetAccessRuleProtection($false, $true)
     $acl.SetAccessRule($AccessRule)
     $acl | Set-Acl $newuserprofileimagepath
+    # TODO: test permissions were set and return condition if not
+    # $admuTracker.ntfsAccess = $true
 
     Write-Log -Message:('New User Profile Path: ' + $newuserprofileimagepath + ' New User SID: ' + $NewUserSID)
     Write-Log -Message:('Old User Profile Path: ' + $olduserprofileimagepath + ' Old User SID: ' + $SelectedUserSID)
@@ -1487,6 +1506,9 @@ Function Start-Migration
     else
     {
       Write-Log -Message:('Could not copy Profile: ' + "$newuserprofileimagepath/NTUSER.DAT.BAK" + ' To: ' + "$olduserprofileimagepath/NTUSER.DAT.BAK")
+      $admuTracker.copyRegistry = $true
+      return
+
     }
     reg copy HKU\$($SelectedUserSID)_Classes_admu HKU\$($NewUserSID)_Classes_admu /s /f
     if ($?)
@@ -1496,11 +1518,11 @@ Function Start-Migration
     else
     {
       Write-Log -Message:('Could not copy Profile: ' + "$newuserprofileimagepath/AppData/Local/Microsoft/Windows/UsrClass.dat" + ' To: ' + "$olduserprofileimagepath/AppData/Local/Microsoft/Windows/UsrClass.dat")
+      $admuTracker.copyRegistry = $true
+      return
     }
     # Copy the profile containing the correct access and data to the destination profile
     Write-Log -Message:('Copying merged profiles to destination profile path')
-    #TODO: Check that we can unload at this state
-    #TODO: Reverse if we fail at this state
 
     #TODO: Turn this into a function
     # Set Registry Check Key for New User
@@ -1517,6 +1539,8 @@ Function Start-Migration
       $rootlessKey = $ADMU_PackageKey.Replace('HKEY_USERS:\', '')
       Set-ValueToKey -registryRoot Users -KeyPath $rootlessKey -name Version -value "0,0,00,0" -regValueKind String
     }
+    # TODO: test Key exists, non terminating error here if we can't set Active Setup Keys
+    # $admuTracker.activeSetupHKU = $true
     # Set the trigger to reset Appx Packages on first login
     $ADMUKEY = "HKEY_USERS:\$($newusersid)_admu\SOFTWARE\JCADMU"
     if (Get-Item $ADMUKEY -ErrorAction SilentlyContinue)
@@ -1531,6 +1555,7 @@ Function Start-Migration
       Set-ValueToKey -registryRoot Users -keyPath "$($newusersid)_admu\SOFTWARE\JCADMU" -Name "previousSID" -value "$SelectedUserSID" -regValueKind String
       Set-ValueToKey -registryRoot Users -keyPath "$($newusersid)_admu\SOFTWARE\JCADMU" -Name "previousProfilePath" -value "$olduserprofileimagepath" -regValueKind String
     }
+    # TODO: test Key exists, non terminating error here if we can't set previous SID/ ProfilePath
     ### End reg key check for new user
 
     # Unload "Selected" and "NewUser"
@@ -1547,8 +1572,8 @@ Function Start-Migration
     {
       write-log -Message("Could not copy backup registry hives to the destination location in $($olduserprofileimagepath): Exiting...")
       write-log -Message($_.Exception.Message)
-      #TODO: split into function + reverse step
-      exit
+      $admuTracker.copyRegistryFiles = $true
+      return
     }
 
     # Rename original ntuser & usrclass .dat files to ntuser_original.dat & usrclass_original.dat for backup and reversal if needed
@@ -1560,10 +1585,10 @@ Function Start-Migration
     }
     catch
     {
-      write-log -Message("Could not rename origional registry files for backup purposes: Exiting...")
+      write-log -Message("Could not rename original registry files for backup purposes: Exiting...")
       write-log -Message($_.Exception.Message)
-      #TODO: split into function + reverse step
-      exit
+      $admuTracker.renameOriginalFiles = $true
+      return
     }
     # finally set .dat.back registry files to the .dat in the profileimagepath
     Write-Log -Message:('rename ntuser.dat.bak to ntuser.dat (replace step)')
@@ -1576,8 +1601,8 @@ Function Start-Migration
     {
       write-log -Message("Could not rename backup registry files to a system recognizable name: Exiting...")
       write-log -Message($_.Exception.Message)
-      #TODO: split into function + reverse step
-      exit
+      $admuTracker.renameBackupFiles = $true
+      return
     }
 
     # Test Condition for same names
@@ -1599,11 +1624,13 @@ Function Start-Migration
       # Rename the old user profile path to the new name
       Rename-Item -Path $olduserprofileimagepath -NewName $JumpCloudUserName
     }
-    # TODO: reverse track this if we fail later
 
     # Set profile image path of new and selected user
     Set-ItemProperty -Path ('HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\' + $SelectedUserSID) -Name 'ProfileImagePath' -Value ("$windowsDrive\Users\" + $SelectedUserName + '.' + $NetBiosName)
     Set-ItemProperty -Path ('HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\' + $NewUserSID) -Name 'ProfileImagePath' -Value ("$windowsDrive\Users\" + $JumpCloudUserName)
+
+    # TODO: test and return condition if fail
+    # $admuTracker.renameHomeDirectory = $true
 
     # logging
     Write-Log -Message:('New User Profile Path: ' + $newuserprofileimagepath + ' New User SID: ' + $NewUserSID)
@@ -1616,7 +1643,8 @@ Function Start-Migration
     $Ar = New-Object system.security.accesscontrol.filesystemaccessrule($NewSPN_Name, "FullControl", "ContainerInherit,ObjectInherit", "None", "Allow")
     $Acl.SetAccessRule($Ar)
     $Acl | Set-Acl -Path $newuserprofileimagepath
-    #TODO: reverse track this if we fail later
+    #TODO: test and return condition if false
+    # $admuTracker.ntfsPermissions = $true
 
     ## End Regedit Block ##
 
@@ -1660,6 +1688,8 @@ Function Start-Migration
         }
       }
     }
+    # TODO: test and note error if failure
+    # $admuTracker.activeSetupHKLM = $true
     ### End Active Setup Registry Entry Region ###
 
     # Get UWP apps from selected user
@@ -1686,12 +1716,8 @@ Function Start-Migration
 
     }
     $appxList | Export-CSV ($newuserprofileimagepath + '\AppData\Local\JumpCloudADMU\appx_manifest.csv') -Force
-
-    # load registry items back for the last time. 
-    # TODO: remove load step
-    # Set-UserRegistryLoadState -op "Load" -ProfilePath $newuserprofileimagepath -UserSid $NewUserSID
-    # Unload the Reg Hives
-    # Set-UserRegistryLoadState -op "Unload" -ProfilePath $newuserprofileimagepath -UserSid $NewUserSID
+    # TODO: Test and return non terminating error here if failure
+    # $admuTracker.uwpAppXPackages = $true
 
     # Download the appx register exe
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -1705,6 +1731,9 @@ Function Start-Migration
     {
       write-Log -Message("Could not find uwp_jcadmu.exe in $windowsDrive\Windows\ UWP Apps will not migrate")
       write-Log -Message($_.Exception.Message)
+      # TODO: Test and return non terminating error here if failure
+      # TODO: Get the checksum
+      # $admuTracker.uwpDownloadExe = $true
     }
     Write-Log -Message:('Profile Conversion Completed')
 
@@ -1712,10 +1741,12 @@ Function Start-Migration
     #region Add To Local Users Group
     Add-LocalGroupMember -SID S-1-5-32-545 -Member $JumpCloudUserName -erroraction silentlycontinue
     #endregion Add To Local Users Group
+    # TODO: test and return non-terminating error here
 
     #region AutobindUserToJCSystem
     BindUsernameToJCSystem -JcApiKey $JumpCloudAPIKey -JumpCloudUserName $JumpCloudUserName
     #endregion AutobindUserToJCSystem
+    # TODO: test if we have the API key?
 
     #region Leave Domain or AzureAD
 
@@ -1731,6 +1762,7 @@ Function Start-Migration
         catch
         {
           Write-Log -Message:('Unable to leave domain, JumpCloud agent will not start until resolved') -Level:('Error')
+          # TODO: instead of exit, return and note the error in the logs (Non Terminating?)
           Exit;
         }
       }
@@ -1744,6 +1776,7 @@ Function Start-Migration
         Catch
         {
           Write-Log -Message:('Unable to leave domain, JumpCloud agent will not start until resolved') -Level:('Error')
+          # TODO: instead of exit, return and note the error in the logs (Non Terminating?)
           Exit;
         }
       }
@@ -1770,6 +1803,24 @@ Function Start-Migration
   }
   End
   {
+    # if we caught any errors handle the cases here:
+    foreach ($trackedStep in $admuTracker)
+    {
+      if ($trackedStep.Values = $true)
+      {
+        "error at $($trackedStep.Keys)"
+        # TODO: cases for things we can reverse:
+        switch ($($trackedStep.Keys)) {
+          # Case for reverting 'newUserInit' steps
+          'newUserInit' {
+            #TODO: add params for removing local user profile created earlier
+            # Remove-LocalUserProfile
+            throw "some error"
+          }
+          Default {}
+        }
+      }
+    }
     Write-Log -Message:('Script finished successfully; Log file location: ' + $jcAdmuLogFile)
     Write-Log -Message:('Tool options chosen were : ' + 'Install JC Agent = ' + $InstallJCAgent + ', Leave Domain = ' + $LeaveDomain + ', Force Reboot = ' + $ForceReboot + ', AzureADProfile = ' + $AzureADProfile + ', Create System Restore Point = ' + $CreateRestore)
   }
