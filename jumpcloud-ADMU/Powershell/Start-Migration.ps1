@@ -255,7 +255,11 @@ function Remove-LocalUserProfile {
   param (
       [Parameter(Mandatory = $true)]
       [System.String]
-      $UserName
+      $UserName,
+      # Remove Profile (Default action)
+      [Parameter(Mandatory = $false)]
+      [System.Boolean]
+      $RemoveProfile = $true
   )
   Begin{
     # Validate that the user was just created by the ADMU
@@ -272,7 +276,7 @@ function Remove-LocalUserProfile {
       }
     }
     if (!$removeUser) {
-      Write-Host "match not found, not reversing"
+      throw " Username match not found, not reversing"
     }
   }
   Process{
@@ -281,20 +285,23 @@ function Remove-LocalUserProfile {
       # Remove the User
       Remove-LocalUser -Name $UserName
       # Remove the User Profile
-      # TODO: if the profile SID is loaded in registry skip this and note in log
-      Remove-Item -Path $($UserPath) -Force -Recurse
-      # Remove the User SID
-      # Match the user SID
-      $matchedKey = get-childitem -path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\' | Where-Object { $_.Name -match $UserSid }
-      # Set the Matched Key Path to PSPath so Powershell can use the path
-      $matchedKeyPath = $($matchedKey.Name) -replace "HKEY_LOCAL_MACHINE", "HKLM:"
-      # Remove the UserSid Key from the ProfileList
-      Remove-Item -Path "$matchedKeyPath" -Recurse
+      if ($RemoveProfile)
+      {
+        # TODO: if the profile SID is loaded in registry skip this and note in log
+        Remove-Item -Path $($UserPath) -Force -Recurse
+        # Remove the User SID
+        # Match the user SID
+        $matchedKey = get-childitem -path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\' | Where-Object { $_.Name -match $UserSid }
+        # Set the Matched Key Path to PSPath so PowerShell can use the path
+        $matchedKeyPath = $($matchedKey.Name) -replace "HKEY_LOCAL_MACHINE", "HKLM:"
+        # Remove the UserSid Key from the ProfileList
+        Remove-Item -Path "$matchedKeyPath" -Recurse
+      }
     }
   }
   End{
     # Output some info
-    write-host "$UserName's account, profile and Registry Key SID were removed"
+    write-log -message:("$UserName's account, profile and Registry Key SID were removed")
   }
 }
 
@@ -1807,18 +1814,42 @@ Function Start-Migration
   }
   End
   {
+    $stateReversal = @{
+      FoundErrors = @();
+      FixedErrors= @();
+    }
     # if we caught any errors handle the cases here:
     foreach ($trackedStep in $admuTracker.Keys)
     {
       if ($admuTracker[$trackedStep] -eq $true)
       {
-        Write-Host "error in $($trackedStep)"
+        $stateReversal.FoundErrors += "$trackedStep"
         switch ($trackedStep) {
           # Case for reverting 'newUserInit' steps
-          'newUserInit' {
+          'newUser' {
+            Write-Log -Message:("Error in $($trackedStep) step") -Level Warn
             Write-Log -Message:("Attempting to revert $($trackedStep) steps")
-            Remove-LocalUserProfile -username $JumpCloudUserName
-            Write-Log -Message:("some error") -Level Error
+            try
+            {
+              # just remove the user account - if failure at this state no profile is built out
+              Remove-LocalUserProfile -username $JumpCloudUserName -RemoveProfile $false
+              $stateReversal.FixedErrors += "$trackedStep"
+            }
+            catch
+            {
+              Write-Log -Message:("Could not remove the $JumpCloudUserName user account") -Level Error
+            }
+          }
+          'newUserInit' {
+            Write-Log -Message:("Error in $($trackedStep) step") -Level Warn
+            Write-Log -Message:("Attempting to revert $($trackedStep) steps")
+            try {
+              Remove-LocalUserProfile -username $JumpCloudUserName
+              $stateReversal.FixedErrors += "$trackedStep"
+            }
+            catch {
+              Write-Log -Message:("Could not remove the $JumpCloudUserName profile and user account") -Level Error
+            }
           }
           Default {
             Write-Log -Message:("default error") -Level Error
@@ -1826,7 +1857,14 @@ Function Start-Migration
         }
       }
     }
-    Write-Log -Message:('Script finished successfully; Log file location: ' + $jcAdmuLogFile)
-    Write-Log -Message:('Tool options chosen were : ' + 'Install JC Agent = ' + $InstallJCAgent + ', Leave Domain = ' + $LeaveDomain + ', Force Reboot = ' + $ForceReboot + ', AzureADProfile = ' + $AzureADProfile + ', Create System Restore Point = ' + $CreateRestore)
+    if (!$stateReversal.FoundErrors) {
+      Write-Log -Message:('Script finished successfully; Log file location: ' + $jcAdmuLogFile)
+      Write-Log -Message:('Tool options chosen were : ' + 'Install JC Agent = ' + $InstallJCAgent + ', Leave Domain = ' + $LeaveDomain + ', Force Reboot = ' + $ForceReboot + ', AzureADProfile = ' + $AzureADProfile + ', Create System Restore Point = ' + $CreateRestore)
+    }
+    else {
+      Write-Log -Message:("ADMU encoutered the following errors: $($stateReversal.FoundErrors)") -Level Warn
+      Write-Log -Message:("The following migration steps were reverted to their original state: $($stateReversal.FixedErrors)") -Level Warn
+      throw "JumpCloud ADMU was unable to migrate $selectedUserName"
+    }
   }
 }
