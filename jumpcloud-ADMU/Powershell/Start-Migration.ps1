@@ -1630,18 +1630,32 @@ Function Start-Migration
     else
     {
       write-log -Message:("Selected User Path and New User Path Differ")
-      # Remove the New User Profile Path, in this case we will rename the home folder to the desired name
-      Remove-Item -Path ($newuserprofileimagepath) -Force -Recurse
-      # Rename the old user profile path to the new name
-      Rename-Item -Path $olduserprofileimagepath -NewName $JumpCloudUserName
+      try
+      {
+        # Remove the New User Profile Path, in this case we will rename the home folder to the desired name
+        Remove-Item -Path ($newuserprofileimagepath) -Force -Recurse
+        # Rename the old user profile path to the new name
+        Rename-Item -Path $olduserprofileimagepath -NewName $JumpCloudUserName
+      }
+      catch
+      {
+        Write-Log -Message:("Unable to rename user profile path to new name - $JumpCloudUserName.")
+        return
+      }
     }
 
     # Set profile image path of new and selected user
-    Set-ItemProperty -Path ('HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\' + $SelectedUserSID) -Name 'ProfileImagePath' -Value ("$windowsDrive\Users\" + $SelectedUserName + '.' + $NetBiosName)
-    Set-ItemProperty -Path ('HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\' + $NewUserSID) -Name 'ProfileImagePath' -Value ("$windowsDrive\Users\" + $JumpCloudUserName)
-
-    # TODO: test and return condition if fail
-    # $admuTracker.renameHomeDirectory = $true
+    try
+    {
+      Set-ItemProperty -Path ('HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\' + $SelectedUserSID) -Name 'ProfileImagePath' -Value ("$windowsDrive\Users\" + $SelectedUserName + '.' + $NetBiosName)
+      Set-ItemProperty -Path ('HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\' + $NewUserSID) -Name 'ProfileImagePath' -Value ("$windowsDrive\Users\" + $JumpCloudUserName)
+    }
+    catch
+    {
+      Write-Log -Message:("Unable to set profile image path.")
+      return
+    }
+    $admuTracker.renameHomeDirectory = $true
 
     # logging
     Write-Log -Message:('New User Profile Path: ' + $newuserprofileimagepath + ' New User SID: ' + $NewUserSID)
@@ -1821,7 +1835,7 @@ Function Start-Migration
     # if we caught any errors handle the cases here:
     foreach ($trackedStep in $admuTracker.Keys)
     {
-      if ($admuTracker[$trackedStep] -eq $true)
+      if ( ( $admuTracker[$trackedStep] -eq $true ) -and ( $trackedStep -ne "renameHomeDirectory" ) )
       {
         $stateReversal.FoundErrors += "$trackedStep"
         switch ($trackedStep) {
@@ -1905,6 +1919,22 @@ Function Start-Migration
           Default {
             Write-Log -Message:("default error") -Level Error
           }
+        }
+        if ( $admuTracker.renameHomeDirectory )
+        {
+          try 
+          {
+            if ($userCompare -ne $selectedUserName)
+            {
+              Rename-Item -Path ($newuserprofileimagepath) -NewName ($selectedUserName)
+            }
+            Set-ItemProperty -Path ('HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\' + $SelectedUserSID) -Name 'ProfileImagePath' -Value ("$windowsDrive\Users\" + $SelectedUserName)
+          }
+          catch
+          {
+            Write-Log -Message:("Unable to restore old user profile path and profile image path.") -Level Error
+          }
+          $admuTracker.renameHomeDirectory = $false
         }
       }
     }
