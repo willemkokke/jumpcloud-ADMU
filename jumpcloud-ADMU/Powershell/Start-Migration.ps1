@@ -1851,6 +1851,57 @@ Function Start-Migration
               Write-Log -Message:("Could not remove the $JumpCloudUserName profile and user account") -Level Error
             }
           }
+          'renameOriginalFiles' 
+          {
+            ### Should we be using Rename-Item here or Move-Item to force overwrite?
+            if (Test-Path "$olduserprofileimagepath\NTUSER_original.DAT" -PathType Leaf)
+            {
+              try
+              {
+                Rename-Item -Path "$olduserprofileimagepath\NTUSER_original.DAT" -NewName "$olduserprofileimagepath\NTUSER.DAT" -Force -ErrorAction Stop
+              }
+              catch
+              {
+                Write-Log -Message:("Unable to rename file $olduserprofileimagepath\NTUSER_original.DAT") -Level Error
+              }
+            }
+            if (Test-Path "$olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass_original.dat" -PathType Leaf)
+            {
+              try
+              {
+                Rename-Item -Path "$olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass_original.dat" -NewName "$olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass.dat" -Force -ErrorAction Stop
+              }
+              catch
+              {
+                Write-Log -Message:("Unable to rename file $olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass_original.dat") -Level Error
+              }
+            }
+          }
+          'renameBackupFiles'
+          {
+            if (Test-Path "$olduserprofileimagepath\NTUSER.DAT.BAK" -PathType Leaf)
+            {
+              try
+              {
+                Rename-Item -Path "$olduserprofileimagepath\NTUSER.DAT.BAK" -NewName "$olduserprofileimagepath\NTUSER.DAT" -Force -ErrorAction Stop
+              }
+              catch
+              {
+                Write-Log -Message:("Unable to rename file $olduserprofileimagepath\NTUSER.DAT.BAK") -Level Error
+              }
+            }
+            if (Test-Path "$olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass.dat.bak" -PathType Leaf)
+            {
+              try
+              {
+                Rename-Item -Path "$olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass.dat.bak" -NewName "$olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass.dat" -Force -ErrorAction Stop
+              }
+              catch
+              {
+                Write-Log -Message:("Unable to rename file $olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass.dat.bak") -Level Error
+              }
+            }
+          }
           Default {
             Write-Log -Message:("default error") -Level Error
           }
