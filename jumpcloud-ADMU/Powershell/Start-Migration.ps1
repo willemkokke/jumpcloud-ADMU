@@ -1867,6 +1867,8 @@ Function Start-Migration
           }
           'renameOriginalFiles' 
           {
+            Write-Log -Message:("Error in $($trackedStep) step") -Level Warn
+            Write-Log -Message:("Attempting to revert $($trackedStep) steps")
             ### Should we be using Rename-Item here or Move-Item to force overwrite?
             if (Test-Path "$olduserprofileimagepath\NTUSER_original.DAT" -PathType Leaf)
             {
@@ -1893,6 +1895,8 @@ Function Start-Migration
           }
           'renameBackupFiles'
           {
+            Write-Log -Message:("Error in $($trackedStep) step") -Level Warn
+            Write-Log -Message:("Attempting to revert $($trackedStep) steps")
             if (Test-Path "$olduserprofileimagepath\NTUSER.DAT.BAK" -PathType Leaf)
             {
               try
@@ -1924,6 +1928,8 @@ Function Start-Migration
         {
           try 
           {
+            Write-Log -Message:("Error in $($trackedStep) step") -Level Warn
+            Write-Log -Message:("Attempting to revert RenameHomeDirectory steps")
             if ($userCompare -ne $selectedUserName)
             {
               Rename-Item -Path ($newuserprofileimagepath) -NewName ($selectedUserName)
