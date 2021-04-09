@@ -1,13 +1,4 @@
 BeforeAll {
-    if (Test-Path -Path 'C:\Windows\Temp\custom.xml') {
-        remove-item -Path 'C:\Windows\Temp\custom.xml' -Force}
-
-$usmtcustom = [xml] @"
-<migration urlid="http://www.microsoft.com/migration/1.0/migxmlext/AppDataMig">
-</migration>
-"@
-
-$usmtcustom.save('C:\Windows\Temp\custom.xml')
 
 }
 
@@ -39,35 +30,13 @@ Describe 'Functions' {
 
     Context 'Write-Log Function'{
 
-        It 'Write-Log - ' {
-		    if ((Test-Path 'C:\Windows\Temp\jcAdmu.log') -eq $true){
-                    remove-item -Path 'C:\windows\Temp\jcAdmu.log' -Force
-            }
-                Write-Log -Message:('Log is created - test.') -Level:('Info')
-                $log='C:\windows\Temp\jcAdmu.log'
-                $log | Should -exist
-        }
-
         It 'Write-Log - Log is created' {
 		    if ((Test-Path 'C:\Windows\Temp\jcAdmu.log') -eq $true){
                     remove-item -Path 'C:\windows\Temp\jcAdmu.log' -Force
             }
                 Write-Log -Message:('Log is created - test.') -Level:('Info')
                 $log='C:\windows\Temp\jcAdmu.log'
-
                 $log | Should -exist
-        }
-
-        It 'Write-Log - ERROR: Log entry exists' {
-		    if ((Test-Path 'C:\Windows\Temp\jcAdmu.log') -eq $true){
-                   remove-item -Path 'C:\windows\Temp\jcAdmu.log' -Force
-            }
-              # Write-Log -Message:('Test Error Log Entry.') -Level:('Error') -ErrorAction
-               #$Log = Get-Content 'c:\windows\temp\jcAdmu.log'
-               #$Log.Contains('ERROR: Test Error Log Entry.') | Should -Be $true
-               #    if ($error.Count -eq 1) {
-               #    $error.Clear()
-               #    }
         }
 
         It 'Write-Log - WARNING: Log entry exists' {
@@ -222,18 +191,6 @@ Describe 'Functions' {
 
     }
 
-    Context 'Add-LocalUser Function'{
-
-        It 'Add-LocalUser - testuser to Users ' {
-            net user testuser /delete | Out-Null
-            net user testuser Temp123! /add
-            Remove-LocalGroupMember -Group "Users" -Member "testuser"
-            Add-LocalGroupMember -SID S-1-5-32-545 -Member 'testuser'
-            ((Get-LocalGroupMember -SID S-1-5-32-545 | Select-Object Name).name -match 'testuser') -ne $null | Should -Be $true
-        }
-
-    }
-
     Context 'Test-Localusername Function'{
 
         It 'Test-Localusername - exists' {
@@ -305,21 +262,5 @@ Describe 'Functions' {
             (ConvertSID -Sid $testusersid) | Should -match 'testuser'
         }
 
-    }
-
-    Context 'Test-XMLFile Function'{
-
-        It 'Test-XMLFile - Valid XML' {
-
-           Test-XMLFile -xmlFilePath 'C:\Windows\Temp\custom.xml' | Should -Be $true
-        }
-
-        $invalidxml = Get-Content 'C:\Windows\Temp\custom.xml'
-        $invalidxml | ForEach-Object { $_.Replace("`>", " ") } | Set-Content 'C:\Windows\Temp\custom.xml'
-
-        It 'Test-XMLFile - InValid XML' {
-
-            Test-XMLFile -xmlFilePath 'C:\Windows\Temp\custom.xml' | Should -Be $false
-        }
     }
 }

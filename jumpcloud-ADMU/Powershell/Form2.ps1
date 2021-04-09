@@ -411,11 +411,11 @@ $Sync.Gui.lbAzureAD_Joined.Content = $AzureADStatus
 $Sync.Gui.lbWorkplace_Joined.Content = $Workplace_join
 $Sync.Gui.lbTenantName.Content = $TenantName
 
-Function Test-Button([object]$tbJumpCloudUserName, [object]$tbJumpCloudConnectKey, [object]$tbTempPassword, [object]$lvProfileList, [object]$tbJumpCloudAPIKey)
+Function Test-Button
 {
     If (![System.String]::IsNullOrEmpty($Sync.Gui.lvProfileList.SelectedItem.UserName))
     {
-        If (!(Test-IsNotEmpty $Sync.Gui.tbJumpCloudUserName.Text) -and (Test-HasNoSpaces $Sync.Gui.$tbJumpCloudUserName.Text) `
+        If (!(Test-IsNotEmpty $Sync.Gui.tbJumpCloudUserName.Text) -and (Test-HasNoSpaces $Sync.Gui.tbJumpCloudUserName.Text) `
                 -and ((Test-Is40chars $Sync.Gui.tbJumpCloudConnectKey.Text) -and (Test-HasNoSpaces $Sync.Gui.tbJumpCloudConnectKey.Text) -and ($Sync.Gui.cb_installjcagent.IsChecked -eq $true))`
                 -and ((Test-Is40chars $Sync.Gui.tbJumpCloudAPIKey.Text) -and (Test-HasNoSpaces $Sync.Gui.tbJumpCloudAPIKey.Text) -and ($Sync.Gui.cb_autobindjcuser.IsChecked -eq $true))`
                 -and !(Test-IsNotEmpty $Sync.Gui.tbTempPassword.Text) -and (Test-HasNoSpaces $Sync.Gui.tbTempPassword.Text)`
@@ -483,19 +483,19 @@ $Sync.Gui.cb_verbose.Add_Checked({$VerbosePreference = 'Continue'})
 
 # Install JCAgent checkbox
 $script:InstallJCAgent = $false
-$Sync.Gui.cb_installjcagent.Add_Checked({Test-Button -tbJumpCloudUserName:($Sync.Gui.tbJumpCloudUserName) -tbJumpCloudConnectKey:($Sync.Gui.tbJumpCloudConnectKey) -tbTempPassword:($tbSync.Gui.TempPassword) -lvProfileList:($Sync.Gui.lvProfileList) -tbJumpCloudAPIKey:($Sync.Gui.tbJumpCloudAPIKey)})
+$Sync.Gui.cb_installjcagent.Add_Checked({Test-Button})
 $Sync.Gui.cb_installjcagent.Add_Checked({$script:InstallJCAgent = $true})
 $Sync.Gui.cb_installjcagent.Add_Checked({$Sync.Gui.tbJumpCloudConnectKey.IsEnabled =$true})
-$Sync.Gui.cb_installjcagent.Add_UnChecked({Test-Button -tbJumpCloudUserName:($Sync.Gui.tbJumpCloudUserName) -tbJumpCloudConnectKey:($Sync.Gui.tbJumpCloudConnectKey) -tbTempPassword:($Sync.Gui.tbTempPassword) -lvProfileList:($Sync.Gui.lvProfileList) -tbJumpCloudAPIKey:($Sync.Gui.tbJumpCloudAPIKey)})
+$Sync.Gui.cb_installjcagent.Add_UnChecked({Test-Button})
 $Sync.Gui.cb_installjcagent.Add_Unchecked({$script:InstallJCAgent = $false})
 $Sync.Gui.cb_installjcagent.Add_Unchecked({$Sync.Gui.tbJumpCloudConnectKey.IsEnabled =$false})
 
 # Autobind JC User checkbox
 $script:AutobindJCUser = $false
-$Sync.Gui.cb_autobindjcuser.Add_Checked({Test-Button -tbJumpCloudUserName:($Sync.Gui.tbJumpCloudUserName) -tbJumpCloudConnectKey:($Sync.Gui.tbJumpCloudConnectKey) -tbTempPassword:($Sync.Gui.tbTempPassword) -lvProfileList:($Sync.Gui.lvProfileList) -tbJumpCloudAPIKey:($Sync.Gui.tbJumpCloudAPIKey)})
+$Sync.Gui.cb_autobindjcuser.Add_Checked({Test-Button})
 $Sync.Gui.cb_autobindjcuser.Add_Checked({$script:AutobindJCUser = $true})
 $Sync.Gui.cb_autobindjcuser.Add_Checked({$Sync.Gui.tbJumpCloudAPIKey.IsEnabled =$true})
-$Sync.Gui.cb_autobindjcuser.Add_UnChecked({Test-Button -tbJumpCloudUserName:($Sync.Gui.tbJumpCloudUserName) -tbJumpCloudConnectKey:($Sync.Gui.tbJumpCloudConnectKey) -tbTempPassword:($Sync.Gui.tbTempPassword) -lvProfileList:($Sync.Gui.lvProfileList) -tbJumpCloudAPIKey:($Sync.Gui.tbJumpCloudAPIKey)})
+$Sync.Gui.cb_autobindjcuser.Add_UnChecked({Test-Button})
 $Sync.Gui.cb_autobindjcuser.Add_Unchecked({$script:AutobindJCUser = $false})
 $Sync.Gui.cb_autobindjcuser.Add_Unchecked({$Sync.Gui.tbJumpCloudAPIKey.IsEnabled =$false})
 
@@ -510,7 +510,7 @@ $Sync.Gui.cb_forcereboot.Add_Checked({$script:ForceReboot = $true})
 $Sync.Gui.cb_forcereboot.Add_Unchecked({$script:ForceReboot = $false})
 
 $Sync.Gui.tbJumpCloudUserName.add_TextChanged( {
-        Test-Button -tbJumpCloudUserName:($Sync.Gui.tbJumpCloudUserName) -tbJumpCloudConnectKey:($Sync.Gui.tbJumpCloudConnectKey) -tbTempPassword:($Sync.Gui.tbTempPassword) -lvProfileList:($Sync.Gui.lvProfileList) -tbJumpCloudAPIKey:($Sync.Gui.tbJumpCloudAPIKey)
+        Test-Button
         If ((Test-IsNotEmpty $Sync.Gui.tbJumpCloudUserName.Text) -or (!(Test-HasNoSpaces $Sync.Gui.tbJumpCloudUserName.Text)) -or (Test-Localusername $Sync.Gui.tbJumpCloudUserName.Text))
         {
             $Sync.Gui.tbJumpCloudUserName.Background = "#FFC6CBCF"
@@ -529,7 +529,7 @@ $Sync.Gui.tbJumpCloudUserName.add_GotFocus( {
     })
 
 $Sync.Gui.tbJumpCloudConnectKey.add_TextChanged( {
-        Test-Button -tbJumpCloudUserName:($Sync.Gui.tbJumpCloudUserName) -tbJumpCloudConnectKey:($Sync.Gui.tbJumpCloudConnectKey) -tbTempPassword:($Sync.Gui.tbTempPassword) -lvProfileList:($Sync.Gui.lvProfileList) -tbJumpCloudAPIKey:($Sync.Gui.tbJumpCloudAPIKey)
+        Test-Button
         If (((Test-Is40chars $Sync.Gui.tbJumpCloudConnectKey.Text) -and (Test-HasNoSpaces $Sync.Gui.tbJumpCloudConnectKey.Text)) -eq $false)
         {
             $Sync.Gui.tbJumpCloudConnectKey.Background = "#FFC6CBCF"
@@ -544,7 +544,7 @@ $Sync.Gui.tbJumpCloudConnectKey.add_TextChanged( {
     })
 
 $Sync.Gui.tbJumpCloudAPIKey.add_TextChanged( {
-    Test-Button -tbJumpCloudUserName:($Sync.Gui.tbJumpCloudUserName) -tbJumpCloudConnectKey:($Sync.Gui.tbJumpCloudConnectKey) -tbJumpCloudConnectAPIKey:($Sync.Gui.tbJumpCloudAPIKey) -tbTempPassword:($Sync.Gui.tbTempPassword) -lvProfileList:($Sync.Gui.lvProfileList) -tbJumpCloudAPIKey:($Sync.Gui.tbJumpCloudAPIKey)
+    Test-Button
     If (((Test-Is40chars $Sync.Gui.tbJumpCloudAPIKey.Text) -and (Test-HasNoSpaces $Sync.Gui.tbJumpCloudAPIKey.Text)) -eq $false)
     {
         $Sync.Gui.tbJumpCloudAPIKey.Background = "#FFC6CBCF"
@@ -567,7 +567,7 @@ $Sync.Gui.tbJumpCloudAPIKey.add_GotFocus( {
 })
 
 $Sync.Gui.tbTempPassword.add_TextChanged( {
-        Test-Button -tbJumpCloudUserName:($Sync.Gui.tbJumpCloudUserName) -tbJumpCloudConnectKey:($Sync.Gui.tbJumpCloudConnectKey) -tbTempPassword:($Sync.Gui.tbTempPassword) -lvProfileList:($Sync.Gui.lvProfileList) -tbJumpCloudAPIKey:($Sync.Gui.tbJumpCloudAPIKey)
+        Test-Button
         If ((!(Test-IsNotEmpty $Sync.Gui.tbTempPassword.Text) -and (Test-HasNoSpaces $Sync.Gui.tbTempPassword.Text)) -eq $false)
         {
             $Sync.Gui.tbTempPassword.Background = "#FFC6CBCF"
@@ -585,7 +585,7 @@ $Sync.Gui.tbTempPassword.add_TextChanged( {
 $Sync.Gui.lvProfileList.Add_SelectionChanged( {
         $script:SelectedUserName = ($Sync.Gui.lvProfileList.SelectedItem.username)
         New-PSDrive -PSProvider Registry -Name HKU -Root HKEY_USERS
-        Test-Button -tbJumpCloudUserName:($Sync.Gui.tbJumpCloudUserName) -tbJumpCloudConnectKey:($Sync.Gui.tbJumpCloudConnectKey) -tbTempPassword:($Sync.Gui.tbTempPassword) -lvProfileList:($Sync.Gui.lvProfileList) -tbJumpCloudAPIKey:($Sync.Gui.tbJumpCloudAPIKey)
+        Test-Button
             try {
                 $SelectedUserSID = ((New-Object System.Security.Principal.NTAccount($script:SelectedUserName)).Translate( [System.Security.Principal.SecurityIdentifier]).Value)
             }
