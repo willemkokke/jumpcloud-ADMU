@@ -1415,6 +1415,80 @@ Function Start-Migration
       Write-Log -Message:('JumpCloud agent is already installed on the system.')
     }
 
+    if ($ForceReboot -eq $true)
+    {
+      #Write-Log -Message:('Forcing reboot of the PC now')
+
+#Build startupscript
+$startupscript=@'
+Param (
+  [Parameter(Mandatory = $true, ValueFromPipeline = $true)][Object]$inputObject
+  )
+
+Begin
+{
+
+
+}
+Process
+{
+
+
+}
+End
+{
+  $inputobject | Export-CSV -Path 'C:\Windows\Temp\outputHERE.csv' -NoTypeInformation
+}
+'@
+
+
+$startupscript | Out-File -FilePath "C:\Windows\Temp\ADMUStartupScript.ps1"
+
+      #Restart-Computer -ComputerName $env:COMPUTERNAME -Force
+
+      $inputobject = [PSCustomObject]@{ }
+      # Build FormResults object
+      Add-Member -InputObject:($inputobject) -MemberType:('NoteProperty') -Name:('LeaveDomain') -Value:($LeaveDomain)
+      Add-Member -InputObject:($inputobject) -MemberType:('NoteProperty') -Name:('DomainUserName') -Value:($SelectedUserName)
+      Add-Member -InputObject:($inputobject) -MemberType:('NoteProperty') -Name:('JumpCloudUserName') -Value:($JumpCloudUserName)
+      Add-Member -InputObject:($inputobject) -MemberType:('NoteProperty') -Name:('TempPassword') -Value:($TempPassword)
+      Add-Member -InputObject:($inputobject) -MemberType:('NoteProperty') -Name:('JumpCloudConnectKey') -Value:($JumpCloudConnectKey)
+      Add-Member -InputObject:($inputobject) -MemberType:('NoteProperty') -Name:('NetBiosName') -Value:($SelectedUserName)
+
+      #output inputobject as csv
+      $inputobject | Export-CSV -Path 'C:\Windows\Temp\test.csv' -NoTypeInformation
+
+      #Create scheduled task
+      $nolimit = New-TimeSpan -Minutes 0
+    $newScheduledTaskSplat = @{
+        Action      = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "Import-CSV c:\Windows\Temp\test.csv | C:\Windows\temp\ADMUStartupScript.ps1"
+        Description = 'Jumpcloud ADMU Startup Script'
+        Settings    = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -MultipleInstances IgnoreNew -ExecutionTimeLimit $nolimit -Priority 0 
+        Trigger     = New-ScheduledTaskTrigger -AtStartup
+        Principal = New-ScheduledTaskPrincipal -UserID "NT AUTHORITY\SYSTEM" -LogonType ServiceAccount -RunLevel Highest
+    }
+    $Start = (Get-Date).AddSeconds(5)
+    $ScheduledTask = New-ScheduledTask @newScheduledTaskSplat
+    $ScheduledTask.Settings.DeleteExpiredTaskAfter = "PT0S"
+    $ScheduledTask.Triggers[0].StartBoundary = $Start.ToString("yyyy-MM-dd'T'HH:mm:ss")
+    $ScheduledTask.Triggers[0].EndBoundary = $Start.AddMinutes(10).ToString('s')
+    
+    Register-ScheduledTask -InputObject $ScheduledTask -TaskName 'Jumpcloud ADMU Startup Script'
+
+#reboot
+Restart-Computer -ComputerName $env:COMPUTERNAME -Force
+
+    }
+
+    #####################
+    #build params + admu script
+    #schedule task to run above script on reboot/load
+    #reboot computer
+    #block login of user?
+    #
+
+    #if forcereboot=true run begin, skip above and run below..
+
     ### Begin Backup Registry for Selected User ###
     Write-Log -Message:('Creating Backup of User Registry Hive')
     # Get Profile Image Path from Registry
@@ -1806,12 +1880,6 @@ Function Start-Migration
     catch
     {
       Write-Log -Message:('Failed to remove Temp Files & Folders.' + $jcAdmuTempPath)
-    }
-
-    if ($ForceReboot -eq $true)
-    {
-      Write-Log -Message:('Forcing reboot of the PC now')
-      Restart-Computer -ComputerName $env:COMPUTERNAME -Force
     }
     #endregion SilentAgentInstall
   }
