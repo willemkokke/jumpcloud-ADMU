@@ -14,9 +14,9 @@ Starts the JumpCloud Active Directory Migration process.
 
 ### cmd
 ```
-Start-Migration -JumpCloudUserName <String> -SelectedUserName <String> -TempPassword <String>
- [-LeaveDomain <Boolean>] [-ForceReboot <Boolean>] [-AzureADProfile <Boolean>] [-InstallJCAgent <Boolean>]
- [-AutobindJCUser <Boolean>] [-JumpCloudConnectKey <String>] [-JumpCloudAPIKey <String>] [<CommonParameters>]
+Start-Migration -JumpCloudUserName <String> -SelectedUserName <String> [-LeaveDomain <Boolean>]
+ [-ForceReboot <Boolean>] [-AzureADProfile <Boolean>] [-InstallJCAgent <Boolean>] [-AutobindJCUser <Boolean>]
+ [-JumpCloudConnectKey <String>] [-JumpCloudAPIKey <String>] [<CommonParameters>]
 ```
 
 ### form
@@ -138,21 +138,6 @@ Parameter Sets: cmd
 Aliases:
 
 Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -TempPassword
-A string value that is used to set the new local accounts password. When duplicating the user account a password must be set when created and this value is passed. Once the system is online in JumpCloud the password will be overwritten and synced with JumpCloud if the user is taken over.
-
-```yaml
-Type: System.String
-Parameter Sets: cmd
-Aliases:
-
-Required: True
 Position: Named
 Default value: None
 Accept pipeline input: False
