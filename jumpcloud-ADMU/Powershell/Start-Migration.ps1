@@ -1429,7 +1429,7 @@ Function Start-Migration
       #Create scheduled task
       $nolimit = New-TimeSpan -Minutes 0
     $newScheduledTaskSplat = @{
-        Action      = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "Import-CSV c:\Windows\Temp\test.csv | Start-MigrationReboot"
+        Action      = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "Import-CSV c:\Windows\Temp\admu_discovery.csv | Start-MigrationReboot"
         Description = 'Jumpcloud ADMU Startup Script'
         Settings    = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -MultipleInstances IgnoreNew -ExecutionTimeLimit $nolimit -Priority 0 
         Trigger     = New-ScheduledTaskTrigger -AtStartup
