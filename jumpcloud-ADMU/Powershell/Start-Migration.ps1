@@ -1424,7 +1424,7 @@ Function Start-Migration
       Add-Member -InputObject:($inputobject) -MemberType:('NoteProperty') -Name:('NetBiosName') -Value:($SelectedUserName)
 
       #output inputobject as csv
-      $inputobject | Export-CSV -Path 'C:\Windows\Temp\test.csv' -NoTypeInformation
+      #$inputobject | Export-CSV -Path 'C:\Windows\Temp\test.csv' -NoTypeInformation
 
       #Create scheduled task
       $nolimit = New-TimeSpan -Minutes 0
@@ -1983,12 +1983,6 @@ function Start-MigrationReboot {
     $windowsDrive = Get-WindowsDrive
     $jcAdmuTempPath = "$windowsDrive\Windows\Temp\JCADMU\"
     $jcAdmuLogFile = "$windowsDrive\Windows\Temp\jcAdmu.log"
-    $msvc2013x64File = 'vc_redist.x64.exe'
-    $msvc2013x86File = 'vc_redist.x86.exe'
-    $msvc2013x86Link = 'http://download.microsoft.com/download/0/5/6/056dcda9-d667-4e27-8001-8a0c6971d6b1/vcredist_x86.exe'
-    $msvc2013x64Link = 'http://download.microsoft.com/download/0/5/6/056dcda9-d667-4e27-8001-8a0c6971d6b1/vcredist_x64.exe'
-    $msvc2013x86Install = "$jcAdmuTempPath$msvc2013x86File /install /quiet /norestart"
-    $msvc2013x64Install = "$jcAdmuTempPath$msvc2013x64File /install /quiet /norestart"
     write-log -Message("The Selected Migration user is: $SelectedUserName")
     $SelectedUserSid = CheckUsernameorSID $SelectedUserName
 
