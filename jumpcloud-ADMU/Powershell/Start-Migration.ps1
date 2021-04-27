@@ -666,10 +666,19 @@ Function Backup-RegistryHive
   }
   catch
   {
-    write-log -Message("Could Not Backup Registry Hives in $($profileImagePath): Exiting...")
-    write-log -Message($_.Exception.Message)
-    # TODO: throw error from message above
-    throw "error"
+    ### begin reworked reg save
+    write-host -Message("Registry items from $($profileImagePath) appears to be loaded already. Attempting Reg Save...")
+    write-host -Message($_.Exception.Message)
+    try {
+      reg save HKU\$($SelectedUserSID) $profileImagePath\NTUSER.DAT.BAK -force
+      reg save HKU\$($SelectedUserSID)_Classes "$profileImagePath\AppData\Local\Microsoft\Windows\UsrClass.dat.bak" -force
+    }
+    catch {
+      write-host -Message("Could Not Backup Registry Hives in $($profileImagePath): Ex2222iting...")
+      write-host -Message($_.Exception.Message)
+      throw "$($_.Exception.Error)"
+    }
+    # end reworked reg save
   }
 }
 
@@ -989,6 +998,38 @@ function Test-Domainusername
   {
   }
 }
+
+Function New-StartupScript
+{
+  [CmdletBinding()]
+  param (
+    [Parameter(Mandatory = $true)]
+    [System.String]
+    $selectedUserName,
+    [Parameter(Mandatory = $true)]
+    [System.String]
+    $jumpcloudUserName,
+    [Parameter(Mandatory = $true)]
+    [System.String]
+    $TempPassword,
+  )
+  begin
+  {
+  }
+  process
+  {
+    $script = "
+# dot source the start-migration location
+. `"C:\Users\jworkman\Desktop\jumpcloud-ADMU-SA-1751-Cleanup_and_consolidation\jumpcloud-ADMU-SA-1751-Cleanup_and_consolidation\jumpcloud-ADMU\Powershell\Start-Migration.ps1`"
+start-migration -selectedUserName {0} -jumpcloudUserName {1} -TempPassword {2} -ForceReboot
+        " -f $selectedUserName, $jumpcloudUserName, $TempPassword
+  }
+  end
+  {
+    $script | Out-File $windowsDrive\ADMUStartupFunction.ps1
+  }
+}
+
 
 Function DownloadAndInstallAgent(
   [System.String]$msvc2013x64Link
@@ -1581,11 +1622,20 @@ Function Start-Migration
     }
     catch
     {
-      write-log -Message("Could not rename original registry files for backup purposes: Exiting...")
-      write-log -Message($_.Exception.Message)
-      $admuTracker.renameOriginalFiles.fail = $true
-      return
+      #### Begin reworked save with reg save
+      try {
+        write-log -Message("attempting to rename original registry files trying with Reg Save")
+        reg save HKU\$($SelectedUserSID) "$profileImagePath\NTUSER_original.BAK" -force
+        reg save HKU\$($SelectedUserSID)_Classes "$profileImagePath\AppData\Local\Microsoft\Windows\UsrClass_original.bak" -force
+      }
+      catch {
+        write-log -Message("Could not rename original registry files for backup purposes: Exiting...")
+        write-log -Message($_.Exception.Message)
+        $admuTracker.renameOriginalFiles.fail = $true
+        return
+      }
     }
+    #### end reworked save with reg save
     $admuTracker.renameOriginalFiles.pass = $true
     # finally set .dat.back registry files to the .dat in the profileimagepath
     Write-Log -Message:('rename ntuser.dat.bak to ntuser.dat (replace step)')
@@ -1596,10 +1646,18 @@ Function Start-Migration
     }
     catch
     {
-      write-log -Message("Could not rename backup registry files to a system recognizable name: Exiting...")
-      write-log -Message($_.Exception.Message)
-      $admuTracker.renameBackupFiles.fail = $true
-      return
+      try {
+        write-log -Message("Profile looks locked, attempting to change NTuser files at startup...")
+        New-StartupScript -profileImagePath $oldUserProfileImagePath
+        write-log -Message("Wrote Startup Script...")
+        # TODO: write scheduled task
+      }
+      catch {
+        write-log -Message("Could not rename backup registry files to a system recognizable name: Exiting...")
+        write-log -Message($_.Exception.Message)
+        $admuTracker.renameBackupFiles.fail = $true
+        return
+      }
     }
     $admuTracker.renameBackupFiles.pass = $true
 
@@ -1617,19 +1675,25 @@ Function Start-Migration
     else
     {
       write-log -Message:("Selected User Path and New User Path Differ")
-      try
-      {
-        # Remove the New User Profile Path, in this case we will rename the home folder to the desired name
-        Remove-Item -Path ($newuserprofileimagepath) -Force -Recurse
-        # Rename the old user profile path to the new name
-        # Error Action Stop added since Rename-Item doesn't treat this as a terminating error
+      # Remove the New User Profile Path, in this case we will rename the home folder to the desired name
+      Remove-Item -Path ($newuserprofileimagepath) -Force -Recurse
+      # Rename the old user profile path to the new name
+      # Error Action Stop added since Rename-Item doesn't treat this as a terminating error
+      try {
         Rename-Item -Path $olduserprofileimagepath -NewName $JumpCloudUserName -ErrorAction Stop
       }
-      catch
-      {
-        Write-Log -Message:("Unable to rename user profile path to new name - $JumpCloudUserName.")
-        $admuTracker.renameHomeDirectory.fail = $true
-        return
+      catch {
+        try {
+          Write-Log -Message:("Unable to rename user profile. Appending to restart script.")
+          $string = "Rename-Item -Path {0} -NewName {1} -ErrorAction Stop" -f $olduserprofileimagepath, $JumpCloudUserName
+          Add-Content -Path "$($windowsDrive)\ADMUStartupFunction.ps1" -value $string
+
+        }
+        catch {
+          Write-Log -Message:("Unable to rename user profile path to new name - $JumpCloudUserName.")
+          $admuTracker.renameHomeDirectory.fail = $true
+          return
+        }
       }
     }
 
@@ -1642,6 +1706,7 @@ Function Start-Migration
     catch
     {
       Write-Log -Message:("Unable to set profile image path.")
+      $admuTracker.renameHomeDirectory.fail = $true
       return
     }
     $admuTracker.renameHomeDirectory.pass = $true
