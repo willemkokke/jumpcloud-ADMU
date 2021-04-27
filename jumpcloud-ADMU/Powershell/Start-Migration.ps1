@@ -1316,7 +1316,6 @@ Function Start-Migration
   Param (
     [Parameter(ParameterSetName = 'cmd', Mandatory = $true)][string]$JumpCloudUserName,
     [Parameter(ParameterSetName = 'cmd', Mandatory = $true)][string]$SelectedUserName,
-    [Parameter(ParameterSetName = 'cmd', Mandatory = $true)][ValidateNotNullOrEmpty()][string]$TempPassword,
     [Parameter(ParameterSetName = 'cmd', Mandatory = $false)][bool]$LeaveDomain = $false,
     [Parameter(ParameterSetName = 'cmd', Mandatory = $false)][bool]$ForceReboot = $false,
     [Parameter(ParameterSetName = 'cmd', Mandatory = $false)][bool]$AzureADProfile = $false,
@@ -1343,7 +1342,6 @@ Function Start-Migration
     {
       $SelectedUserName = $inputObject.DomainUserName
       $JumpCloudUserName = $inputObject.JumpCloudUserName
-      $TempPassword = $inputObject.TempPassword
       if (($inputObject.JumpCloudConnectKey).Length -eq 40)
       {
         $JumpCloudConnectKey = $inputObject.JumpCloudConnectKey
@@ -1456,6 +1454,50 @@ Function Start-Migration
       Write-Log -Message:('JumpCloud agent is already installed on the system.')
     }
 
+    if ($ForceReboot -eq $true)
+    {
+      $inputobject = [PSCustomObject]@{ }
+      # Build FormResults object
+      Add-Member -InputObject:($inputobject) -MemberType:('NoteProperty') -Name:('LeaveDomain') -Value:($LeaveDomain)
+      Add-Member -InputObject:($inputobject) -MemberType:('NoteProperty') -Name:('DomainUserName') -Value:($SelectedUserName)
+      Add-Member -InputObject:($inputobject) -MemberType:('NoteProperty') -Name:('JumpCloudUserName') -Value:($JumpCloudUserName)
+      Add-Member -InputObject:($inputobject) -MemberType:('NoteProperty') -Name:('JumpCloudConnectKey') -Value:($JumpCloudConnectKey)
+      Add-Member -InputObject:($inputobject) -MemberType:('NoteProperty') -Name:('NetBiosName') -Value:($SelectedUserName)
+
+      #output inputobject as csv
+      #$inputobject | Export-CSV -Path 'C:\Windows\Temp\test.csv' -NoTypeInformation
+
+      #Create scheduled task
+      $nolimit = New-TimeSpan -Minutes 0
+    $newScheduledTaskSplat = @{
+        Action      = New-ScheduledTaskAction -Execute "powershell.exe" -Argument "Import-CSV c:\Windows\Temp\admu_discovery.csv | Start-MigrationReboot"
+        Description = 'Jumpcloud ADMU Startup Script'
+        Settings    = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -MultipleInstances IgnoreNew -ExecutionTimeLimit $nolimit -Priority 0 
+        Trigger     = New-ScheduledTaskTrigger -AtStartup
+        Principal = New-ScheduledTaskPrincipal -UserID "NT AUTHORITY\SYSTEM" -LogonType ServiceAccount -RunLevel Highest
+    }
+    $Start = (Get-Date).AddSeconds(5)
+    $ScheduledTask = New-ScheduledTask @newScheduledTaskSplat
+    $ScheduledTask.Settings.DeleteExpiredTaskAfter = "PT0S"
+    $ScheduledTask.Triggers[0].StartBoundary = $Start.ToString("yyyy-MM-dd'T'HH:mm:ss")
+    $ScheduledTask.Triggers[0].EndBoundary = $Start.AddMinutes(10).ToString('s')
+    
+    Register-ScheduledTask -InputObject $ScheduledTask -TaskName 'Jumpcloud ADMU Startup Script'
+
+#reboot
+Restart-Computer -ComputerName $env:COMPUTERNAME -Force
+
+}
+
+    #####################
+    #build params + admu script
+    #schedule task to run above script on reboot/load
+    #reboot computer
+    #block login of user?
+    #
+
+    #if forcereboot=true run begin, skip above and run below..
+
     ### Begin Backup Registry for Selected User ###
     Write-Log -Message:('Creating Backup of User Registry Hive')
     # Get Profile Image Path from Registry
@@ -1473,8 +1515,8 @@ Function Start-Migration
 
     ### Begin Create New User Region ###
     Write-Log -Message:('Creating New Local User ' + $localComputerName + '\' + $JumpCloudUserName)
-    $newUserPassword = ConvertTo-SecureString -String $TempPassword -AsPlainText -Force
-    New-localUser -Name $JumpCloudUserName -password $newUserPassword -ErrorVariable userExitCode -Description "Created By JumpCloud ADMU"
+    New-LocalUser -Name $JumpCloudUserName -NoPassword -AccountNeverExpires -UserMayNotChangePassword -ErrorVariable userExitCode -Description "Created By JumpCloud ADMU" | Set-LocalUser -PasswordNeverExpires $true
+
     if ($userExitCode)
     {
       Write-Log -Message:("$userExitCode")
@@ -1872,16 +1914,583 @@ Function Start-Migration
     {
       Write-Log -Message:('Failed to remove Temp Files & Folders.' + $jcAdmuTempPath)
     }
-
-    if ($ForceReboot -eq $true)
-    {
-      Write-Log -Message:('Forcing reboot of the PC now')
-      Restart-Computer -ComputerName $env:COMPUTERNAME -Force
-    }
     #endregion SilentAgentInstall
   }
   End
   {
+    $FixedErrors= @();
+    # if we caught any errors and need to revert based on admuTracker status, do so here:
+    foreach ($trackedStep in $admuTracker.Keys)
+    {
+      if (($admuTracker[$trackedStep].fail -eq $true) -or ($admuTracker[$trackedStep].pass -eq $true))
+      {
+        switch ($trackedStep) {
+          # Case for reverting 'newUserInit' steps
+          'newUserInit' {
+            Write-Log -Message:("Attempting to revert $($trackedStep) steps")
+            try {
+              Remove-LocalUserProfile -username $JumpCloudUserName
+            }
+            catch {
+              Write-Log -Message:("Could not remove the $JumpCloudUserName profile and user account") -Level Error
+            }
+            $FixedErrors += "$trackedStep"
+          }
+          'renameOriginalFiles'
+          {
+            Write-Log -Message:("Attempting to revert $($trackedStep) steps")
+            ### Should we be using Rename-Item here or Move-Item to force overwrite?
+            if (Test-Path "$olduserprofileimagepath\NTUSER_original.DAT" -PathType Leaf)
+            {
+              try
+              {
+                Rename-Item -Path "$olduserprofileimagepath\NTUSER.DAT" -NewName "$olduserprofileimagepath\NTUSER_failedCopy.DAT" -Force -ErrorAction Stop
+                Rename-Item -Path "$olduserprofileimagepath\NTUSER_original.DAT" -NewName "$olduserprofileimagepath\NTUSER.DAT" -Force -ErrorAction Stop
+              }
+              catch
+              {
+                Write-Log -Message:("Unable to rename file $olduserprofileimagepath\NTUSER_original.DAT") -Level Error
+              }
+            }
+            if (Test-Path "$olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass_original.dat" -PathType Leaf)
+            {
+              try
+              {
+                Rename-Item -Path "$olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass.dat" -NewName "$olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass_failedCopy.dat" -Force -ErrorAction Stop
+                Rename-Item -Path "$olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass_original.dat" -NewName "$olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass.dat" -Force -ErrorAction Stop
+              }
+              catch
+              {
+                Write-Log -Message:("Unable to rename file $olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass_original.dat") -Level Error
+              }
+              $FixedErrors += "$trackedStep"
+            }
+          }
+          'renameBackupFiles'
+          {
+            Write-Log -Message:("Attempting to revert $($trackedStep) steps")
+            if (Test-Path "$olduserprofileimagepath\NTUSER.DAT.BAK" -PathType Leaf)
+            {
+              try
+              {
+                Rename-Item -Path "$olduserprofileimagepath\NTUSER.DAT.BAK" -NewName "$olduserprofileimagepath\NTUSER.DAT" -Force -ErrorAction Stop
+              }
+              catch
+              {
+                Write-Log -Message:("Unable to rename file $olduserprofileimagepath\NTUSER.DAT.BAK") -Level Error
+              }
+            }
+            if (Test-Path "$olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass.dat.bak" -PathType Leaf)
+            {
+              try
+              {
+                Rename-Item -Path "$olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass.dat.bak" -NewName "$olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass.dat" -Force -ErrorAction Stop
+              }
+              catch
+              {
+                Write-Log -Message:("Unable to rename file $olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass.dat.bak") -Level Error
+              }
+            }
+            $FixedErrors += "$trackedStep"
+          }
+          'renameHomeDirectory'
+          {
+            try
+            {
+              Write-Log -Message:("Attempting to revert RenameHomeDirectory steps")
+              if (($userCompare -ne $selectedUserName) -and (test-path -Path $newuserprofileimagepath))
+              {
+                # Error Action stop to treat as terminating error
+                Rename-Item -Path ($newuserprofileimagepath) -NewName ($selectedUserName) -ErrorAction Stop
+              }
+              Set-ItemProperty -Path ('HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\' + $SelectedUserSID) -Name 'ProfileImagePath' -Value "$($olduserprofileimagepath)"
+            }
+            catch
+            {
+              Write-Log -Message:("Unable to restore old user profile path and profile image path.") -Level Error
+            }
+            $FixedErrors += "$trackedStep"
+          }
+          Default {
+            # Write-Log -Message:("default error") -Level Error
+          }
+        }
+      }
+    }
+    if ([System.String]::IsNullOrEmpty($($admuTracker.Keys | Where-Object { $admuTracker[$_].fail -eq $true }))) {
+      Write-Log -Message:('Script finished successfully; Log file location: ' + $jcAdmuLogFile)
+      Write-Log -Message:('Tool options chosen were : ' + 'Install JC Agent = ' + $InstallJCAgent + ', Leave Domain = ' + $LeaveDomain + ', Force Reboot = ' + $ForceReboot + ', AzureADProfile = ' + $AzureADProfile + ', Create System Restore Point = ' + $CreateRestore)
+    }
+    else {
+      Write-Log -Message:("ADMU encoutered the following errors: $($admuTracker.Keys | Where-Object { $admuTracker[$_].fail -eq $true })") -Level Warn
+      Write-Log -Message:("The following migration steps were reverted to their original state: $FixedErrors") -Level Warn
+      throw "JumpCloud ADMU was unable to migrate $selectedUserName"
+    }
+  }
+}
+
+function Start-MigrationReboot {
+  Param (
+    [Parameter][Object]$inputObject)
+  
+  begin {
+    # Start script
+    $admuVersion = '2.0.0'
+    Write-Log -Message:('####################################' + (get-date -format "dd-MMM-yyyy HH:mm") + '####################################')
+    Write-Log -Message:('Running ADMU: ' + 'v' + $admuVersion)
+    Write-Log -Message:('Script starting; Log file location: ' + $jcAdmuLogFile)
+    Write-Log -Message:('Gathering system & profile information')
+
+    $netBiosName = GetNetBiosname
+
+    # Define misc static variables
+    $localComputerName = $WmiComputerSystem.Name
+    $windowsDrive = Get-WindowsDrive
+    $jcAdmuTempPath = "$windowsDrive\Windows\Temp\JCADMU\"
+    $jcAdmuLogFile = "$windowsDrive\Windows\Temp\jcAdmu.log"
+    write-log -Message("The Selected Migration user is: $SelectedUserName")
+    $SelectedUserSid = CheckUsernameorSID $SelectedUserName
+
+    # Track migration steps
+    $admuTracker = [Ordered]@{
+      backup              = @{'pass' = $false; 'fail' = $false}
+      newUserInit         = @{'pass' = $false; 'fail' = $false}
+      copyRegistry        = @{'pass' = $false; 'fail' = $false}
+      copyRegistryFiles   = @{'pass' = $false; 'fail' = $false}
+      renameOriginalFiles = @{'pass' = $false; 'fail' = $false}
+      renameBackupFiles   = @{'pass' = $false; 'fail' = $false}
+      renameHomeDirectory = @{'pass' = $false; 'fail' = $false}
+      ntfsAccess          = @{'pass' = $false; 'fail' = $false}
+      ntfsPermissions     = @{'pass' = $false; 'fail' = $false}
+      activeSetupHKLM     = @{'pass' = $false; 'fail' = $false}
+      activeSetupHKU      = @{'pass' = $false; 'fail' = $false}
+      uwpAppXPacakges     = @{'pass' = $false; 'fail' = $false}
+      uwpDownloadExe      = @{'pass' = $false; 'fail' = $false}
+    }
+
+    Write-Log -Message:('Creating JCADMU Temporary Path in ' + $jcAdmuTempPath)
+    if (!(Test-path $jcAdmuTempPath))
+    {
+      new-item -ItemType Directory -Force -Path $jcAdmuTempPath 2>&1 | Write-Verbose
+    }
+
+    # Test checks
+    if ($AzureADProfile -eq $true -or $netBiosName -match 'AzureAD')
+    {
+      $DomainName = 'AzureAD'
+      $netBiosName = 'AzureAD'
+      Write-Log -Message:($localComputerName + ' is currently Domain joined and $AzureADProfile = $true')
+    }
+    elseif ($AzureADProfile -eq $false)
+    {
+      $DomainName = $WmiComputerSystem.Domain
+      $netBiosName = GetNetBiosName
+      Write-Log -Message:($localComputerName + ' is currently Domain joined to ' + $DomainName + ' NetBiosName is ' + $netBiosName)
+    }
+    #endregion Test checks
+  }
+  
+  process {
+        # Start Of Console Output
+        Write-Log -Message:('Windows Profile "' + $SelectedUserName + '" is going to be converted to "' + $localComputerName + '\' + $JumpCloudUserName + '"')
+
+            ### Begin Backup Registry for Selected User ###
+    Write-Log -Message:('Creating Backup of User Registry Hive')
+    # Get Profile Image Path from Registry
+    $oldUserProfileImagePath = Get-ProfileImagePath -UserSid $SelectedUserSID
+    # Backup Registry NTUSER.DAT and UsrClass.dat files
+    try{
+      Backup-RegistryHive -profileImagePath $olduserprofileimagepath
+    }
+    catch{
+      $admuTracker.backup.fail = $true
+      return
+    }
+    $admuTracker.backup.pass = $true
+    ### End Backup Registry for Selected User ###
+
+    ### Begin Create New User Region ###
+    Write-Log -Message:('Creating New Local User ' + $localComputerName + '\' + $JumpCloudUserName)
+    New-LocalUser -Name $JumpCloudUserName -NoPassword -AccountNeverExpires -UserMayNotChangePassword -ErrorVariable userExitCode -Description "Created By JumpCloud ADMU" | Set-LocalUser -PasswordNeverExpires $true
+
+    if ($userExitCode)
+    {
+      Write-Log -Message:("$userExitCode")
+      Write-Log -Message:("The user: $JumpCloudUserName could not be created, exiting")
+      $admuTracker.newUserInit.fail = $true
+      return
+    }
+    # Initialize the Profile
+    New-LocalUserProfile -username $JumpCloudUserName -ErrorVariable profileInit
+    if ($profileInit)
+    {
+      Write-Log -Message:("$profileInit")
+      Write-Log -Message:("The user: $JumpCloudUserName could not be initalized, exiting")
+      $admuTracker.newUserInit.fail = $true
+      return
+    }
+    $admuTracker.newUserInit.pass = $true
+
+    ### End Create New User Region ###
+
+    ### Begin Regedit Block ###
+    Write-Log -Message:('Getting new profile image path')
+    # Set the New User Profile Path
+    # Now get NewUserSID
+    $NewUserSID = Get-SID -User $JumpCloudUserName
+    # Get profile image path for new user
+    $newUserProfileImagePath = Get-ProfileImagePath -UserSid $NewUserSID
+    ### Begin backup user registry for new user
+    Backup-RegistryHive -profileImagePath $newuserprofileimagepath
+    ### End backup user registry for new user
+
+    # Test Registry Access before edits
+    Write-Log -Message:('Verifying Registry Hives can be loaded and unloaded')
+    Test-UserRegistryLoadState -ProfilePath $newuserprofileimagepath -UserSid $newUserSid
+    Test-UserRegistryLoadState -ProfilePath $olduserprofileimagepath -UserSid $SelectedUserSID
+    # End Test Registry
+
+    Write-Log -Message:('Begin new local user registry copy')
+    # Give us admin rights to modify
+    $path = takeown /F $newuserprofileimagepath /a /r /d y
+    $acl = Get-Acl ($newuserprofileimagepath)
+    $AdministratorsGroupSIDName = ([wmi]"Win32_SID.SID='S-1-5-32-544'").AccountName
+    $AccessRule = New-Object System.Security.AccessControl.FileSystemAccessRule($AdministratorsGroupSIDName, "FullControl", "Allow")
+    $acl.SetAccessRuleProtection($false, $true)
+    $acl.SetAccessRule($AccessRule)
+    $acl | Set-Acl $newuserprofileimagepath
+    # TODO: test permissions were set and return condition if not
+    # $admuTracker.ntfsAccess = $true
+
+    Write-Log -Message:('New User Profile Path: ' + $newuserprofileimagepath + ' New User SID: ' + $NewUserSID)
+    Write-Log -Message:('Old User Profile Path: ' + $olduserprofileimagepath + ' Old User SID: ' + $SelectedUserSID)
+    # Load New User Profile Registry Keys
+    Set-UserRegistryLoadState -op "Load" -ProfilePath $newuserprofileimagepath -UserSid $NewUserSID
+    # Load Selected User Profile Keys
+    Set-UserRegistryLoadState -op "Load" -ProfilePath $olduserprofileimagepath -UserSid $SelectedUserSID
+    # Copy from "SelectedUser" to "NewUser"
+
+    # TODO: Turn this into a function
+    reg copy HKU\$($SelectedUserSID)_admu HKU\$($NewUserSID)_admu /s /f
+    if ($?)
+    {
+      Write-Log -Message:('Copy Profile: ' + "$newuserprofileimagepath/NTUSER.DAT.BAK" + ' To: ' + "$olduserprofileimagepath/NTUSER.DAT.BAK")
+    }
+    else
+    {
+      Write-Log -Message:('Could not copy Profile: ' + "$newuserprofileimagepath/NTUSER.DAT.BAK" + ' To: ' + "$olduserprofileimagepath/NTUSER.DAT.BAK")
+      $admuTracker.copyRegistry.fail = $true
+      return
+    }
+    reg copy HKU\$($SelectedUserSID)_Classes_admu HKU\$($NewUserSID)_Classes_admu /s /f
+    if ($?)
+    {
+      Write-Log -Message:('Copy Profile: ' + "$newuserprofileimagepath/AppData/Local/Microsoft/Windows/UsrClass.dat" + ' To: ' + "$olduserprofileimagepath/AppData/Local/Microsoft/Windows/UsrClass.dat")
+    }
+    else
+    {
+      Write-Log -Message:('Could not copy Profile: ' + "$newuserprofileimagepath/AppData/Local/Microsoft/Windows/UsrClass.dat" + ' To: ' + "$olduserprofileimagepath/AppData/Local/Microsoft/Windows/UsrClass.dat")
+      $admuTracker.copyRegistry.fail = $true
+      return
+    }
+    $admuTracker.copyRegistry.pass = $true
+
+    # Copy the profile containing the correct access and data to the destination profile
+    Write-Log -Message:('Copying merged profiles to destination profile path')
+
+    #TODO: Turn this into a function
+    # Set Registry Check Key for New User
+    # Check that the installed components key does not exist
+    if ((Get-psdrive | select-object name) -notmatch "HKEY_USERS")
+    {
+      Write-Host "Mounting HKEY_USERS to check USER UWP keys"
+      New-PSDrive HKEY_USERS Registry HKEY_USERS
+    }
+    $ADMU_PackageKey = "HKEY_USERS:\$($newusersid)_admu\SOFTWARE\Microsoft\Active Setup\Installed Components\ADMU-AppxPackage"
+    if (Get-Item $ADMU_PackageKey -ErrorAction SilentlyContinue)
+    {
+      # If the account to be converted already has this key, reset the version
+      $rootlessKey = $ADMU_PackageKey.Replace('HKEY_USERS:\', '')
+      Set-ValueToKey -registryRoot Users -KeyPath $rootlessKey -name Version -value "0,0,00,0" -regValueKind String
+    }
+    # TODO: test Key exists, non terminating error here if we can't set Active Setup Keys
+    # $admuTracker.activeSetupHKU = $true
+    # Set the trigger to reset Appx Packages on first login
+    $ADMUKEY = "HKEY_USERS:\$($newusersid)_admu\SOFTWARE\JCADMU"
+    if (Get-Item $ADMUKEY -ErrorAction SilentlyContinue)
+    {
+      # If the registry Key exists (it wont)
+      Write-Host "The Key Already Exists"
+    }
+    else
+    {
+      # Create the new key & remind add tracking from previous domain account for reversion if necessary
+      New-RegKey -registryRoot Users -keyPath "$($newusersid)_admu\SOFTWARE\JCADMU"
+      Set-ValueToKey -registryRoot Users -keyPath "$($newusersid)_admu\SOFTWARE\JCADMU" -Name "previousSID" -value "$SelectedUserSID" -regValueKind String
+      Set-ValueToKey -registryRoot Users -keyPath "$($newusersid)_admu\SOFTWARE\JCADMU" -Name "previousProfilePath" -value "$olduserprofileimagepath" -regValueKind String
+    }
+    # TODO: test Key exists, non terminating error here if we can't set previous SID/ ProfilePath
+    ### End reg key check for new user
+
+    # Unload "Selected" and "NewUser"
+    Set-UserRegistryLoadState -op "Unload" -ProfilePath $newuserprofileimagepath -UserSid $NewUserSID
+    Set-UserRegistryLoadState -op "Unload" -ProfilePath $olduserprofileimagepath -UserSid $SelectedUserSID
+
+    # Copy both registry hives over and replace the existing backup files in the destination directory.
+    try
+    {
+      Copy-Item -Path "$newuserprofileimagepath/NTUSER.DAT.BAK" -Destination "$olduserprofileimagepath/NTUSER.DAT.BAK" -Force -ErrorAction Stop
+      Copy-Item -Path "$newuserprofileimagepath/AppData/Local/Microsoft/Windows/UsrClass.dat.bak" -Destination "$olduserprofileimagepath/AppData/Local/Microsoft/Windows/UsrClass.dat.bak" -Force -ErrorAction Stop
+    }
+    catch
+    {
+      write-log -Message("Could not copy backup registry hives to the destination location in $($olduserprofileimagepath): Exiting...")
+      write-log -Message($_.Exception.Message)
+      $admuTracker.copyRegistryFiles.fail = $true
+      return
+    }
+    $admuTracker.copyRegistryFiles.pass = $true
+
+    # Rename original ntuser & usrclass .dat files to ntuser_original.dat & usrclass_original.dat for backup and reversal if needed
+    Write-Log -Message:('Copy orig. ntuser.dat to ntuser_original.dat (backup reg step)')
+    try
+    {
+      Rename-Item -Path "$olduserprofileimagepath\NTUSER.DAT" -NewName "$olduserprofileimagepath\NTUSER_original.DAT" -Force -ErrorAction Stop
+      Rename-Item -Path "$olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass.dat" -NewName "$olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass_original.dat" -Force -ErrorAction Stop
+    }
+    catch
+    {
+      write-log -Message("Could not rename original registry files for backup purposes: Exiting...")
+      write-log -Message($_.Exception.Message)
+      $admuTracker.renameOriginalFiles.fail = $true
+      return
+    }
+    $admuTracker.renameOriginalFiles.pass = $true
+    # finally set .dat.back registry files to the .dat in the profileimagepath
+    Write-Log -Message:('rename ntuser.dat.bak to ntuser.dat (replace step)')
+    try
+    {
+      Rename-Item -Path "$olduserprofileimagepath\NTUSER.DAT.BAK" -NewName "$olduserprofileimagepath\NTUSER.DAT" -Force -ErrorAction Stop
+      Rename-Item -Path "$olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass.dat.bak" -NewName "$olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass.dat" -Force -ErrorAction Stop
+    }
+    catch
+    {
+      write-log -Message("Could not rename backup registry files to a system recognizable name: Exiting...")
+      write-log -Message($_.Exception.Message)
+      $admuTracker.renameBackupFiles.fail = $true
+      return
+    }
+    $admuTracker.renameBackupFiles.pass = $true
+
+    # Test Condition for same names
+    # Check if the new user is named username.HOSTNAME or username.000, .001 etc.
+    $userCompare = $olduserprofileimagepath.Replace("$($windowsDrive)\Users\", "")
+    if ($userCompare -eq $JumpCloudUserName)
+    {
+      Write-log -Message:("Selected User Path and New User Path Match")
+      # Remove the New User Profile Path, we want to just use the old Path
+      Remove-Item -Path ($newuserprofileimagepath) -Force -Recurse
+      # Set the New User Profile Image Path to Old User Profile Path (they are the same)
+      $newuserprofileimagepath = $olduserprofileimagepath
+    }
+    else
+    {
+      write-log -Message:("Selected User Path and New User Path Differ")
+      try
+      {
+        # Remove the New User Profile Path, in this case we will rename the home folder to the desired name
+        Remove-Item -Path ($newuserprofileimagepath) -Force -Recurse
+        # Rename the old user profile path to the new name
+        # Error Action Stop added since Rename-Item doesn't treat this as a terminating error
+        Rename-Item -Path $olduserprofileimagepath -NewName $JumpCloudUserName -ErrorAction Stop
+      }
+      catch
+      {
+        Write-Log -Message:("Unable to rename user profile path to new name - $JumpCloudUserName.")
+        $admuTracker.renameHomeDirectory.fail = $true
+        return
+      }
+    }
+
+    # Set profile image path of new and selected user
+    try
+    {
+      Set-ItemProperty -Path ('HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\' + $SelectedUserSID) -Name 'ProfileImagePath' -Value ("$windowsDrive\Users\" + $SelectedUserName + '.' + $NetBiosName)
+      Set-ItemProperty -Path ('HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\' + $NewUserSID) -Name 'ProfileImagePath' -Value ("$windowsDrive\Users\" + $JumpCloudUserName)
+    }
+    catch
+    {
+      Write-Log -Message:("Unable to set profile image path.")
+      return
+    }
+    $admuTracker.renameHomeDirectory.pass = $true
+
+    # logging
+    Write-Log -Message:('New User Profile Path: ' + $newuserprofileimagepath + ' New User SID: ' + $NewUserSID)
+    Write-Log -Message:('Old User Profile Path: ' + $olduserprofileimagepath + ' Old User SID: ' + $SelectedUserSID)
+
+    Write-Log -Message:("NTFS ACLs on domain $windowsDrive\users\ dir")
+    #ntfs acls on domain $windowsDrive\users\ dir
+    $NewSPN_Name = $env:COMPUTERNAME + '\' + $JumpCloudUserName
+    $Acl = Get-Acl $newuserprofileimagepath
+    $Ar = New-Object system.security.accesscontrol.filesystemaccessrule($NewSPN_Name, "FullControl", "ContainerInherit,ObjectInherit", "None", "Allow")
+    $Acl.SetAccessRule($Ar)
+    $Acl | Set-Acl -Path $newuserprofileimagepath
+    #TODO: test and return condition if false
+    # $admuTracker.ntfsPermissions = $true
+
+    ## End Regedit Block ##
+
+    ### Active Setup Registry Entry ###
+    Write-Log -Message:('Creating HKLM Registry Entries')
+    # Root Key Path
+    $ADMUKEY = "HKLM:\SOFTWARE\Microsoft\Active Setup\Installed Components\ADMU-AppxPackage"
+    # Remove Root from key to pass into functions
+    $rootlessKey = $ADMUKEY.Replace('HKLM:\', '')
+    # Property Values
+    $propertyHash = @{
+      IsInstalled = 1
+      Locale      = "*"
+      StubPath    = "uwp_jcadmu.exe"
+      Version     = "1,0,00,0"
+    }
+    if (Get-Item $ADMUKEY -ErrorAction SilentlyContinue)
+    {
+      write-log -message:("The ADMU Registry Key exits")
+      $properties = Get-ItemProperty -Path "$ADMUKEY"
+      foreach ($item in $propertyHash.Keys)
+      {
+        Write-log -message:("Property: $($item) Value: $($properties.$item)")
+      }
+    }
+    else
+    {
+      # write-host "The ADMU Registry Key does not exist"
+      # Create the new key
+      New-RegKey -keyPath $rootlessKey -registryRoot LocalMachine
+      foreach ($item in $propertyHash.Keys)
+      {
+        # Eventually make this better
+        if ($item -eq "IsInstalled")
+        {
+          Set-ValueToKey -registryRoot LocalMachine -keyPath "$rootlessKey" -Name "$item" -value $propertyHash[$item] -regValueKind Dword
+        }
+        else
+        {
+          Set-ValueToKey -registryRoot LocalMachine -keyPath "$rootlessKey" -Name "$item" -value $propertyHash[$item] -regValueKind String
+        }
+      }
+    }
+    # TODO: test and note error if failure
+    # $admuTracker.activeSetupHKLM = $true
+    ### End Active Setup Registry Entry Region ###
+
+    # Get UWP apps from selected user
+    Write-Log -Message:('Updating UWP Apps for new user')
+    $path = $newuserprofileimagepath + '\AppData\Local\JumpCloudADMU'
+    If (!(test-path $path))
+    {
+      New-Item -ItemType Directory -Force -Path $path
+    }
+    $appxList = @()
+    if ($AzureADProfile -eq $true -or $netBiosName -match 'AzureAD')
+    {
+      # Find Appx User Apps by Username
+      $appxList = Get-AppXpackage -user (ConvertSID $SelectedUserSID) | Select-Object InstallLocation
+    }
+    else
+    {
+      $appxList = Get-AppXpackage -user $SelectedUserSID | Select-Object InstallLocation
+    }
+    if ($appxList.Count -eq 0)
+    {
+      # Get Common Apps in edge case:
+      $appxList = Get-AppXpackage -AllUsers | Select-Object InstallLocation
+
+    }
+    $appxList | Export-CSV ($newuserprofileimagepath + '\AppData\Local\JumpCloudADMU\appx_manifest.csv') -Force
+    # TODO: Test and return non terminating error here if failure
+    # $admuTracker.uwpAppXPackages = $true
+
+    # Download the appx register exe
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    Invoke-WebRequest -Uri "https://github.com/TheJumpCloud/jumpcloud-ADMU/releases/latest/download/uwp_jcadmu.exe" -OutFile "$windowsDrive\Windows\uwp_jcadmu.exe"
+    Start-Sleep -Seconds 5
+    try
+    {
+      Get-Item -Path "$windowsDrive\Windows\uwp_jcadmu.exe" -ErrorAction Stop
+    }
+    catch
+    {
+      write-Log -Message("Could not find uwp_jcadmu.exe in $windowsDrive\Windows\ UWP Apps will not migrate")
+      write-Log -Message($_.Exception.Message)
+      # TODO: Test and return non terminating error here if failure
+      # TODO: Get the checksum
+      # $admuTracker.uwpDownloadExe = $true
+    }
+    Write-Log -Message:('Profile Conversion Completed')
+
+
+    #region Add To Local Users Group
+    Add-LocalGroupMember -SID S-1-5-32-545 -Member $JumpCloudUserName -erroraction silentlycontinue
+    #endregion Add To Local Users Group
+    # TODO: test and return non-terminating error here
+
+    #region AutobindUserToJCSystem
+    BindUsernameToJCSystem -JcApiKey $JumpCloudAPIKey -JumpCloudUserName $JumpCloudUserName
+    #endregion AutobindUserToJCSystem
+    # TODO: test if we have the API key?
+
+    #region Leave Domain or AzureAD
+
+    if ($LeaveDomain -eq $true)
+    {
+      if ($netBiosName -match 'AzureAD')
+      {
+        try
+        {
+          Write-Log -Message:('Leaving AzureAD')
+          dsregcmd.exe /leave
+        }
+        catch
+        {
+          Write-Log -Message:('Unable to leave domain, JumpCloud agent will not start until resolved') -Level:('Error')
+          # TODO: instead of exit, return and note the error in the logs (Non Terminating?)
+          Exit;
+        }
+      }
+      else
+      {
+        Try
+        {
+          Write-Log -Message:('Leaving Domain')
+          $WmiComputerSystem.UnJoinDomainOrWorkGroup($null, $null, 0)
+        }
+        Catch
+        {
+          Write-Log -Message:('Unable to leave domain, JumpCloud agent will not start until resolved') -Level:('Error')
+          # TODO: instead of exit, return and note the error in the logs (Non Terminating?)
+          Exit;
+        }
+      }
+    }
+
+    # Cleanup Folders Again Before Reboot
+    Write-Log -Message:('Removing Temp Files & Folders.')
+    Start-Sleep -s 10
+    try
+    {
+      Remove-ItemIfExists -Path:($jcAdmuTempPath) -Recurse
+    }
+    catch
+    {
+      Write-Log -Message:('Failed to remove Temp Files & Folders.' + $jcAdmuTempPath)
+    }
+    #endregion SilentAgentInstall
+
+  }
+  
+  end {
     $FixedErrors= @();
     # if we caught any errors and need to revert based on admuTracker status, do so here:
     foreach ($trackedStep in $admuTracker.Keys)
