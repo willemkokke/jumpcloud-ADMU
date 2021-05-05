@@ -43,6 +43,7 @@ $data | Out-File -FilePath $CsvPath -Append
 
 # Execution policy required to run scripts:
 Set-ExecutionPolicy -ExecutionPolicy Bypass -Force
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 Install-PackageProvider -Name NuGet -Force
 # Install Module PowerShellForGitHub
 Install-Module PowerShellForGitHub -Force
