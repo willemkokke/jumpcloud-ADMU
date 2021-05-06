@@ -4,6 +4,13 @@ $CSVFolder = 'C:\Windows\Temp\';
 $CSVResult = 'C:\Windows\Temp\ADMUResult.csv';
 $password = ConvertTo-SecureString "$GHToken" -AsPlainText -Force
 $Cred = New-Object System.Management.Automation.PSCredential ($GHUsername, $password)
+
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+Install-PackageProvider -Name NuGet -Force
+# Install Module PowerShellForGitHub
+Install-Module PowerShellForGitHub -Force
+
+# Set Authentication
 Set-GitHubAuthentication -Credential $cred
 
 # Get GH Gists
