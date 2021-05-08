@@ -1630,7 +1630,7 @@ Function Start-Migration
       try{
         Write-Log -Message:("Attempting to remove newly created $newUserProfileImagePath")
         # Reset permissions on NewUserProfileImagePath
-        icacls $newUserProfileImagePath /reset /t /c /l | Out-Null
+        icacls $newUserProfileImagePath /reset /c /l | Out-Null
         # -ErrorAction Stop; Remove-Item doesn't throw terminating errors
         Remove-Item -Path ($newUserProfileImagePath) -Force -Recurse -ErrorAction Stop
       }
