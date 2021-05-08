@@ -26,7 +26,7 @@ function BindUsernameToJCSystem
       }
       Try
       {
-        Write-Host "Getting information from SystemID: $systemKey"
+        Write-log -Message:("Getting information from SystemID: $systemKey")
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         $Response = Invoke-WebRequest -Method 'Get' -Uri "https://console.jumpcloud.com/api/systemusers" -Headers $Headers -Body $Form -UseBasicParsing
         $StatusCode = $Response.StatusCode
@@ -63,12 +63,12 @@ function BindUsernameToJCSystem
       }
       else
       {
-        Write-Host "Cound not bind user/ JumpCloudUsername did not exist in JC Directory"
+        Write-log -Message:("Cound not bind user/ JumpCloudUsername did not exist in JC Directory")
       }
     }
     else
     {
-      Write-Host "Could not find systemKey, aborting bind step"
+      Write-log -Message:("Could not find systemKey, aborting bind step")
     }
   }
   End
@@ -1319,6 +1319,7 @@ Function Start-Migration
     }
 
     # Define misc static variables
+    $WmiComputerSystem = Get-WmiObject -Class:('Win32_ComputerSystem')
     $localComputerName = $WmiComputerSystem.Name
     $windowsDrive = Get-WindowsDrive
     $jcAdmuTempPath = "$windowsDrive\Windows\Temp\JCADMU\"
@@ -1358,6 +1359,7 @@ Function Start-Migration
       activeSetupHKU      = @{'pass' = $false; 'fail' = $false}
       uwpAppXPacakges     = @{'pass' = $false; 'fail' = $false}
       uwpDownloadExe      = @{'pass' = $false; 'fail' = $false}
+      leaveDomain         = @{'pass' = $false; 'fail' = $false}
     }
 
     Write-Log -Message:('Creating JCADMU Temporary Path in ' + $jcAdmuTempPath)
@@ -1421,7 +1423,7 @@ Function Start-Migration
     $oldUserProfileImagePath = Get-ProfileImagePath -UserSid $SelectedUserSID
     # Backup Registry NTUSER.DAT and UsrClass.dat files
     try{
-      Backup-RegistryHive -profileImagePath $olduserprofileimagepath
+      Backup-RegistryHive -profileImagePath $oldUserProfileImagePath
     }
     catch{
       $admuTracker.backup.fail = $true
@@ -1462,55 +1464,63 @@ Function Start-Migration
     # Get profile image path for new user
     $newUserProfileImagePath = Get-ProfileImagePath -UserSid $NewUserSID
     ### Begin backup user registry for new user
-    Backup-RegistryHive -profileImagePath $newuserprofileimagepath
+    Backup-RegistryHive -profileImagePath $newUserProfileImagePath
     ### End backup user registry for new user
 
     # Test Registry Access before edits
     Write-Log -Message:('Verifying Registry Hives can be loaded and unloaded')
-    Test-UserRegistryLoadState -ProfilePath $newuserprofileimagepath -UserSid $newUserSid
-    Test-UserRegistryLoadState -ProfilePath $olduserprofileimagepath -UserSid $SelectedUserSID
+    Test-UserRegistryLoadState -ProfilePath $newUserProfileImagePath -UserSid $newUserSid
+    Test-UserRegistryLoadState -ProfilePath $oldUserProfileImagePath -UserSid $SelectedUserSID
     # End Test Registry
 
     Write-Log -Message:('Begin new local user registry copy')
     # Give us admin rights to modify
-    $path = takeown /F $newuserprofileimagepath /a /r /d y
-    $acl = Get-Acl ($newuserprofileimagepath)
+    $path = takeown /F $newUserProfileImagePath /a /r /d y
+    $acl = Get-Acl ($newUserProfileImagePath)
     $AdministratorsGroupSIDName = ([wmi]"Win32_SID.SID='S-1-5-32-544'").AccountName
     $AccessRule = New-Object System.Security.AccessControl.FileSystemAccessRule($AdministratorsGroupSIDName, "FullControl", "Allow")
     $acl.SetAccessRuleProtection($false, $true)
     $acl.SetAccessRule($AccessRule)
-    $acl | Set-Acl $newuserprofileimagepath
+    $acl | Set-Acl $newUserProfileImagePath
+
+    # $path = takeown /F $newUserProfileImagePath /a /r /d y
+    # $acl = Get-Acl ($newUserProfileImagePath)
+    # $AdministratorsGroupSIDName = ([wmi]"Win32_SID.SID='S-1-5-18'").AccountName
+    # $AccessRule = New-Object System.Security.AccessControl.FileSystemAccessRule($AdministratorsGroupSIDName, "FullControl", "Allow")
+    # $acl.SetAccessRuleProtection($false, $true)
+    # $acl.SetAccessRule($AccessRule)
+    # $acl | Set-Acl $newUserProfileImagePath
     # TODO: test permissions were set and return condition if not
     # $admuTracker.ntfsAccess = $true
 
-    Write-Log -Message:('New User Profile Path: ' + $newuserprofileimagepath + ' New User SID: ' + $NewUserSID)
-    Write-Log -Message:('Old User Profile Path: ' + $olduserprofileimagepath + ' Old User SID: ' + $SelectedUserSID)
+    Write-Log -Message:('New User Profile Path: ' + $newUserProfileImagePath + ' New User SID: ' + $NewUserSID)
+    Write-Log -Message:('Old User Profile Path: ' + $oldUserProfileImagePath + ' Old User SID: ' + $SelectedUserSID)
     # Load New User Profile Registry Keys
-    Set-UserRegistryLoadState -op "Load" -ProfilePath $newuserprofileimagepath -UserSid $NewUserSID
+    Set-UserRegistryLoadState -op "Load" -ProfilePath $newUserProfileImagePath -UserSid $NewUserSID
     # Load Selected User Profile Keys
-    Set-UserRegistryLoadState -op "Load" -ProfilePath $olduserprofileimagepath -UserSid $SelectedUserSID
+    Set-UserRegistryLoadState -op "Load" -ProfilePath $oldUserProfileImagePath -UserSid $SelectedUserSID
     # Copy from "SelectedUser" to "NewUser"
 
     # TODO: Turn this into a function
     reg copy HKU\$($SelectedUserSID)_admu HKU\$($NewUserSID)_admu /s /f
     if ($?)
     {
-      Write-Log -Message:('Copy Profile: ' + "$newuserprofileimagepath/NTUSER.DAT.BAK" + ' To: ' + "$olduserprofileimagepath/NTUSER.DAT.BAK")
+      Write-Log -Message:('Copy Profile: ' + "$newUserProfileImagePath/NTUSER.DAT.BAK" + ' To: ' + "$oldUserProfileImagePath/NTUSER.DAT.BAK")
     }
     else
     {
-      Write-Log -Message:('Could not copy Profile: ' + "$newuserprofileimagepath/NTUSER.DAT.BAK" + ' To: ' + "$olduserprofileimagepath/NTUSER.DAT.BAK")
+      Write-Log -Message:('Could not copy Profile: ' + "$newUserProfileImagePath/NTUSER.DAT.BAK" + ' To: ' + "$oldUserProfileImagePath/NTUSER.DAT.BAK")
       $admuTracker.copyRegistry.fail = $true
       return
     }
     reg copy HKU\$($SelectedUserSID)_Classes_admu HKU\$($NewUserSID)_Classes_admu /s /f
     if ($?)
     {
-      Write-Log -Message:('Copy Profile: ' + "$newuserprofileimagepath/AppData/Local/Microsoft/Windows/UsrClass.dat" + ' To: ' + "$olduserprofileimagepath/AppData/Local/Microsoft/Windows/UsrClass.dat")
+      Write-Log -Message:('Copy Profile: ' + "$newUserProfileImagePath/AppData/Local/Microsoft/Windows/UsrClass.dat" + ' To: ' + "$oldUserProfileImagePath/AppData/Local/Microsoft/Windows/UsrClass.dat")
     }
     else
     {
-      Write-Log -Message:('Could not copy Profile: ' + "$newuserprofileimagepath/AppData/Local/Microsoft/Windows/UsrClass.dat" + ' To: ' + "$olduserprofileimagepath/AppData/Local/Microsoft/Windows/UsrClass.dat")
+      Write-Log -Message:('Could not copy Profile: ' + "$newUserProfileImagePath/AppData/Local/Microsoft/Windows/UsrClass.dat" + ' To: ' + "$oldUserProfileImagePath/AppData/Local/Microsoft/Windows/UsrClass.dat")
       $admuTracker.copyRegistry.fail = $true
       return
     }
@@ -1548,24 +1558,24 @@ Function Start-Migration
       # Create the new key & remind add tracking from previous domain account for reversion if necessary
       New-RegKey -registryRoot Users -keyPath "$($newusersid)_admu\SOFTWARE\JCADMU"
       Set-ValueToKey -registryRoot Users -keyPath "$($newusersid)_admu\SOFTWARE\JCADMU" -Name "previousSID" -value "$SelectedUserSID" -regValueKind String
-      Set-ValueToKey -registryRoot Users -keyPath "$($newusersid)_admu\SOFTWARE\JCADMU" -Name "previousProfilePath" -value "$olduserprofileimagepath" -regValueKind String
+      Set-ValueToKey -registryRoot Users -keyPath "$($newusersid)_admu\SOFTWARE\JCADMU" -Name "previousProfilePath" -value "$oldUserProfileImagePath" -regValueKind String
     }
     # TODO: test Key exists, non terminating error here if we can't set previous SID/ ProfilePath
     ### End reg key check for new user
 
     # Unload "Selected" and "NewUser"
-    Set-UserRegistryLoadState -op "Unload" -ProfilePath $newuserprofileimagepath -UserSid $NewUserSID
-    Set-UserRegistryLoadState -op "Unload" -ProfilePath $olduserprofileimagepath -UserSid $SelectedUserSID
+    Set-UserRegistryLoadState -op "Unload" -ProfilePath $newUserProfileImagePath -UserSid $NewUserSID
+    Set-UserRegistryLoadState -op "Unload" -ProfilePath $oldUserProfileImagePath -UserSid $SelectedUserSID
 
     # Copy both registry hives over and replace the existing backup files in the destination directory.
     try
     {
-      Copy-Item -Path "$newuserprofileimagepath/NTUSER.DAT.BAK" -Destination "$olduserprofileimagepath/NTUSER.DAT.BAK" -Force -ErrorAction Stop
-      Copy-Item -Path "$newuserprofileimagepath/AppData/Local/Microsoft/Windows/UsrClass.dat.bak" -Destination "$olduserprofileimagepath/AppData/Local/Microsoft/Windows/UsrClass.dat.bak" -Force -ErrorAction Stop
+      Copy-Item -Path "$newUserProfileImagePath/NTUSER.DAT.BAK" -Destination "$oldUserProfileImagePath/NTUSER.DAT.BAK" -Force -ErrorAction Stop
+      Copy-Item -Path "$newUserProfileImagePath/AppData/Local/Microsoft/Windows/UsrClass.dat.bak" -Destination "$oldUserProfileImagePath/AppData/Local/Microsoft/Windows/UsrClass.dat.bak" -Force -ErrorAction Stop
     }
     catch
     {
-      write-log -Message("Could not copy backup registry hives to the destination location in $($olduserprofileimagepath): Exiting...")
+      write-log -Message("Could not copy backup registry hives to the destination location in $($oldUserProfileImagePath): Exiting...")
       write-log -Message($_.Exception.Message)
       $admuTracker.copyRegistryFiles.fail = $true
       return
@@ -1576,8 +1586,8 @@ Function Start-Migration
     Write-Log -Message:('Copy orig. ntuser.dat to ntuser_original.dat (backup reg step)')
     try
     {
-      Rename-Item -Path "$olduserprofileimagepath\NTUSER.DAT" -NewName "$olduserprofileimagepath\NTUSER_original.DAT" -Force -ErrorAction Stop
-      Rename-Item -Path "$olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass.dat" -NewName "$olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass_original.dat" -Force -ErrorAction Stop
+      Rename-Item -Path "$oldUserProfileImagePath\NTUSER.DAT" -NewName "$oldUserProfileImagePath\NTUSER_original.DAT" -Force -ErrorAction Stop
+      Rename-Item -Path "$oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass.dat" -NewName "$oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass_original.dat" -Force -ErrorAction Stop
     }
     catch
     {
@@ -1591,8 +1601,8 @@ Function Start-Migration
     Write-Log -Message:('rename ntuser.dat.bak to ntuser.dat (replace step)')
     try
     {
-      Rename-Item -Path "$olduserprofileimagepath\NTUSER.DAT.BAK" -NewName "$olduserprofileimagepath\NTUSER.DAT" -Force -ErrorAction Stop
-      Rename-Item -Path "$olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass.dat.bak" -NewName "$olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass.dat" -Force -ErrorAction Stop
+      Rename-Item -Path "$oldUserProfileImagePath\NTUSER.DAT.BAK" -NewName "$oldUserProfileImagePath\NTUSER.DAT" -Force -ErrorAction Stop
+      Rename-Item -Path "$oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass.dat.bak" -NewName "$oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass.dat" -Force -ErrorAction Stop
     }
     catch
     {
@@ -1605,25 +1615,34 @@ Function Start-Migration
 
     # Test Condition for same names
     # Check if the new user is named username.HOSTNAME or username.000, .001 etc.
-    $userCompare = $olduserprofileimagepath.Replace("$($windowsDrive)\Users\", "")
+    $userCompare = $oldUserProfileImagePath.Replace("$($windowsDrive)\Users\", "")
     if ($userCompare -eq $JumpCloudUserName)
     {
       Write-log -Message:("Selected User Path and New User Path Match")
       # Remove the New User Profile Path, we want to just use the old Path
-      Remove-Item -Path ($newuserprofileimagepath) -Force -Recurse
+      Remove-Item -Path ($newUserProfileImagePath) -Force -Recurse
       # Set the New User Profile Image Path to Old User Profile Path (they are the same)
-      $newuserprofileimagepath = $olduserprofileimagepath
+      $newUserProfileImagePath = $oldUserProfileImagePath
     }
     else
     {
       write-log -Message:("Selected User Path and New User Path Differ")
+      try{
+        Write-Log -Message:("Attempting to remove newly created $newUserProfileImagePath")
+        # Reset permissions on NewUserProfileImagePath
+        icacls $newUserProfileImagePath /reset /t /c /l | Out-Null
+        # -ErrorAction Stop; Remove-Item doesn't throw terminating errors
+        Remove-Item -Path ($newUserProfileImagePath) -Force -Recurse -ErrorAction Stop
+      }
+      catch{
+        Write-Log -Message:("Remove $newUserProfileImagePath, renaming to RemoveMe")
+        Rename-Item -Path $newUserProfileImagePath -NewName "removeMe" -ErrorAction Stop
+      }
       try
       {
-        # Remove the New User Profile Path, in this case we will rename the home folder to the desired name
-        Remove-Item -Path ($newuserprofileimagepath) -Force -Recurse
         # Rename the old user profile path to the new name
-        # Error Action Stop added since Rename-Item doesn't treat this as a terminating error
-        Rename-Item -Path $olduserprofileimagepath -NewName $JumpCloudUserName -ErrorAction Stop
+        # -ErrorAction Stop; Rename-Item doesn't throw terminating errors
+        Rename-Item -Path $oldUserProfileImagePath -NewName $JumpCloudUserName -ErrorAction Stop
       }
       catch
       {
@@ -1647,16 +1666,16 @@ Function Start-Migration
     $admuTracker.renameHomeDirectory.pass = $true
 
     # logging
-    Write-Log -Message:('New User Profile Path: ' + $newuserprofileimagepath + ' New User SID: ' + $NewUserSID)
-    Write-Log -Message:('Old User Profile Path: ' + $olduserprofileimagepath + ' Old User SID: ' + $SelectedUserSID)
+    Write-Log -Message:('New User Profile Path: ' + $newUserProfileImagePath + ' New User SID: ' + $NewUserSID)
+    Write-Log -Message:('Old User Profile Path: ' + $oldUserProfileImagePath + ' Old User SID: ' + $SelectedUserSID)
 
     Write-Log -Message:("NTFS ACLs on domain $windowsDrive\users\ dir")
     #ntfs acls on domain $windowsDrive\users\ dir
     $NewSPN_Name = $env:COMPUTERNAME + '\' + $JumpCloudUserName
-    $Acl = Get-Acl $newuserprofileimagepath
+    $Acl = Get-Acl $newUserProfileImagePath
     $Ar = New-Object system.security.accesscontrol.filesystemaccessrule($NewSPN_Name, "FullControl", "ContainerInherit,ObjectInherit", "None", "Allow")
     $Acl.SetAccessRule($Ar)
-    $Acl | Set-Acl -Path $newuserprofileimagepath
+    $Acl | Set-Acl -Path $newUserProfileImagePath
     #TODO: test and return condition if false
     # $admuTracker.ntfsPermissions = $true
 
@@ -1708,7 +1727,7 @@ Function Start-Migration
 
     # Get UWP apps from selected user
     Write-Log -Message:('Updating UWP Apps for new user')
-    $path = $newuserprofileimagepath + '\AppData\Local\JumpCloudADMU'
+    $path = $newUserProfileImagePath + '\AppData\Local\JumpCloudADMU'
     If (!(test-path $path))
     {
       New-Item -ItemType Directory -Force -Path $path
@@ -1726,10 +1745,16 @@ Function Start-Migration
     if ($appxList.Count -eq 0)
     {
       # Get Common Apps in edge case:
-      $appxList = Get-AppXpackage -AllUsers | Select-Object InstallLocation
+      try{
+        $appxList = Get-AppXpackage -AllUsers | Select-Object InstallLocation
+      }
+      catch{
+        # if the primary trust relationship fails (needed for local conversion)
+        $appxList = Get-AppXpackage | Select-Object InstallLocation
+      }
 
     }
-    $appxList | Export-CSV ($newuserprofileimagepath + '\AppData\Local\JumpCloudADMU\appx_manifest.csv') -Force
+    $appxList | Export-CSV ($newUserProfileImagePath + '\AppData\Local\JumpCloudADMU\appx_manifest.csv') -Force
     # TODO: Test and return non terminating error here if failure
     # $admuTracker.uwpAppXPackages = $true
 
@@ -1758,9 +1783,10 @@ Function Start-Migration
     # TODO: test and return non-terminating error here
 
     #region AutobindUserToJCSystem
-    BindUsernameToJCSystem -JcApiKey $JumpCloudAPIKey -JumpCloudUserName $JumpCloudUserName
+    if ($AutobindJCUser -eq $true) {
+      BindUsernameToJCSystem -JcApiKey $JumpCloudAPIKey -JumpCloudUserName $JumpCloudUserName
+    }
     #endregion AutobindUserToJCSystem
-    # TODO: test if we have the API key?
 
     #region Leave Domain or AzureAD
 
@@ -1777,7 +1803,9 @@ Function Start-Migration
         {
           Write-Log -Message:('Unable to leave domain, JumpCloud agent will not start until resolved') -Level:('Error')
           # TODO: instead of exit, return and note the error in the logs (Non Terminating?)
-          Exit;
+          # Exit;
+          # $admuTracker.leaveDomain.fail = $true
+          # return
         }
       }
       else
@@ -1791,9 +1819,12 @@ Function Start-Migration
         {
           Write-Log -Message:('Unable to leave domain, JumpCloud agent will not start until resolved') -Level:('Error')
           # TODO: instead of exit, return and note the error in the logs (Non Terminating?)
-          Exit;
+          # Exit;
+          # $admuTracker.leaveDomain.fail = $true
+          # return
         }
       }
+      $admuTracker.leaveDomain.pass = $true
     }
 
     # Cleanup Folders Again Before Reboot
@@ -1811,7 +1842,7 @@ Function Start-Migration
     if ($ForceReboot -eq $true)
     {
       Write-Log -Message:('Forcing reboot of the PC now')
-      Restart-Computer -ComputerName $env:COMPUTERNAME -Force
+      Restart-Computer -ComputerName $localComputerName -Force
     }
     #endregion SilentAgentInstall
   }
@@ -1819,99 +1850,102 @@ Function Start-Migration
   {
     $FixedErrors= @();
     # if we caught any errors and need to revert based on admuTracker status, do so here:
-    foreach ($trackedStep in $admuTracker.Keys)
+    if ($admuTracker | % { $_.values.fail -eq $true })
     {
-      if (($admuTracker[$trackedStep].fail -eq $true) -or ($admuTracker[$trackedStep].pass -eq $true))
+      foreach ($trackedStep in $admuTracker.Keys)
       {
-        switch ($trackedStep) {
-          # Case for reverting 'newUserInit' steps
-          'newUserInit' {
-            Write-Log -Message:("Attempting to revert $($trackedStep) steps")
-            try {
-              Remove-LocalUserProfile -username $JumpCloudUserName
-            }
-            catch {
-              Write-Log -Message:("Could not remove the $JumpCloudUserName profile and user account") -Level Error
-            }
-            $FixedErrors += "$trackedStep"
-          }
-          'renameOriginalFiles'
-          {
-            Write-Log -Message:("Attempting to revert $($trackedStep) steps")
-            ### Should we be using Rename-Item here or Move-Item to force overwrite?
-            if (Test-Path "$olduserprofileimagepath\NTUSER_original.DAT" -PathType Leaf)
-            {
-              try
-              {
-                Rename-Item -Path "$olduserprofileimagepath\NTUSER.DAT" -NewName "$olduserprofileimagepath\NTUSER_failedCopy.DAT" -Force -ErrorAction Stop
-                Rename-Item -Path "$olduserprofileimagepath\NTUSER_original.DAT" -NewName "$olduserprofileimagepath\NTUSER.DAT" -Force -ErrorAction Stop
+        if (($admuTracker[$trackedStep].fail -eq $true) -or ($admuTracker[$trackedStep].pass -eq $true))
+        {
+          switch ($trackedStep) {
+            # Case for reverting 'newUserInit' steps
+            'newUserInit' {
+              Write-Log -Message:("Attempting to revert $($trackedStep) steps")
+              try {
+                Remove-LocalUserProfile -username $JumpCloudUserName
               }
-              catch
-              {
-                Write-Log -Message:("Unable to rename file $olduserprofileimagepath\NTUSER_original.DAT") -Level Error
-              }
-            }
-            if (Test-Path "$olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass_original.dat" -PathType Leaf)
-            {
-              try
-              {
-                Rename-Item -Path "$olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass.dat" -NewName "$olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass_failedCopy.dat" -Force -ErrorAction Stop
-                Rename-Item -Path "$olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass_original.dat" -NewName "$olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass.dat" -Force -ErrorAction Stop
-              }
-              catch
-              {
-                Write-Log -Message:("Unable to rename file $olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass_original.dat") -Level Error
+              catch {
+                Write-Log -Message:("Could not remove the $JumpCloudUserName profile and user account") -Level Error
               }
               $FixedErrors += "$trackedStep"
             }
-          }
-          'renameBackupFiles'
-          {
-            Write-Log -Message:("Attempting to revert $($trackedStep) steps")
-            if (Test-Path "$olduserprofileimagepath\NTUSER.DAT.BAK" -PathType Leaf)
+            'renameOriginalFiles'
+            {
+              Write-Log -Message:("Attempting to revert $($trackedStep) steps")
+              ### Should we be using Rename-Item here or Move-Item to force overwrite?
+              if (Test-Path "$oldUserProfileImagePath\NTUSER_original.DAT" -PathType Leaf)
+              {
+                try
+                {
+                  Rename-Item -Path "$oldUserProfileImagePath\NTUSER.DAT" -NewName "$oldUserProfileImagePath\NTUSER_failedCopy.DAT" -Force -ErrorAction Stop
+                  Rename-Item -Path "$oldUserProfileImagePath\NTUSER_original.DAT" -NewName "$oldUserProfileImagePath\NTUSER.DAT" -Force -ErrorAction Stop
+                }
+                catch
+                {
+                  Write-Log -Message:("Unable to rename file $oldUserProfileImagePath\NTUSER_original.DAT") -Level Error
+                }
+              }
+              if (Test-Path "$oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass_original.dat" -PathType Leaf)
+              {
+                try
+                {
+                  Rename-Item -Path "$oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass.dat" -NewName "$oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass_failedCopy.dat" -Force -ErrorAction Stop
+                  Rename-Item -Path "$oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass_original.dat" -NewName "$oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass.dat" -Force -ErrorAction Stop
+                }
+                catch
+                {
+                  Write-Log -Message:("Unable to rename file $oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass_original.dat") -Level Error
+                }
+                $FixedErrors += "$trackedStep"
+              }
+            }
+            'renameBackupFiles'
+            {
+              Write-Log -Message:("Attempting to revert $($trackedStep) steps")
+              if (Test-Path "$oldUserProfileImagePath\NTUSER.DAT.BAK" -PathType Leaf)
+              {
+                try
+                {
+                  Rename-Item -Path "$oldUserProfileImagePath\NTUSER.DAT.BAK" -NewName "$oldUserProfileImagePath\NTUSER.DAT" -Force -ErrorAction Stop
+                }
+                catch
+                {
+                  Write-Log -Message:("Unable to rename file $oldUserProfileImagePath\NTUSER.DAT.BAK") -Level Error
+                }
+              }
+              if (Test-Path "$oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass.dat.bak" -PathType Leaf)
+              {
+                try
+                {
+                  Rename-Item -Path "$oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass.dat.bak" -NewName "$oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass.dat" -Force -ErrorAction Stop
+                }
+                catch
+                {
+                  Write-Log -Message:("Unable to rename file $oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass.dat.bak") -Level Error
+                }
+              }
+              $FixedErrors += "$trackedStep"
+            }
+            'renameHomeDirectory'
             {
               try
               {
-                Rename-Item -Path "$olduserprofileimagepath\NTUSER.DAT.BAK" -NewName "$olduserprofileimagepath\NTUSER.DAT" -Force -ErrorAction Stop
+                Write-Log -Message:("Attempting to revert RenameHomeDirectory steps")
+                if (($userCompare -ne $selectedUserName) -and (test-path -Path $newUserProfileImagePath))
+                {
+                  # Error Action stop to treat as terminating error
+                  Rename-Item -Path ($newUserProfileImagePath) -NewName ($selectedUserName) -ErrorAction Stop
+                }
+                Set-ItemProperty -Path ('HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\' + $SelectedUserSID) -Name 'ProfileImagePath' -Value "$($oldUserProfileImagePath)"
               }
               catch
               {
-                Write-Log -Message:("Unable to rename file $olduserprofileimagepath\NTUSER.DAT.BAK") -Level Error
+                Write-Log -Message:("Unable to restore old user profile path and profile image path.") -Level Error
               }
+              $FixedErrors += "$trackedStep"
             }
-            if (Test-Path "$olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass.dat.bak" -PathType Leaf)
-            {
-              try
-              {
-                Rename-Item -Path "$olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass.dat.bak" -NewName "$olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass.dat" -Force -ErrorAction Stop
-              }
-              catch
-              {
-                Write-Log -Message:("Unable to rename file $olduserprofileimagepath\AppData\Local\Microsoft\Windows\UsrClass.dat.bak") -Level Error
-              }
+            Default {
+              # Write-Log -Message:("default error") -Level Error
             }
-            $FixedErrors += "$trackedStep"
-          }
-          'renameHomeDirectory'
-          {
-            try
-            {
-              Write-Log -Message:("Attempting to revert RenameHomeDirectory steps")
-              if (($userCompare -ne $selectedUserName) -and (test-path -Path $newuserprofileimagepath))
-              {
-                # Error Action stop to treat as terminating error
-                Rename-Item -Path ($newuserprofileimagepath) -NewName ($selectedUserName) -ErrorAction Stop
-              }
-              Set-ItemProperty -Path ('HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\' + $SelectedUserSID) -Name 'ProfileImagePath' -Value "$($olduserprofileimagepath)"
-            }
-            catch
-            {
-              Write-Log -Message:("Unable to restore old user profile path and profile image path.") -Level Error
-            }
-            $FixedErrors += "$trackedStep"
-          }
-          Default {
-            # Write-Log -Message:("default error") -Level Error
           }
         }
       }
