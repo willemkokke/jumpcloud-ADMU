@@ -9,6 +9,12 @@ $Hostname = $env:COMPUTERNAME
 $DiscoveryCSV = 'C:\Windows\Temp\ADMUDiscovery.csv';
 $password = ConvertTo-SecureString "$GHToken" -AsPlainText -Force
 $Cred = New-Object System.Management.Automation.PSCredential ($GHUsername, $password)
+
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+Install-PackageProvider -Name NuGet -Force
+# Install Module PowerShellForGitHub
+Install-Module PowerShellForGitHub -Force
+
 Set-GitHubAuthentication -Credential $cred
 
 $gist = Get-GitHubGist -UserName $GHUsername | Where-Object { $_.description -eq $GHGistDescription }
@@ -43,7 +49,21 @@ foreach ($row in $ImportedCSV) {
     }
 }
 
-#TODO: validate all params are not null
+# Validate parameters are not empty:
+If ( -Not ($SelectedUsername)::IsNullOrEmpty){
+    Write-Host "Could not migrate user, entry not found in CSV for Selected Username"
+    exit
+}
+If ( -Not ($JumpCloudUserName)::IsNullOrEmpty)
+{
+    Write-Host "Could not migrate user, entry not found in CSV for JumpCloud Username"
+    exit
+}
+If ( -Not ($TempPassword)::IsNullOrEmpty)
+{
+    Write-Host "Could not migrate user, entry not found in CSV for TempPassword"
+    exit
+}
 Write-Host "Converting ADMU with the following options:"
 Write-Host "SelectedUsername = $SelectedUsername"
 Write-Host "JumpCloudUserName = $JumpCloudUserName"
@@ -127,12 +147,12 @@ if ($systemKey){
         }
     }
     else {
-        Write-Host "Cound not bind user/ JumpCloudUsername did not exist in JC Directory"
+        Write-Host "Could not bind user/ JumpCloudUsername did not exist in JC Directory"
     }
 }
 else{
     Write-Host "Could not find systemKey, aborting bind step"
 }
 
-# Restart Comptuer to update UI at login screen
+# Restart Computer to update UI at login screen
 Restart-Computer -Force
