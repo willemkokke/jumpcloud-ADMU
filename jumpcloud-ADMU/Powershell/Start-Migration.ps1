@@ -1,4 +1,40 @@
 #region Functions
+function Test-RegistryValueMatch {
+
+  param (
+
+   [parameter(Mandatory=$true)]
+   [ValidateNotNullOrEmpty()]$Path,
+
+   [parameter(Mandatory=$true)]
+   [ValidateNotNullOrEmpty()]$Value,
+
+   [parameter(Mandatory=$true)]
+   [ValidateNotNullOrEmpty()]$stringmatch
+
+  )
+
+$ErrorActionPreference="SilentlyContinue"
+$regvalue = Get-ItemPropertyValue -Path $Path -Name $Value
+$ErrorActionPreference="Continue"
+$out = 'Value For ' + $Value + ' Is ' + $1 + ' On ' + $Path
+
+
+if ([string]::IsNullOrEmpty($regvalue)) {
+  write-host 'KEY DOESNT EXIST OR IS EMPTY'
+  return $false
+}
+else {
+  if ($regvalue -match ($stringmatch)) {
+      Write-Host $out
+      return $true
+  } else {
+      Write-Host $out
+      return $false
+  }
+}
+  }
+
 function BindUsernameToJCSystem
 {
   param
@@ -1382,6 +1418,22 @@ Function Start-Migration
       Write-Log -Message:($localComputerName + ' is currently Domain joined to ' + $DomainName + ' NetBiosName is ' + $netBiosName)
     }
     #endregion Test checks
+
+    # Check User Shell Paths
+
+    $olduserprofileimagepath = Get-ItemPropertyValue -Path ('HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\' + $SelectedUserSID) -Name 'ProfileImagePath'
+
+    #TODO move regload/unload test into begin block from below
+    Set-UserRegistryLoadState -op "UnLoad" -ProfilePath $olduserprofileimagepath -UserSid $SelectedUserSid
+    Set-UserRegistryLoadState -op "Load" -ProfilePath $olduserprofileimagepath -UserSid $SelectedUserSid
+
+    $mountedreg = 'HCU:\' + $SelectedUserSid + '_admu' + '\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders'
+
+    Test-RegValueMatch -Path $mountedreg -Value 'Templates' -stringmatch $olduserprofileimagepath
+
+    Set-UserRegistryLoadState -op "UnLoad" -ProfilePath $olduserprofileimagepath -UserSid $SelectedUserSid
+
+    #endregion Check User Shell Paths
 
   }
   Process
