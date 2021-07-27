@@ -23,7 +23,7 @@ Describe 'Migration Test Scenarios'{
             {
                 write-host "Running: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)"
                 # Invoke-Command -ScriptBlock { Start-Migration -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -ConvertProfile $true} | Should -Not -Throw
-                { Start-Migration -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -ConvertProfile $true -UpdateHomePath $user.UpdateHomePath} | Should -Not -Throw
+                { Start-Migration -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath} | Should -Not -Throw
             }
         }
         It "Test UWP_JCADMU was downloaded & exists"{
@@ -66,7 +66,7 @@ Describe 'Migration Test Scenarios'{
 $JCU = ${ENV:$JcUserName}.Trim([char]0x0022)
 $SU = ${ENV:$SelectedUserName}.Trim([char]0x0022)
 $PW = ${ENV:$TempPassword}.Trim([char]0x0022)
-Start-Migration -JumpCloudUserName $JCU -SelectedUserName $ENV:COMPUTERNAME\$SU -TempPassword $PW -ConvertProfile $true
+Start-Migration -JumpCloudUserName $JCU -SelectedUserName $ENV:COMPUTERNAME\$SU -TempPassword $PW
 '
             $CommandTrigger = 'ADMU'
             $CommandName = 'RemoteADMU'
