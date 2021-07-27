@@ -223,9 +223,8 @@ $Runspace.SessionStateProxy.SetVariable('Sync',$Sync)
 # handle the click event for the "Run" button
 $Sync.Gui.RunButton.add_click({
     # create the extra Powershell session and add the script block to execute
-    $global:Session = [PowerShell]::Create().AddScript({
+    $Session = [PowerShell]::Create().AddScript({
 
-        
         # make the $Error variable available to the parent Powershell session for debugging
         $Sync.Error = $Error
         # to access objects owned by the parent Powershell session a Dispatcher must be used
@@ -250,8 +249,8 @@ $Sync.Gui.RunButton.add_click({
 
     # execute the code in this session
     $Session.Runspace = $Runspace
-    $global:Handle = $Session.BeginInvoke()
-    
+    $Handle = $Session.BeginInvoke()
+
 })
 # check if a command is still running when exiting the GUI
 $Sync.Window.add_closing({

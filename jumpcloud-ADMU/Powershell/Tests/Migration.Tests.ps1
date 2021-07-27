@@ -134,6 +134,7 @@ Start-Migration -JumpCloudUserName $JCU -SelectedUserName $ENV:COMPUTERNAME\$SU 
                     $count += 1
                     start-sleep 5
                 } until ((($CommandResults.DataExitCode) -is [int]) -or ($count -eq 24))
+                # TODO: update test to match 2.0.0 revert functions
                 $CommandResults.DataExitCode | Should -Be 0
             }
 
