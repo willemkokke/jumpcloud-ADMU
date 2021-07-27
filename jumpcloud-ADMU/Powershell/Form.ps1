@@ -1,4 +1,4 @@
-Write-Log 'Loading Jumpcloud ADMU. Please Wait.. Loading ADMU GUI..'
+Write-ToLog 'Loading Jumpcloud ADMU. Please Wait.. Loading ADMU GUI..'
 
 #==============================================================================================
 # XAML Code - Imported from Visual Studio WPF Application
@@ -178,7 +178,7 @@ $xaml.SelectNodes("//*[@Name]") | ForEach-Object { Set-Variable -Name ($_.Name) 
 
 $WmiComputerSystem = Get-WmiObject -Class:('Win32_ComputerSystem')
 Write-progress -Activity 'Jumpcloud ADMU' -Status 'Loading Jumpcloud ADMU. Please Wait.. Checking AzureAD Status..' -PercentComplete 25
-Write-Log 'Loading Jumpcloud ADMU. Please Wait.. Checking AzureAD Status..'
+Write-ToLog 'Loading Jumpcloud ADMU. Please Wait.. Checking AzureAD Status..'
 if ($WmiComputerSystem.PartOfDomain)
 {
     $WmiComputerDomain = Get-WmiObject -Class:('Win32_ntDomain')
@@ -237,9 +237,9 @@ else
 
 $FormResults = [PSCustomObject]@{ }
 Write-Progress -Activity 'Jumpcloud ADMU' -Status 'Loading Jumpcloud ADMU. Please Wait.. Verifying Local Accounts & Group Membership..' -PercentComplete 50
-Write-Log 'Loading Jumpcloud ADMU. Please Wait.. Verifying Local Accounts & Group Membership..'
+Write-ToLog 'Loading Jumpcloud ADMU. Please Wait.. Verifying Local Accounts & Group Membership..'
 Write-Progress -Activity 'Jumpcloud ADMU' -Status 'Loading Jumpcloud ADMU. Please Wait.. Getting C:\ & Local Profile Data..' -PercentComplete 70
-Write-Log 'Loading Jumpcloud ADMU. Please Wait.. Getting C:\ & Local Profile Data..'
+Write-ToLog 'Loading Jumpcloud ADMU. Please Wait.. Getting C:\ & Local Profile Data..'
 # Get Valid SIDs from the Registry and build user object
 $registyProfiles = Get-ChildItem "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList"
 $profileList = @()
@@ -258,7 +258,7 @@ foreach ($listItem in $profileList)
     {
         # Populate Users List
         $users += [PSCustomObject]@{
-            Name              = ConvertSID $listItem.PSChildName
+            Name              = Convert-Sid $listItem.PSChildName
             LocalPath         = $listItem.ProfileImagePath
             SID               = $listItem.PSChildName
             IsLocalAdmin      = $null
@@ -315,11 +315,11 @@ foreach ($user in $users)
 }
 
 Write-Progress -Activity 'Jumpcloud ADMU' -Status 'Loading Jumpcloud ADMU. Please Wait.. Building Profile Group Box Query..' -PercentComplete 85
-Write-Log 'Loading Jumpcloud ADMU. Please Wait.. Building Profile Group Box Query..'
+Write-ToLog 'Loading Jumpcloud ADMU. Please Wait.. Building Profile Group Box Query..'
 
 $Profiles = $users | Select-Object SID, RoamingConfigured, Loaded, IsLocalAdmin, LocalPath, LocalProfileSize, LastLogin, @{Name = "UserName"; EXPRESSION = { $_.Name } }
 Write-Progress -Activity 'Jumpcloud ADMU' -Status 'Loading Jumpcloud ADMU. Please Wait.. Done!' -PercentComplete 100
-Write-Log 'Loading Jumpcloud ADMU. Please Wait.. Done!'
+Write-ToLog 'Loading Jumpcloud ADMU. Please Wait.. Done!'
 
 #load UI Labels
 
