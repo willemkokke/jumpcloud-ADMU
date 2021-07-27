@@ -15,9 +15,8 @@ Starts the JumpCloud Active Directory Migration process.
 ### cmd
 ```
 Start-Migration -JumpCloudUserName <String> -SelectedUserName <String> -TempPassword <String>
- [-AcceptEULA <Boolean>] [-LeaveDomain <Boolean>] [-ForceReboot <Boolean>] [-ConvertProfile <Boolean>]
- [-UpdateHomePath <Boolean>] [-CreateRestore <Boolean>] [-AzureADProfile <Boolean>] [-Customxml <Boolean>]
- [-InstallJCAgent <Boolean>] [-JumpCloudConnectKey <String>] [<CommonParameters>]
+ [-LeaveDomain <Boolean>] [-ForceReboot <Boolean>] [-AzureADProfile <Boolean>] [-InstallJCAgent <Boolean>]
+ [-AutobindJCUser <Boolean>] [-JumpCloudConnectKey <String>] [-JumpCloudAPIKey <String>] [<CommonParameters>] [-UpdateHomePath <Boolean>]
 ```
 
 ### form
@@ -55,39 +54,8 @@ This example would run the `Start-Migration` function on a domain user `DOMAIN\j
 
 ## PARAMETERS
 
-### -AcceptEULA
-A boolean $true/$false value for accepting Microsoft's Assessment and Deployment Kit (ADK) EULA. If $false the following log entry would be outputted.
-LOG: 'Installing Windows ADK at C:\Program Files (x86)\Windows Kits\10\ please complete GUI prompts & accept EULA within 5mins or it will exit.'
-
-```yaml
-Type: System.Boolean
-Parameter Sets: cmd
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
 ### -AzureADProfile
 A boolean $true/$false value to allow the conversion of AzureAD profile. This will set the domain account used in the migration to `AZUREAD\`.
-
-```yaml
-Type: System.Boolean
-Parameter Sets: cmd
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -Customxml
-A boolean $true/$false value to allow the use of a custom.xml in the user state migration process. If $true USMT will look for `C:\Windows\Temp\Custom.xml` for additional migration steps.
 
 ```yaml
 Type: System.Boolean
@@ -206,21 +174,6 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -ConvertProfile
-The Convert User functionality from v1.5.0 can be invoked with the ConvertProfile parameter. This functionality will convert the SelectedUserName user or SID to a local user with the account name specified by the JumpCloudUserName parameter.
-
-```yaml
-Type: System.Boolean
-Parameter Sets: cmd
-Aliases:
-
-Required: False
-Position: Named
-Default value: None
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
 ### -SelectedUserName
 A string value for the DomainUserName that is used in the migration script. This value is verified to make sure the account exists on the system. If the Domain Account does not exist, the script will error and not continue. Either pass a username using the "Domain\username" syntax or a domain user SID.
 
@@ -236,11 +189,26 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -CreateRestore
-If set, the ADMU will attempt to invoke Checkpoint-Computer and make a system restore checkpoint before any migration actions are taken. By default in Windows 10, only one system restore point can be set per day.
+### -AutobindJCUser
+{{ Fill AutobindJCUser Description }}
 
 ```yaml
 Type: System.Boolean
+Parameter Sets: cmd
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -JumpCloudAPIKey
+{{ Fill JumpCloudAPIKey Description }}
+
+```yaml
+Type: System.String
 Parameter Sets: cmd
 Aliases:
 

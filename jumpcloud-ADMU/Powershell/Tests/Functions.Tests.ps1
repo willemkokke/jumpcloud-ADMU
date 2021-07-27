@@ -45,7 +45,6 @@ Describe 'Functions' {
             }
                 Write-ToLog -Message:('Log is created - test.') -Level:('Info')
                 $log='C:\windows\Temp\jcAdmu.log'
-
                 $log | Should -exist
         }
 

@@ -8,118 +8,154 @@ Write-ToLog 'Loading Jumpcloud ADMU. Please Wait.. Loading ADMU GUI..'
 <Window
      xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-     Title="JumpCloud ADMU 1.6.6" Height="677.234" Width="1053.775" WindowStartupLocation="CenterScreen" ResizeMode="NoResize" ForceCursor="True">
-    <Grid Margin="0,0,-0.2,0.168" RenderTransformOrigin="0.531,0.272">
-        <TabControl Name="tc_main" HorizontalAlignment="Left" Height="614" VerticalAlignment="Top" Width="1012">
-            <TabItem Name="tab_jcadmu" Header="JumpCloud ADMU">
-                <Grid Background="#FFE5E5E5">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="87*"/>
-                        <ColumnDefinition Width="919*"/>
-                    </Grid.ColumnDefinitions>
-                    <GroupBox Header="Migration Steps" HorizontalAlignment="Left" Height="98" Margin="10,0,0,0" VerticalAlignment="Top" Width="993" FontWeight="Bold" Grid.ColumnSpan="2">
-                        <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" Height="70" Width="561" Margin="0,10,0,-5" FontWeight="Normal"><Run Text="1. Select the domain or AzureAD account that you want to migrate to a local account from the list below."/><LineBreak/><Run Text="2. Enter a local account username and password to migrate the selected account to. "/><LineBreak/><Run Text="3. Enter your organizations JumpCloud system connect key."/><LineBreak/><Run Text="4. Click the "/><Run Text="Migrate Profile"/><Run Text=" button."/><LineBreak/><Run/></TextBlock>
-                    </GroupBox>
-                    <ListView Name="lvProfileList" HorizontalAlignment="Left" Height="226" Margin="10,228,0,0" VerticalAlignment="Top" Width="993" Grid.ColumnSpan="2">
-                        <ListView.View>
-                            <GridView>
-                                <GridViewColumn Header="System Accounts" DisplayMemberBinding="{Binding UserName}" Width="180"/>
-                                <GridViewColumn Header="Last Login" DisplayMemberBinding="{Binding LastLogin}" Width="135"/>
-                                <GridViewColumn Header="Currently Active" DisplayMemberBinding="{Binding Loaded}" Width="105" />
-                                <GridViewColumn Header="Domain Roaming" DisplayMemberBinding="{Binding RoamingConfigured}" Width="105"/>
-                                <GridViewColumn Header="Local Admin" DisplayMemberBinding="{Binding IsLocalAdmin}" Width="105"/>
-                                <GridViewColumn Header="Local Path" DisplayMemberBinding="{Binding LocalPath}" Width="140"/>
-                                <GridViewColumn Header="Local Profile Size" DisplayMemberBinding="{Binding LocalProfileSize}" Width="105"/>
-                            </GridView>
-                        </ListView.View>
-                    </ListView>
-                    <Button Name="bDeleteProfile" Content="Select Profile" HorizontalAlignment="Left" Margin="788,557,0,0" VerticalAlignment="Top" Width="121" Height="23" IsEnabled="False" Grid.Column="1">
-                        <Button.Effect>
-                            <DropShadowEffect/>
-                        </Button.Effect>
-                    </Button>
-                    <GroupBox Header="System Information" HorizontalAlignment="Left" Height="120" Margin="10,103,0,0" VerticalAlignment="Top" Width="341" FontWeight="Bold" Grid.ColumnSpan="2">
-                        <Grid HorizontalAlignment="Left" Height="90" VerticalAlignment="Top" Width="321" Margin="10,0,-2,0">
-                            <Label Content="Local Computer Name:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" FontWeight="Normal"/>
-                            <Label Content="USMT Detected:" HorizontalAlignment="Left" Margin="10,31,0,0" VerticalAlignment="Top" FontWeight="Normal"/>
-                            <Label Name="lbComputerName" Content="" HorizontalAlignment="Left" Margin="191,10,0,0" VerticalAlignment="Top" Width="120" FontWeight="Normal"/>
-                            <Label Name="lbUSMTStatus" Content="" HorizontalAlignment="Left" Margin="191,31,0,0" VerticalAlignment="Top" Width="120" FontWeight="Normal"/>
-                            <Label Content="C:\ Free Disk Space:" HorizontalAlignment="Left" Margin="10,57,0,0" VerticalAlignment="Top" FontWeight="Normal"/>
-                            <Label Name="lbcfreespace" Content="" HorizontalAlignment="Left" Margin="191,57,0,0" VerticalAlignment="Top" Width="120" FontWeight="Normal"/>
-                        </Grid>
-                    </GroupBox>
-                    <GroupBox Header="Account Migration Information" HorizontalAlignment="Left" Height="92" Margin="445,459,0,0" VerticalAlignment="Top" Width="471" FontWeight="Bold" Grid.Column="1">
-                        <Grid HorizontalAlignment="Left" Height="66.859" Margin="1.212,2.564,0,0" VerticalAlignment="Top" Width="454.842">
-                            <Label Content="Local Account Username :" HorizontalAlignment="Left" Margin="7.088,8.287,0,0" VerticalAlignment="Top" FontWeight="Normal"/>
-                            <Label Content="Local Account Password :" HorizontalAlignment="Left" Margin="7.088,36.287,0,0" VerticalAlignment="Top" FontWeight="Normal"/>
-                            <TextBox Name="tbJumpCloudUserName" HorizontalAlignment="Left" Height="23" Margin="151.11,10.287,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="301.026" Text="Username should match JumpCloud username" Background="#FFC6CBCF" FontWeight="Bold" />
-                            <TextBox Name="tbTempPassword" HorizontalAlignment="Left" Height="23" Margin="151.11,39.287,0,0" TextWrapping="Wrap" Text="Temp123!Temp123!" VerticalAlignment="Top" Width="301.026" FontWeight="Normal"/>
-                        </Grid>
-                    </GroupBox>
-                    <GroupBox Header="System Migration Options" HorizontalAlignment="Left" Height="121" Margin="10,459,0,0" VerticalAlignment="Top" Width="517" FontWeight="Bold" Grid.ColumnSpan="2">
-                        <Grid HorizontalAlignment="Left" Height="93" Margin="2,0,0,0" VerticalAlignment="Center" Width="505">
-                            <Label Name="lbMoreInfo" Content="More Info" HorizontalAlignment="Left" Margin="91.649,38,0,-0.876" VerticalAlignment="Top" Width="65.381" FontSize="11" FontWeight="Bold" FontStyle="Italic" Foreground="#FF005DFF"/>
-                            <CheckBox Name="cb_accepteula" Content="Accept EULA" HorizontalAlignment="Left" Margin="3.649,44.326,0,0" VerticalAlignment="Top" FontWeight="Normal" IsChecked="True"/>
-                            <Label Content="JumpCloud Connect Key :" HorizontalAlignment="Left" Margin="3.649,7.999,0,0" VerticalAlignment="Top" AutomationProperties.HelpText="https://console.jumpcloud.com/#/systems/new" ToolTip="https://console.jumpcloud.com/#/systems/new" FontWeight="Normal"/>
-                            <TextBox Name="tbJumpCloudConnectKey" HorizontalAlignment="Left" Height="23" Margin="148.673,10,0,0" TextWrapping="Wrap" Text="Enter JumpCloud Connect Key" VerticalAlignment="Top" Width="301.026" Background="#FFC6CBCF" FontWeight="Bold" IsEnabled="False"/>
-                            <CheckBox Name="cb_installjcagent" Content="Install JCAgent" HorizontalAlignment="Left" Margin="155.699,44.326,0,0" VerticalAlignment="Top" FontWeight="Normal" IsChecked="False"/>
-                            <CheckBox Name="cb_leavedomain" Content="Leave Domain" HorizontalAlignment="Left" Margin="258.699,44.326,0,0" VerticalAlignment="Top" FontWeight="Normal" IsChecked="False"/>
-                            <CheckBox Name="cb_forcereboot" Content="Force Reboot" HorizontalAlignment="Left" Margin="391,68,0,0" VerticalAlignment="Top" FontWeight="Normal" IsChecked="False"/>
-                            <CheckBox Name="cb_custom_xml" Content="Use USMT Custom.XML" HorizontalAlignment="Left" Margin="4,68,0,0" VerticalAlignment="Top" FontWeight="Normal"/>
-                            <CheckBox Name="cb_convertprofile" Content="Convert Profile" HorizontalAlignment="Left" Margin="156,68,0,0" VerticalAlignment="Top" FontWeight="Normal" IsChecked="true"/>
-                            <CheckBox Name="cb_createrestore" Content="Create Restore Point" HorizontalAlignment="Left" Margin="258,68,0,0" VerticalAlignment="Top" FontWeight="Normal" IsChecked="False"/>
-                            <CheckBox Name="cb_updatehomepath" Content="Update Home Path" HorizontalAlignment="Left" Margin="359,44,0,0" VerticalAlignment="Top" FontWeight="Normal" IsChecked="False"/>
-                        </Grid>
-                    </GroupBox>
-                    <GroupBox Header="Domain Information" HorizontalAlignment="Left" Height="120" Margin="269,103,0,0" VerticalAlignment="Top" Width="321" FontWeight="Bold" Grid.Column="1">
-                        <Grid HorizontalAlignment="Left" Height="95" Margin="10,0,0,0" VerticalAlignment="Top" Width="297">
-                            <Label Content="Domain Name:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" FontWeight="Normal"/>
-                            <Label Name="lbDomainName" Content="" Margin="167,11,10,59" Foreground="Black" FontWeight="Normal"/>
-                            <Label Content="Secure Channel Healthy:" HorizontalAlignment="Left" Margin="10,62,0,0" VerticalAlignment="Top" FontWeight="Normal"/>
-                            <Label Name="lbsecurechannel" Content="" HorizontalAlignment="Left" Margin="167,62,0,0" VerticalAlignment="Top" Width="120" FontWeight="Normal"/>
-                            <Label Content="NetBios Name:" HorizontalAlignment="Left" Margin="10,36,0,0" VerticalAlignment="Top" FontWeight="Normal"/>
-                            <Label Name="lbNetBios" Content="" Margin="167,36,10,33" Foreground="Black" FontWeight="Normal"/>
-                        </Grid>
-                    </GroupBox>
-                    <GroupBox Header="AzureAD Information" HorizontalAlignment="Left" Height="120" Margin="595,103,0,0" VerticalAlignment="Top" Width="321" FontWeight="Bold" Grid.Column="1">
-                        <Grid HorizontalAlignment="Left" Height="90" Margin="10,0,0,0" VerticalAlignment="Top" Width="297">
-                            <Label Content="AzureAD Joined:" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top" FontWeight="Normal"/>
-                            <Label Name="lbAzureAD_Joined" Content="" Margin="168,10,10,54" Foreground="Black" FontWeight="Normal"/>
-                            <Label Content="Workplace Joined:" HorizontalAlignment="Left" Margin="10,36,0,0" VerticalAlignment="Top" FontWeight="Normal"/>
-                            <Label Name="lbWorkplace_Joined" Content="" Margin="169,36,10,28" Foreground="Black" FontWeight="Normal"/>
-                            <Label Content="Tenant Name:" HorizontalAlignment="Left" Margin="10,62,0,0" VerticalAlignment="Top" FontWeight="Normal"/>
-                            <Label Name="lbTenantName" Content="" Margin="168,62,10,2" Foreground="Black" FontWeight="Normal"/>
-                        </Grid>
-                    </GroupBox>
-                </Grid>
-            </TabItem>
-            <TabItem Name="tab_usmtcustomxml" Header="USMT Custom.XML" IsEnabled="False">
-                <Grid Background="#FFE5E5E5">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="89*"/>
-                        <ColumnDefinition Width="917*"/>
-                    </Grid.ColumnDefinitions>
-                    <TextBox Name="tb_customxml" HorizontalAlignment="Left" Height="370" Margin="10,103,0,0" AcceptsReturn="True" VerticalScrollBarVisibility="Visible" TextWrapping="WrapWithOverflow" VerticalAlignment="Top" Width="986" Text="test" Grid.ColumnSpan="2" />
-                    <TextBox Name="tb_xmlerror" HorizontalAlignment="Left" Height="74" Margin="10,478,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="986" Grid.ColumnSpan="2" BorderBrush="Black" IsEnabled="False"/>
-                    <Label Name="lbMoreInfo_xml" Content="More Info On Customizing USMT XML" HorizontalAlignment="Left" Margin="358,48,0,0" VerticalAlignment="Top" Width="206" FontSize="11" FontWeight="Bold" FontStyle="Italic" Foreground="#FF005DFF" Grid.Column="1"/>
-                    <GroupBox Header="USMT Custom.XML" HorizontalAlignment="Left" Height="98" Margin="10,0,0,0" VerticalAlignment="Top" Width="412" FontWeight="Bold" Grid.ColumnSpan="2">
-                        <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" Height="70" Width="429" Margin="0,10,0,-5" FontWeight="Normal"><Run Text="1. Modify XML to include and exclude as required."/><LineBreak/><Run Text="2. Click 'Verify XML' button to validate the xml. "/><LineBreak/><Run Text="3. If not valid, view errors below and correct, then verify again."/><LineBreak/><Run Text="4. Click OK to return to Jumpcloud ADMU and use valid XML."/><Run/></TextBlock>
-                    </GroupBox>
-                    <Button Name="btn_custom_ok" Content="OK" HorizontalAlignment="Left" Margin="654,559,0,0" VerticalAlignment="Top" Width="121" Height="23" IsEnabled="False" Grid.Column="1">
-                        <Button.Effect>
-                            <DropShadowEffect/>
-                        </Button.Effect>
-                    </Button>
-                    <Button Name="btn_custom_cancel" Content="CANCEL" HorizontalAlignment="Left" Margin="786,559,0,0" VerticalAlignment="Top" Width="121" Height="23" IsEnabled="True" Grid.Column="1">
-                        <Button.Effect>
-                            <DropShadowEffect/>
-                        </Button.Effect>
-                    </Button>
-                </Grid>
-            </TabItem>
-        </TabControl>
-    </Grid>
-</Window>
+     Title="JumpCloud ADMU 2.0.0" Height="519" Width="919" WindowStartupLocation="CenterScreen" ResizeMode="NoResize" ForceCursor="True" WindowStyle="None" Background="White">
+     <Grid Margin="0,0,0,109">
+     <Grid.RowDefinitions>
+         <RowDefinition Height="25"/>
+         <RowDefinition/>
+     </Grid.RowDefinitions>
+
+     <Grid.ColumnDefinitions>
+         <ColumnDefinition/>
+         <ColumnDefinition/>
+     </Grid.ColumnDefinitions>
+
+     <StackPanel Grid.Row="1">
+         <StackPanel Orientation="Horizontal">
+             <Image Width="352" Height="92"
+                    Source="https://jumpcloud.com/wp-content/themes/jumpcloud/assets/images/jumpcloud-press-kit/logos/01-combination-mark-color.png"/>
+         </StackPanel>
+
+     </StackPanel>
+
+     <Grid Background="#0F0F2D" 
+           Grid.ColumnSpan="2">
+
+         <Grid.ColumnDefinitions>
+             <ColumnDefinition/>
+             <ColumnDefinition/>
+             <ColumnDefinition/>
+             <ColumnDefinition/>
+
+
+         </Grid.ColumnDefinitions>
+
+         <TextBlock Name="tbjcconsole"
+                    Text="JumpCloud Console"
+                    Foreground="White"
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    />
+
+         <TextBlock Name="tbjcadmugh"
+                    Text="JumpCloud AMDU Github"
+                    Foreground="White"
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    />
+         <TextBlock Name="tbjcsupport"
+                    Text="JumpCloud Support"
+                    Foreground="White"
+                    Grid.Column="2"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    />
+         <TextBlock Name="tbjcadmulog"
+                    Text="JumpCloud ADMU Log"
+                    Foreground="White"
+                    Grid.Column="5"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    />
+
+         <ListView Name="lvProfileList" Grid.ColumnSpan="8" Margin="7,180,9,-311">
+             <ListView.View>
+                 <GridView>
+                     <GridViewColumn Header="System Accounts" DisplayMemberBinding="{Binding UserName}" Width="180"/>
+                     <GridViewColumn Header="Last Login" DisplayMemberBinding="{Binding LastLogin}" Width="135"/>
+                     <GridViewColumn Header="Currently Active" DisplayMemberBinding="{Binding Loaded}" Width="105" />
+                     <GridViewColumn Header="Domain Roaming" DisplayMemberBinding="{Binding RoamingConfigured}" Width="105"/>
+                     <GridViewColumn Header="Local Admin" DisplayMemberBinding="{Binding IsLocalAdmin}" Width="105"/>
+                     <GridViewColumn Header="Local Path" DisplayMemberBinding="{Binding LocalPath}" Width="140"/>
+                     <GridViewColumn Header="Local Profile Size" DisplayMemberBinding="{Binding LocalProfileSize}" Width="105"/>
+                 </GridView>
+             </ListView.View>
+         </ListView>
+
+         <GroupBox Header="System Migration Options"  Height="155" Width="430" FontWeight="Bold" Grid.ColumnSpan="4" HorizontalAlignment="Left" Margin="7,351,0,-481">
+             <Grid HorizontalAlignment="Left" Height="137" Margin="2,0,0,0" VerticalAlignment="Center" Width="423">
+                 <Label Content="JumpCloud Connect Key :" HorizontalAlignment="Left" Margin="3,8,0,0" VerticalAlignment="Top" AutomationProperties.HelpText="https://console.jumpcloud.com/#/systems/new" ToolTip="https://console.jumpcloud.com/#/systems/new" FontWeight="Normal"/>
+                 <TextBox Name="tbJumpCloudConnectKey" HorizontalAlignment="Left" Height="23" Margin="149,10,0,0" TextWrapping="Wrap" Text="Enter JumpCloud Connect Key" VerticalAlignment="Top" Width="263" Background="#FFC6CBCF" FontWeight="Bold" IsEnabled="False"/>
+                 <CheckBox Name="cb_forcereboot" Content="Force Reboot" HorizontalAlignment="Left" Margin="10,88,0,0" VerticalAlignment="Top" FontWeight="Normal" IsChecked="False"/>
+                 <CheckBox Name="cb_installjcagent" Content="Install JCAgent" HorizontalAlignment="Left" Margin="123,88,0,0" VerticalAlignment="Top" FontWeight="Normal" IsChecked="False"/>
+                 <CheckBox Name="cb_verbose" Content="Verbose" HorizontalAlignment="Left" Margin="249,88,0,0" VerticalAlignment="Top" FontWeight="Normal" IsChecked="False"/>
+                 <CheckBox Name="cb_leavedomain" Content="Leave Domain" HorizontalAlignment="Left" Margin="10,111,0,0" VerticalAlignment="Top" FontWeight="Normal" IsChecked="False"/>
+                 <CheckBox Name="cb_autobindjcuser" Content="Autobind JC User" HorizontalAlignment="Left" Margin="123,111,0,0" VerticalAlignment="Top" FontWeight="Normal" IsChecked="False"/>
+                 <Label Content="JumpCloud API Key :" HorizontalAlignment="Left" Margin="4,37,0,0" VerticalAlignment="Top" AutomationProperties.HelpText="https://console.jumpcloud.com/" ToolTip="https://console.jumpcloud.com/" FontWeight="Normal"/>
+                 <TextBox Name="tbJumpCloudAPIKey" HorizontalAlignment="Left" Height="23" Margin="149,39,0,0" TextWrapping="Wrap" Text="Enter JumpCloud API Key" VerticalAlignment="Top" Width="263" Background="#FFC6CBCF" FontWeight="Bold" IsEnabled="False"/>
+             </Grid>
+         </GroupBox>
+
+         <GroupBox Header="Account Migration Information" Height="92" FontWeight="Bold" Grid.ColumnSpan="3" Margin="228,351,9,-418" Grid.Column="1">
+             <Grid HorizontalAlignment="Left" Height="66.859" Margin="1.212,2.564,0,0" VerticalAlignment="Top" Width="454.842">
+                 <Grid.ColumnDefinitions>
+                     <ColumnDefinition Width="23*"/>
+                     <ColumnDefinition Width="432*"/>
+                 </Grid.ColumnDefinitions>
+                 <Label Content="Local Account Username :" HorizontalAlignment="Left" Margin="0,8,0,0" VerticalAlignment="Top" FontWeight="Normal" Grid.ColumnSpan="2"/>
+                 <Label Content="Local Account Password :" HorizontalAlignment="Left" Margin="0,36,0,0" VerticalAlignment="Top" FontWeight="Normal" Grid.ColumnSpan="2"/>
+                 <TextBox Name="tbJumpCloudUserName" HorizontalAlignment="Left" Height="23" Margin="127,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="282" Text="Username should match JumpCloud username" Background="#FFC6CBCF" FontWeight="Bold" Grid.Column="1" />
+                 <TextBox Name="tbTempPassword" HorizontalAlignment="Left" Height="23" Margin="128,39,0,0" TextWrapping="Wrap" Text="Temp123!Temp123!" VerticalAlignment="Top" Width="200" FontWeight="Normal" Grid.Column="1"/>
+             </Grid>
+         </GroupBox>
+
+         <Button Name="bDeleteProfile" Content="Select Profile" Height="23" IsEnabled="False" Grid.ColumnSpan="2" Grid.Column="6" Margin="96,463,9,-461">
+             <Button.Effect>
+                 <DropShadowEffect/>
+             </Button.Effect>
+         </Button>
+
+         <GroupBox Header="System Information" Margin="110,40,9,-140" Width="570" FontWeight="Bold" Grid.Column="1" Grid.ColumnSpan="3">
+
+             <Grid>
+                 <Grid.RowDefinitions>
+                     <RowDefinition Height="25"/>
+                     <RowDefinition Height="25"/>
+                     <RowDefinition Height="25"/>
+                     <RowDefinition Height="25"/>
+                 </Grid.RowDefinitions>
+
+                 <Grid.ColumnDefinitions>
+                     <ColumnDefinition/>
+                     <ColumnDefinition/>
+                     <ColumnDefinition/>
+                     <ColumnDefinition/>
+                 </Grid.ColumnDefinitions>
+
+                 <Label Content="Computer Name:" FontWeight="Normal" Grid.Column="0" Grid.Row="0"/>
+                 <Label Content="Domain Name:" FontWeight="Normal" Grid.Column="0" Grid.Row="1"/>
+                 <Label Content="NetBios Name:" FontWeight="Normal" Grid.Column="0" Grid.Row="2"/>
+                 <Label Content="Secure Channel Healthy:" FontWeight="Normal" Grid.Column="0" Grid.Row="3"/>
+                 <Label Name="lbComputerName" Content="" FontWeight="Normal" Grid.Column="1" Grid.Row="0"/>
+                 <Label Name="lbDomainName" Content="" FontWeight="Normal" Grid.Column="1" Grid.Row="1"/>
+                 <Label Name="lbNetBios" Content="" FontWeight="Normal" Grid.Column="1" Grid.Row="2"/>
+                 <Label Name="lbsecurechannel" Content="" FontWeight="Normal" Grid.Column="1" Grid.Row="3"/>
+
+                 <Label Content="AzureAD Joined:" FontWeight="Normal" Grid.Column="2" Grid.Row="0"/>
+                 <Label Content="Workplace Joined:" FontWeight="Normal" Grid.Column="2" Grid.Row="1"/>
+                 <Label Content="Azure Tenant Name:" FontWeight="Normal" Grid.Column="2" Grid.Row="2"/>
+                 <Label Name="lbAzureAD_Joined" Content="" FontWeight="Normal" Grid.Column="3" Grid.Row="0"/>
+                 <Label Name="lbWorkplace_Joined" Content="" FontWeight="Normal" Grid.Column="3" Grid.Row="1"/>
+                 <Label Name="lbTenantName" Content="" FontWeight="Normal" Grid.Column="3" Grid.Row="2"/>
+
+             </Grid>
+         </GroupBox>
+     </Grid>
+     <Button Name="btn_close" Content="X" Grid.Column="1" HorizontalAlignment="Left" Margin="436,0,0,0" VerticalAlignment="Center" Width="24" Height="25"/>
+ </Grid>
+       </Window>
 '@
 
 # Read XAML
@@ -140,219 +176,155 @@ $xaml.SelectNodes("//*[@Name]") | ForEach-Object { Set-Variable -Name ($_.Name) 
 
 # Define misc static variables
 
-        #USMT Path
-        $UserStateMigrationToolx64Path = 'C:\Program Files (x86)\Windows Kits\10\Assessment and Deployment Kit\User State Migration Tool\'
-        $UserStateMigrationToolx86Path = 'C:\Program Files\Windows Kits\10\Assessment and Deployment Kit\User State Migration Tool\'
+$WmiComputerSystem = Get-WmiObject -Class:('Win32_ComputerSystem')
+Write-progress -Activity 'Jumpcloud ADMU' -Status 'Loading Jumpcloud ADMU. Please Wait.. Checking AzureAD Status..' -PercentComplete 25
+Write-Log 'Loading Jumpcloud ADMU. Please Wait.. Checking AzureAD Status..'
+if ($WmiComputerSystem.PartOfDomain)
+{
+    $WmiComputerDomain = Get-WmiObject -Class:('Win32_ntDomain')
+    $securechannelstatus = Test-ComputerSecureChannel
 
-        Switch ([System.IntPtr]::Size)
+    $nbtstat = nbtstat -n
+    foreach ($line in $nbtStat)
+    {
+        if ($line -match '^\s*([^<\s]+)\s*<00>\s*GROUP')
         {
-        8 { $UserStateMigrationToolx64Path }
-        4 { $UserStateMigrationToolx86Path }
-        Default { Write-ToLog -Message:('Unknown OSArchitecture') -Level:('Error') }
+            $NetBiosName = $matches[1]
         }
+    }
 
-        $WmiComputerSystem = Get-WmiObject -Class:('Win32_ComputerSystem')
-        Write-ToLog 'Loading Jumpcloud ADMU. Please Wait.. Checking AzureAD Status..'
-        if ($WmiComputerSystem.PartOfDomain) {
-            $WmiComputerDomain = Get-WmiObject -Class:('Win32_ntDomain')
-            $securechannelstatus = Test-ComputerSecureChannel
+    if ([System.String]::IsNullOrEmpty($WmiComputerDomain[0].DnsForestName) -and $securechannelstatus -eq $false)
+    {
+        $DomainName = 'Fix Secure Channel'
+    }
+    else
+    {
+        $DomainName = [string]$WmiComputerDomain.DnsForestName
+    }
+    $NetBiosName = [string]$NetBiosName
+}
+elseif ($WmiComputerSystem.PartOfDomain -eq $false)
+{
+    $DomainName = 'N/A'
+    $NetBiosName = 'N/A'
+    $securechannelstatus = 'N/A'
+}
+if ((Get-CimInstance Win32_OperatingSystem).Version -match '10')
+{
+    $AzureADInfo = dsregcmd.exe /status
+    foreach ($line in $AzureADInfo)
+    {
+        if ($line -match "AzureADJoined : ")
+        {
+            $AzureADStatus = ($line.trimstart('AzureADJoined : '))
+        }
+        if ($line -match "WorkplaceJoined : ")
+        {
+            $Workplace_join = ($line.trimstart('WorkplaceJoined : '))
+        }
+        if ($line -match "TenantName : ")
+        {
+            $TenantName = ($line.trimstart('WorkplaceTenantName : '))
+        }
+    }
+}
+else
+{
+    $AzureADStatus = 'N/A'
+    $Workplace_join = 'N/A'
+    $TenantName = 'N/A'
+}
 
-            $nbtstat = nbtstat -n
-            foreach ($line in $nbtStat)
+$FormResults = [PSCustomObject]@{ }
+Write-Progress -Activity 'Jumpcloud ADMU' -Status 'Loading Jumpcloud ADMU. Please Wait.. Verifying Local Accounts & Group Membership..' -PercentComplete 50
+Write-Log 'Loading Jumpcloud ADMU. Please Wait.. Verifying Local Accounts & Group Membership..'
+Write-Progress -Activity 'Jumpcloud ADMU' -Status 'Loading Jumpcloud ADMU. Please Wait.. Getting C:\ & Local Profile Data..' -PercentComplete 70
+Write-Log 'Loading Jumpcloud ADMU. Please Wait.. Getting C:\ & Local Profile Data..'
+# Get Valid SIDs from the Registry and build user object
+$registyProfiles = Get-ChildItem "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList"
+$profileList = @()
+foreach ($profile in $registyProfiles)
+{
+    $profileList += Get-ItemProperty -Path $profile.PSPath | Select-Object PSChildName, ProfileImagePath
+}
+# List to store users
+$users = @()
+foreach ($listItem in $profileList)
+{
+    $sidPattern = "^S-\d-\d+-(\d+-){1,14}\d+$"
+    $isValidFormat = [regex]::IsMatch($($listItem.PSChildName), $sidPattern);
+    # Get Valid SIDs
+    if ($isValidFormat)
+    {
+        # Populate Users List
+        $users += [PSCustomObject]@{
+            Name              = Convert-Sid $listItem.PSChildName
+            LocalPath         = $listItem.ProfileImagePath
+            SID               = $listItem.PSChildName
+            IsLocalAdmin      = $null
+            LocalProfileSize  = $null
+            Loaded            = $null
+            RoamingConfigured = $null
+            LastLogin         = $null
+        }
+    }
+}
+# Get Win32 Profiles to merge data with valid SIDs
+$win32UserProfiles = Get-WmiObject -Class:('Win32_UserProfile') -Property * | Where-Object { $_.Special -eq $false }
+$date_format = "yyyy-MM-dd HH:mm"
+foreach ($user in $users)
+{
+    # Get Data from Win32Profile
+    foreach ($win32user in $win32UserProfiles)
+    {
+        if ($($user.SID) -eq $($win32user.SID))
+        {
+            $user.RoamingConfigured = $win32user.RoamingConfigured
+            $user.Loaded = $win32user.Loaded
+            if ([string]::IsNullOrEmpty($($win32user.LastUseTime)))
             {
-                if ($line -match '^\s*([^<\s]+)\s*<00>\s*GROUP')
-                {
-                    $NetBiosName = $matches[1]
-                }
+                $user.LastLogin = "N/A"
             }
-
-            if([System.String]::IsNullOrEmpty($WmiComputerDomain[0].DnsForestName) -and $securechannelstatus -eq $false)
+            else
             {
-                $DomainName = 'Fix Secure Channel'
-            } else {
-                $DomainName = [string]$WmiComputerDomain.DnsForestName
-            }
-                $NetBiosName = [string]$NetBiosName
-        }
-        elseif ($WmiComputerSystem.PartOfDomain -eq $false) {
-            $DomainName = 'N/A'
-            $NetBiosName = 'N/A'
-            $securechannelstatus = 'N/A'
-        }
-        if ((Get-CimInstance Win32_OperatingSystem).Version -match '10') {
-            $AzureADInfo = dsregcmd.exe /status
-            foreach ($line in $AzureADInfo) {
-                if ($line -match "AzureADJoined : ") {
-                    $AzureADStatus = ($line.trimstart('AzureADJoined : '))
-                }
-                if ($line -match "WorkplaceJoined : ") {
-                    $Workplace_join = ($line.trimstart('WorkplaceJoined : '))
-                }
-                if ($line -match "TenantName : ") {
-                    $TenantName = ($line.trimstart('TenantName : '))
-                }
+                $user.LastLogin = [System.Management.ManagementDateTimeConverter]::ToDateTime($($win32user.LastUseTime)).ToUniversalTime().ToSTring($date_format)
             }
         }
-        else {
-            $AzureADStatus = 'N/A'
-            $Workplace_join = 'N/A'
-            $TenantName = 'N/A'
-        }
+    }
+    # Get Admin Status
+    try
+    {
+        $admin = Get-LocalGroupMember -Member "$($user.SID)" -Name "Administrators" -EA SilentlyContinue
+    }
+    catch
+    {
+        $user = Get-LocalGroupMember -Member "$($user.SID)" -Name "Users"
+    }
+    if ($admin)
+    {
+        $user.IsLocalAdmin = $true
+    }
+    else
+    {
+        $user.IsLocalAdmin = $false
+    }
+    # Get Profile Size
+    # $largeprofile = Get-ChildItem $($user.LocalPath) -Recurse -Force -ErrorAction SilentlyContinue | Measure-Object -Sum length | Select-Object -ExpandProperty Sum
+    # $largeprofile = [math]::Round($largeprofile / 1MB, 0)
+    # $user.LocalProfileSize = $largeprofile
+}
 
-        $FormResults = [PSCustomObject]@{ }
+Write-Progress -Activity 'Jumpcloud ADMU' -Status 'Loading Jumpcloud ADMU. Please Wait.. Building Profile Group Box Query..' -PercentComplete 85
+Write-Log 'Loading Jumpcloud ADMU. Please Wait.. Building Profile Group Box Query..'
 
-        Write-ToLog 'Loading Jumpcloud ADMU. Please Wait.. Getting Installed Applications..'
-
-        $InstalledProducts = (Get-WmiObject -Class:('Win32_Product') | Select-Object Name)
-        $Disk = Get-WmiObject -Class Win32_logicaldisk -Filter "DeviceID = 'C:'"
-        $freespace = $Disk.FreeSpace
-        $freespace = [math]::Round($freespace / 1MB, 0)
-
-        Write-ToLog 'Loading Jumpcloud ADMU. Please Wait.. Verifying Local Accounts & Group Membership..'
-
-        #region custom xml
-$usmtcustom = [xml] @"
-<migration urlid="http://www.microsoft.com/migration/1.0/migxmlext/AppDataMig">
-	<component context="User" type="Application">
-        <displayName>Local AppData</displayName>
-        <paths>
-            <path type="File">%CSIDL_LOCAL_APPDATA%</path>
-        </paths>
-        <role role="Settings">
-            <rules>
-                <include filter='MigXmlHelper.IgnoreIrrelevantLinks()'>
-                    <objectSet>
-                        <pattern type="File">%CSIDL_LOCAL_APPDATA%\* [*]</pattern>
-						<pattern type="File">%CSIDL_LOCAL_APPDATA%\* [*]</pattern>
-						<pattern type="File">%CSIDL_LOCAL_APPDATA%\* [*]</pattern>
-                    </objectSet>
-                </include>
-                <merge script="MigXmlHelper.DestinationPriority()">
-                    <objectSet>
-                        <pattern type="File">%CSIDL_LOCAL_APPDATA%\* [*]</pattern>
-						<pattern type="File">%CSIDL_LOCAL_APPDATA%\* [*]</pattern>
-						<pattern type="File">%CSIDL_LOCAL_APPDATA%\* [*]</pattern>
-                    </objectSet>
-                </merge>
-            </rules>
-        </role>
-    </component>
-	<component context="User" type="Application">
-        <displayName>Roaming AppData</displayName>
-        <paths>
-            <path type="File">%CSIDL_LOCAL_APPDATA%</path>
-        </paths>
-        <role role="Settings">
-            <rules>
-                <include filter='MigXmlHelper.IgnoreIrrelevantLinks()'>
-                    <objectSet>
-                        <pattern type="File">%CSIDL_APPDATA%\* [*]</pattern>
-						<pattern type="File">%CSIDL_APPDATA%\* [*]</pattern>
-						<pattern type="File">%CSIDL_APPDATA%\* [*]</pattern>
-                    </objectSet>
-                </include>
-                <merge script="MigXmlHelper.DestinationPriority()">
-                    <objectSet>
-                        <pattern type="File">%CSIDL_APPDATA%\* [*]</pattern>
-						<pattern type="File">%CSIDL_APPDATA%\* [*]</pattern>
-						<pattern type="File">%CSIDL_APPDATA%\* [*]</pattern>
-                    </objectSet>
-                </merge>
-            </rules>
-        </role>
-    </component>
-
-	</migration>
-"@
-        #endregion custom xml
-
-        # Load custom xml
-        [string[]]$text = $usmtcustom.OuterXml #or use Get-Content to read an XML File
-        $data = New-Object System.Collections.ArrayList
-        [void] $data.Add($text -join "`n")
-        $tmpDoc = New-Object System.Xml.XmlDataDocument
-        $tmpDoc.LoadXml($data -join "`n")
-        $sw = New-Object System.IO.StringWriter
-        $writer = New-Object System.Xml.XmlTextWriter($sw)
-        $writer.Formatting = [System.Xml.Formatting]::Indented
-        $tmpDoc.WriteContentTo($writer)
-        $tb_customxml.Text = $sw.ToString()
-
-        Write-ToLog 'Loading Jumpcloud ADMU. Please Wait.. Getting C:\ & Local Profile Data..'
-        # Get Valid SIDs from the Registry and build user object
-        $registyProfiles = Get-ChildItem "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList"
-        $profileList = @()
-        foreach ($profile in $registyProfiles) {
-            $profileList += Get-ItemProperty -Path $profile.PSPath | Select-Object PSChildName, ProfileImagePath
-        }
-        # List to store users
-        $users = @()
-        foreach ($listItem in $profileList) {
-            $sidPattern = "^S-\d-\d+-(\d+-){1,14}\d+$"
-            $isValidFormat = [regex]::IsMatch($($listItem.PSChildName), $sidPattern);
-            # Get Valid SIDs
-            if ($isValidFormat) {
-                # Populate Users List
-                $users += [PSCustomObject]@{
-                    Name              = Convert-Sid $listItem.PSChildName
-                    LocalPath         = $listItem.ProfileImagePath
-                    SID               = $listItem.PSChildName
-                    IsLocalAdmin      = $null
-                    LocalProfileSize  = $null
-                    Loaded            = $null
-                    RoamingConfigured = $null
-                    LastLogin         = $null
-                }
-            }
-        }
-        # Get Win32 Profiles to merge data with valid SIDs
-        $win32UserProfiles = Get-WmiObject -Class:('Win32_UserProfile') -Property * | Where-Object { $_.Special -eq $false }
-        $date_format = "yyyy-MM-dd HH:mm"
-        foreach ($user in $users) {
-            # Get Data from Win32Profile
-            foreach ($win32user in $win32UserProfiles) {
-                if ($($user.SID) -eq $($win32user.SID)) {
-                    $user.RoamingConfigured = $win32user.RoamingConfigured
-                    $user.Loaded = $win32user.Loaded
-                    if ([string]::IsNullOrEmpty($($win32user.LastUseTime))){
-                        $user.LastLogin = "N/A"
-                    }
-                    else{
-                        $user.LastLogin = [System.Management.ManagementDateTimeConverter]::ToDateTime($($win32user.LastUseTime)).ToUniversalTime().ToSTring($date_format)
-                    }
-                }
-            }
-            # Get Admin Status
-            try {
-                $admin = Get-LocalGroupMember -Member "$($user.SID)" -Name "Administrators" -EA SilentlyContinue
-            }
-            catch {
-                $user = Get-LocalGroupMember -Member "$($user.SID)" -Name "Users"
-            }
-            if ($admin) {
-                $user.IsLocalAdmin = $true
-            }
-            else {
-                $user.IsLocalAdmin = $false
-            }
-            # Get Profile Size
-            $largeprofile = Get-ChildItem $($user.LocalPath) -Recurse -Force -ErrorAction SilentlyContinue | Measure-Object -Sum length | Select-Object -ExpandProperty Sum
-            $largeprofile = [math]::Round($largeprofile / 1MB, 0)
-            $user.LocalProfileSize = $largeprofile
-        }
-
-        Write-ToLog 'Loading Jumpcloud ADMU. Please Wait.. Building Profile Group Box Query..'
-
-        $Profiles = $users | Select-Object SID, RoamingConfigured, Loaded, IsLocalAdmin, LocalPath, LocalProfileSize, LastLogin, @{Name = "UserName"; EXPRESSION = { $_.Name } }
-
-        Write-ToLog 'Loading Jumpcloud ADMU. Please Wait.. Done!'
+$Profiles = $users | Select-Object SID, RoamingConfigured, Loaded, IsLocalAdmin, LocalPath, LocalProfileSize, LastLogin, @{Name = "UserName"; EXPRESSION = { $_.Name } }
+Write-Progress -Activity 'Jumpcloud ADMU' -Status 'Loading Jumpcloud ADMU. Please Wait.. Done!' -PercentComplete 100
+Write-Log 'Loading Jumpcloud ADMU. Please Wait.. Done!'
 
 #load UI Labels
 
 #SystemInformation
 $lbComputerName.Content = $WmiComputerSystem.Name
-$lbUSMTStatus.Content = (($InstalledProducts -match 'User State Migration Tool').Count -eq 1)
-$lbcfreespace.Content = $freespace
 
 #DomainInformation
 $lbDomainName.Content = $DomainName
@@ -364,13 +336,14 @@ $lbAzureAD_Joined.Content = $AzureADStatus
 $lbWorkplace_Joined.Content = $Workplace_join
 $lbTenantName.Content = $TenantName
 
-Function Test-Button([object]$tbJumpCloudUserName, [object]$tbJumpCloudConnectKey, [object]$tbTempPassword, [object]$lvProfileList)
+Function Test-Button([object]$tbJumpCloudUserName, [object]$tbJumpCloudConnectKey, [object]$tbTempPassword, [object]$lvProfileList, [object]$tbJumpCloudAPIKey)
 {
     If (![System.String]::IsNullOrEmpty($lvProfileList.SelectedItem.UserName))
     {
-        If (!(Test-IsNotEmpty $tbJumpCloudUserName.Text) -and (Test-HasNoSpace $tbJumpCloudUserName.Text) `
-                -and (Test-Is40chars $tbJumpCloudConnectKey.Text) -and (Test-HasNoSpace $tbJumpCloudConnectKey.Text) -and ($cb_installjcagent.IsChecked -eq $true)`
-                -and !(Test-IsNotEmpty $tbTempPassword.Text) -and (Test-HasNoSpace $tbTempPassword.Text)`
+        If (!(Test-IsNotEmpty $tbJumpCloudUserName.Text) -and (Test-HasNoSpaces $tbJumpCloudUserName.Text) `
+                -and ((Test-Is40chars $tbJumpCloudConnectKey.Text) -and (Test-HasNoSpaces $tbJumpCloudConnectKey.Text) -and ($cb_installjcagent.IsChecked -eq $true))`
+                -and ((Test-Is40chars $tbJumpCloudAPIKey.Text) -and (Test-HasNoSpaces $tbJumpCloudAPIKey.Text) -and ($cb_autobindjcuser.IsChecked -eq $true))`
+                -and !(Test-IsNotEmpty $tbTempPassword.Text) -and (Test-HasNoSpaces $tbTempPassword.Text)`
                 -and !($lvProfileList.selectedItem.Username -match $WmiComputerSystem.Name)`
                 -and !(Test-Localusername $tbJumpCloudUserName.Text))
         {
@@ -378,17 +351,38 @@ Function Test-Button([object]$tbJumpCloudUserName, [object]$tbJumpCloudConnectKe
             $script:bDeleteProfile.IsEnabled = $true
             Return $true
         }
-        Elseif(!(Test-IsNotEmpty $tbJumpCloudUserName.Text) -and (Test-HasNoSpace $tbJumpCloudUserName.Text) `
-        -and ($cb_installjcagent.IsChecked -eq $false)`
-        -and !(Test-IsNotEmpty $tbTempPassword.Text) -and (Test-HasNoSpace $tbTempPassword.Text)`
-        -and !($lvProfileList.selectedItem.Username -match $WmiComputerSystem.Name)`
-        -and !(Test-Localusername $tbJumpCloudUserName.Text))
+        ElseIf (!(Test-IsNotEmpty $tbJumpCloudUserName.Text) -and (Test-HasNoSpaces $tbJumpCloudUserName.Text) `
+                -and ((Test-Is40chars $tbJumpCloudConnectKey.Text) -and (Test-HasNoSpaces $tbJumpCloudConnectKey.Text) -and ($cb_installjcagent.IsChecked -eq $true) -and ($cb_autobindjcuser.IsChecked -eq $false))`
+                -and !(Test-IsNotEmpty $tbTempPassword.Text) -and (Test-HasNoSpaces $tbTempPassword.Text)`
+                -and !($lvProfileList.selectedItem.Username -match $WmiComputerSystem.Name)`
+                -and !(Test-Localusername $tbJumpCloudUserName.Text))
         {
             $script:bDeleteProfile.Content = "Migrate Profile"
             $script:bDeleteProfile.IsEnabled = $true
             Return $true
         }
-        Elseif(($lvProfileList.selectedItem.Username -match $WmiComputerSystem.Name) -or ($lvProfileList.selectedItem.Username -eq 'UNKNOWN ACCOUNT')){
+        ElseIf (!(Test-IsNotEmpty $tbJumpCloudUserName.Text) -and (Test-HasNoSpaces $tbJumpCloudUserName.Text) `
+                -and ((Test-Is40chars $tbJumpCloudAPIKey.Text) -and (Test-HasNoSpaces $tbJumpCloudAPIKey.Text) -and ($cb_autobindjcuser.IsChecked -eq $true) -and ($cb_installjcagent.IsChecked -eq $false))`
+                -and !(Test-IsNotEmpty $tbTempPassword.Text) -and (Test-HasNoSpaces $tbTempPassword.Text)`
+                -and !($lvProfileList.selectedItem.Username -match $WmiComputerSystem.Name)`
+                -and !(Test-Localusername $tbJumpCloudUserName.Text))
+        {
+            $script:bDeleteProfile.Content = "Migrate Profile"
+            $script:bDeleteProfile.IsEnabled = $true
+            Return $true
+        }
+        Elseif (!(Test-IsNotEmpty $tbJumpCloudUserName.Text) -and (Test-HasNoSpaces $tbJumpCloudUserName.Text) `
+                -and ($cb_installjcagent.IsChecked -eq $false) -and ($cb_autobindjcuser.IsChecked -eq $false)`
+                -and !(Test-IsNotEmpty $tbTempPassword.Text) -and (Test-HasNoSpaces $tbTempPassword.Text)`
+                -and !($lvProfileList.selectedItem.Username -match $WmiComputerSystem.Name)`
+                -and !(Test-Localusername $tbJumpCloudUserName.Text))
+        {
+            $script:bDeleteProfile.Content = "Migrate Profile"
+            $script:bDeleteProfile.IsEnabled = $true
+            Return $true
+        }
+        Elseif (($lvProfileList.selectedItem.Username -match $WmiComputerSystem.Name) -or ($lvProfileList.selectedItem.Username -eq 'UNKNOWN ACCOUNT'))
+        {
             $script:bDeleteProfile.Content = "Select Domain Profile"
             $script:bDeleteProfile.IsEnabled = $false
             Return $false
@@ -409,35 +403,391 @@ Function Test-Button([object]$tbJumpCloudUserName, [object]$tbJumpCloudConnectKe
 }
 
 ## Form changes & interactions
-
-# EULA checkbox
-$script:AcceptEULA = $true
-$cb_accepteula.Add_Checked({$script:AcceptEULA = $true})
-$cb_accepteula.Add_Unchecked({$script:AcceptEULA = $false})
+# Verbose checkbox
+$cb_verbose.Add_Checked( { $VerbosePreference = 'Continue' })
 
 # Install JCAgent checkbox
 $script:InstallJCAgent = $false
-$cb_installjcagent.Add_Checked({Test-Button -tbJumpCloudUserName:($tbJumpCloudUserName) -tbJumpCloudConnectKey:($tbJumpCloudConnectKey) -tbTempPassword:($tbTempPassword) -lvProfileList:($lvProfileList)})
-$cb_installjcagent.Add_Checked({$script:InstallJCAgent = $true})
-$cb_installjcagent.Add_Checked({$tbJumpCloudConnectKey.IsEnabled =$true})
-$cb_installjcagent.Add_UnChecked({Test-Button -tbJumpCloudUserName:($tbJumpCloudUserName) -tbJumpCloudConnectKey:($tbJumpCloudConnectKey) -tbTempPassword:($tbTempPassword) -lvProfileList:($lvProfileList)})
-$cb_installjcagent.Add_Unchecked({$script:InstallJCAgent = $false})
-$cb_installjcagent.Add_Unchecked({$tbJumpCloudConnectKey.IsEnabled =$false})
+$cb_installjcagent.Add_Checked( { Test-Button -tbJumpCloudUserName:($tbJumpCloudUserName) -tbJumpCloudConnectKey:($tbJumpCloudConnectKey) -tbTempPassword:($tbTempPassword) -lvProfileList:($lvProfileList) -tbJumpCloudAPIKey:($tbJumpCloudAPIKey) })
+$cb_installjcagent.Add_Checked( { $script:InstallJCAgent = $true })
+$cb_installjcagent.Add_Checked( { $tbJumpCloudConnectKey.IsEnabled = $true })
+$cb_installjcagent.Add_UnChecked( { Test-Button -tbJumpCloudUserName:($tbJumpCloudUserName) -tbJumpCloudConnectKey:($tbJumpCloudConnectKey) -tbTempPassword:($tbTempPassword) -lvProfileList:($lvProfileList) -tbJumpCloudAPIKey:($tbJumpCloudAPIKey) })
+$cb_installjcagent.Add_Unchecked( { $script:InstallJCAgent = $false })
+$cb_installjcagent.Add_Unchecked( { $tbJumpCloudConnectKey.IsEnabled = $false })
+
+# Autobind JC User checkbox
+$script:AutobindJCUser = $false
+$cb_autobindjcuser.Add_Checked( { Test-Button -tbJumpCloudUserName:($tbJumpCloudUserName) -tbJumpCloudConnectKey:($tbJumpCloudConnectKey) -tbTempPassword:($tbTempPassword) -lvProfileList:($lvProfileList) -tbJumpCloudAPIKey:($tbJumpCloudAPIKey) })
+$cb_autobindjcuser.Add_Checked( { $script:AutobindJCUser = $true })
+$cb_autobindjcuser.Add_Checked( { $tbJumpCloudAPIKey.IsEnabled = $true })
+$cb_autobindjcuser.Add_UnChecked( { Test-Button -tbJumpCloudUserName:($tbJumpCloudUserName) -tbJumpCloudConnectKey:($tbJumpCloudConnectKey) -tbTempPassword:($tbTempPassword) -lvProfileList:($lvProfileList) -tbJumpCloudAPIKey:($tbJumpCloudAPIKey) })
+$cb_autobindjcuser.Add_Unchecked( { $script:AutobindJCUser = $false })
+$cb_autobindjcuser.Add_Unchecked( { $tbJumpCloudAPIKey.IsEnabled = $false })
 
 # Leave Domain checkbox
 $script:LeaveDomain = $false
 # Checked And Not Running As System And Joined To Azure AD
-$cb_leavedomain.Add_Checked({
-if (([bool](([System.Security.Principal.WindowsIdentity]::GetCurrent()).user.Value -match "S-1-5-18")) -eq $false -and !($AzureADStatus -eq 'NO' ))
+$cb_leavedomain.Add_Checked( {
+        if (([bool](([System.Security.Principal.WindowsIdentity]::GetCurrent()).user.Value -match "S-1-5-18")) -eq $false -and !($AzureADStatus -eq 'NO' ))
+        {
+            # Throw Popup, OK Loads URL, Cancel Closes. Disables And Unchecks LeaveDomain Checkbox Else LeaveDomain -eq $true
+            [System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
+            $result = [System.Windows.Forms.MessageBox]::Show("To leave AzureAD, ADMU must be run as NTAuthority\SYSTEM.`nFor more information on the requirements`nSelect 'OK' else select 'Cancel'" , "JumpCloud ADMU" , 1)
+            if ($result -eq 'OK')
+            {
+                [Diagnostics.Process]::Start('https://github.com/TheJumpCloud/jumpcloud-ADMU/wiki/Leaving-AzureAD-Domains')
+            }
+            Write-ToLog -Message:('Unable to leave AzureAD, ADMU Script must be run as NTAuthority\SYSTEM.This will have to be completed manually. For more information on the requirements read https://github.com/TheJumpCloud/jumpcloud-ADMU/wiki/Leaving-AzureAD-Domains') -Level:('Error')
+            $script:LeaveDomain = $false
+            $cb_leavedomain.IsChecked = $false
+            $cb_leavedomain.IsEnabled = $false
+        }
+        $script:LeaveDomain = $true
+    })
+$cb_leavedomain.Add_Unchecked( { $script:LeaveDomain = $false })
+
+# Force Reboot checkbox
+$script:ForceReboot = $false
+$cb_forcereboot.Add_Checked( { $script:ForceReboot = $true })
+$cb_forcereboot.Add_Unchecked( { $script:ForceReboot = $false })
+
+$tbJumpCloudUserName.add_TextChanged( {
+        Test-Button -tbJumpCloudUserName:($tbJumpCloudUserName) -tbJumpCloudConnectKey:($tbJumpCloudConnectKey) -tbTempPassword:($tbTempPassword) -lvProfileList:($lvProfileList) -tbJumpCloudAPIKey:($tbJumpCloudAPIKey)
+        If ((Test-IsNotEmpty $tbJumpCloudUserName.Text) -or (!(Test-HasNoSpaces $tbJumpCloudUserName.Text)) -or (Test-Localusername $tbJumpCloudUserName.Text))
+        {
+            $tbJumpCloudUserName.Background = "#FFC6CBCF"
+            $tbJumpCloudUserName.Tooltip = "Local account user name can not be empty, contain spaces or already exist on the local system."
+        }
+        Else
+        {
+            $tbJumpCloudUserName.Background = "white"
+            $tbJumpCloudUserName.Tooltip = $null
+            $tbJumpCloudUserName.FontWeight = "Normal"
+        }
+    })
+
+$tbJumpCloudUserName.add_GotFocus( {
+        $tbJumpCloudUserName.Text = ""
+    })
+
+$tbJumpCloudConnectKey.add_TextChanged( {
+        Test-Button -tbJumpCloudUserName:($tbJumpCloudUserName) -tbJumpCloudConnectKey:($tbJumpCloudConnectKey) -tbTempPassword:($tbTempPassword) -lvProfileList:($lvProfileList) -tbJumpCloudAPIKey:($tbJumpCloudAPIKey)
+        If (((Test-Is40chars $tbJumpCloudConnectKey.Text) -and (Test-HasNoSpaces $tbJumpCloudConnectKey.Text)) -eq $false)
+        {
+            $tbJumpCloudConnectKey.Background = "#FFC6CBCF"
+            $tbJumpCloudConnectKey.Tooltip = "Connect Key Must be 40chars & Not Contain Spaces"
+        }
+        Else
+        {
+            $tbJumpCloudConnectKey.Background = "white"
+            $tbJumpCloudConnectKey.Tooltip = $null
+            $tbJumpCloudConnectKey.FontWeight = "Normal"
+        }
+    })
+
+$tbJumpCloudAPIKey.add_TextChanged( {
+        Test-Button -tbJumpCloudUserName:($tbJumpCloudUserName) -tbJumpCloudConnectKey:($tbJumpCloudConnectKey) -tbJumpCloudConnectAPIKey:($tbJumpCloudAPIKey) -tbTempPassword:($tbTempPassword) -lvProfileList:($lvProfileList) -tbJumpCloudAPIKey:($tbJumpCloudAPIKey)
+        If (((Test-Is40chars $tbJumpCloudAPIKey.Text) -and (Test-HasNoSpaces $tbJumpCloudAPIKey.Text)) -eq $false)
+        {
+            $tbJumpCloudAPIKey.Background = "#FFC6CBCF"
+            $tbJumpCloudAPIKey.Tooltip = "API Key Must be 40chars & Not Contain Spaces"
+        }
+        Else
+        {
+            $tbJumpCloudAPIKey.Background = "white"
+            $tbJumpCloudAPIKey.Tooltip = $null
+            $tbJumpCloudAPIKey.FontWeight = "Normal"
+        }
+    })
+
+$tbJumpCloudConnectKey.add_GotFocus( {
+        $tbJumpCloudConnectKey.Text = ""
+    })
+
+$tbJumpCloudAPIKey.add_GotFocus( {
+        $tbJumpCloudAPIKey.Text = ""
+    })
+
+$tbTempPassword.add_TextChanged( {
+        Test-Button -tbJumpCloudUserName:($tbJumpCloudUserName) -tbJumpCloudConnectKey:($tbJumpCloudConnectKey) -tbTempPassword:($tbTempPassword) -lvProfileList:($lvProfileList) -tbJumpCloudAPIKey:($tbJumpCloudAPIKey)
+        If ((!(Test-IsNotEmpty $tbTempPassword.Text) -and (Test-HasNoSpaces $tbTempPassword.Text)) -eq $false)
+        {
+            $tbTempPassword.Background = "#FFC6CBCF"
+            $tbTempPassword.Tooltip = "Temp Password Must Not Be Empty & Not Contain Spaces"
+        }
+        Else
+        {
+            $tbTempPassword.Background = "white"
+            $tbTempPassword.Tooltip = $null
+            $tbTempPassword.FontWeight = "Normal"
+        }
+    })
+
+# Change button when profile selected
+$lvProfileList.Add_SelectionChanged( {
+        $script:SelectedUserName = ($lvProfileList.SelectedItem.username)
+        New-PSDrive -PSProvider Registry -Name HKU -Root HKEY_USERS
+        Test-Button -tbJumpCloudUserName:($tbJumpCloudUserName) -tbJumpCloudConnectKey:($tbJumpCloudConnectKey) -tbTempPassword:($tbTempPassword) -lvProfileList:($lvProfileList) -tbJumpCloudAPIKey:($tbJumpCloudAPIKey)
+        try
+        {
+            $SelectedUserSID = ((New-Object System.Security.Principal.NTAccount($script:SelectedUserName)).Translate( [System.Security.Principal.SecurityIdentifier]).Value)
+        }
+        catch
+        {
+            $SelectedUserSID = $script:SelectedUserName
+        }
+        $hku = ('HKU:\' + $SelectedUserSID)
+        if (Test-Path -Path $hku)
+        {
+            $script:bDeleteProfile.Content = "User Registry Loaded"
+            $script:bDeleteProfile.IsEnabled = $false
+            $script:tbJumpCloudUserName.IsEnabled = $false
+            $script:tbTempPassword.IsEnabled = $false
+        }
+        else
+        {
+            $script:tbJumpCloudUserName.IsEnabled = $true
+            $script:tbTempPassword.IsEnabled = $true
+        }
+    })
+
+$bDeleteProfile.Add_Click( {
+        # Build FormResults object
+        Add-Member -InputObject:($FormResults) -MemberType:('NoteProperty') -Name:('InstallJCAgent') -Value:($InstallJCAgent)
+        Add-Member -InputObject:($FormResults) -MemberType:('NoteProperty') -Name:('AutobindJCUser') -Value:($AutobindJCUser)
+        Add-Member -InputObject:($FormResults) -MemberType:('NoteProperty') -Name:('LeaveDomain') -Value:($LeaveDomain)
+        Add-Member -InputObject:($FormResults) -MemberType:('NoteProperty') -Name:('ForceReboot') -Value:($ForceReboot)
+        # Add-Member -InputObject:($FormResults) -MemberType:('NoteProperty') -Name:('DomainUserName') -Value:($SelectedUserName.Substring($SelectedUserName.IndexOf('\') + 1))
+        Add-Member -InputObject:($FormResults) -MemberType:('NoteProperty') -Name:('DomainUserName') -Value:($SelectedUserName)
+        Add-Member -InputObject:($FormResults) -MemberType:('NoteProperty') -Name:('JumpCloudUserName') -Value:($tbJumpCloudUserName.Text)
+        Add-Member -InputObject:($FormResults) -MemberType:('NoteProperty') -Name:('TempPassword') -Value:($tbTempPassword.Text)
+        if (($tbJumpCloudConnectKey.Text).length -eq 40)
+        {
+            Add-Member -InputObject:($FormResults) -MemberType:('NoteProperty') -Name:('JumpCloudConnectKey') -Value:($tbJumpCloudConnectKey.Text)
+        }
+        if (($tbJumpCloudAPIKey.Text).length -eq 40)
+        {
+            Add-Member -InputObject:($FormResults) -MemberType:('NoteProperty') -Name:('JumpCloudAPIKey') -Value:($tbJumpCloudAPIKey.Text)
+        }
+        Add-Member -InputObject:($FormResults) -MemberType:('NoteProperty') -Name:('NetBiosName') -Value:($SelectedUserName)
+        # Close form
+        $Form.Close()
+    })
+
+# JCConsole Link
+$tbjcconsole.Add_PreviewMouseDown( { [System.Diagnostics.Process]::start('https://console.jumpcloud.com/login') })
+
+# JCADMUGH Link
+$tbjcadmugh.Add_PreviewMouseDown( { [System.Diagnostics.Process]::start('https://github.com/TheJumpCloud/jumpcloud-ADMU') })
+
+# JCSupport Link
+$tbjcsupport.Add_PreviewMouseDown( { [System.Diagnostics.Process]::start('https://support.jumpcloud.com/support/s/') })
+
+# jcadmulog
+$tbjcadmulog.Add_PreviewMouseDown( { Invoke-Item "C:\Windows\Temp\JCADMU.log" })
+
+# close button
+$btn_close.Add_Click( {
+        $Form.Close()
+    })
+
+# move window
+$Form.Add_MouseLeftButtonDown( {
+        $Form.DragMove()
+    })
+
+# Put the list of profiles in the profile box
+$Profiles | ForEach-Object { $lvProfileList.Items.Add($_) | Out-Null }
+#===========================================================================
+# Shows the form & allow move
+#===========================================================================
+$Form.Showdialog()
+
+If ($bDeleteProfile.IsEnabled -eq $true)
 {
-# Throw Popup, OK Loads URL, Cancel Closes. Disables And Unchecks LeaveDomain Checkbox Else LeaveDomain -eq $true
-[System.Reflection.Assembly]::LoadWithPartialName("System.Windows.Forms")
-$result = [System.Windows.Forms.MessageBox]::Show("To leave AzureAD, ADMU must be run as NTAuthority\SYSTEM.`nFor more information on the requirements`nSelect 'OK' else select 'Cancel'" , "JumpCloud ADMU" , 1)
-if ($result -eq 'OK') {
-    [Diagnostics.Process]::Start('https://github.com/TheJumpCloud/jumpcloud-ADMU/wiki/Leaving-AzureAD-Domains')
+    Return $FormResults
 }
-Write-ToLog -Message:('Unable to leave AzureAD, ADMU Script must be run as NTAuthority\SYSTEM.This will have to be completed manually. For more information on the requirements read https://github.com/TheJumpCloud/jumpcloud-ADMU/wiki/Leaving-AzureAD-Domains') -Level:('Error')
-$script:LeaveDomain = $false
+Write-ToLog 'Loading Jumpcloud ADMU. Please Wait.. Loading ADMU GUI..'
+
+#==============================================================================================
+# XAML Code - Imported from Visual Studio WPF Application
+#==============================================================================================
+[void][System.Reflection.Assembly]::LoadWithPartialName('PresentationFramework')
+[xml]$XAML = @'
+<Window
+     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+     Title="JumpCloud ADMU 2.0.0" Height="519" Width="919" WindowStartupLocation="CenterScreen" ResizeMode="NoResize" ForceCursor="True" WindowStyle="None" Background="White">
+     <Grid Margin="0,0,0,109">
+     <Grid.RowDefinitions>
+         <RowDefinition Height="25"/>
+         <RowDefinition/>
+     </Grid.RowDefinitions>
+
+     <Grid.ColumnDefinitions>
+         <ColumnDefinition/>
+         <ColumnDefinition/>
+     </Grid.ColumnDefinitions>
+
+     <StackPanel Grid.Row="1">
+         <StackPanel Orientation="Horizontal">
+             <Image Width="352" Height="92"
+                    Source="https://jumpcloud.com/wp-content/themes/jumpcloud/assets/images/jumpcloud-press-kit/logos/01-combination-mark-color.png"/>
+         </StackPanel>
+
+     </StackPanel>
+
+     <Grid Background="#0F0F2D" 
+           Grid.ColumnSpan="2">
+
+         <Grid.ColumnDefinitions>
+             <ColumnDefinition/>
+             <ColumnDefinition/>
+             <ColumnDefinition/>
+             <ColumnDefinition/>
+
+
+         </Grid.ColumnDefinitions>
+
+         <TextBlock Name="tbjcconsole"
+                    Text="JumpCloud Console"
+                    Foreground="White"
+                    Grid.Column="0"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    />
+
+         <TextBlock Name="tbjcadmugh"
+                    Text="JumpCloud AMDU Github"
+                    Foreground="White"
+                    Grid.Column="1"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    />
+         <TextBlock Name="tbjcsupport"
+                    Text="JumpCloud Support"
+                    Foreground="White"
+                    Grid.Column="2"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    />
+         <TextBlock Name="tbjcadmulog"
+                    Text="JumpCloud ADMU Log"
+                    Foreground="White"
+                    Grid.Column="5"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Center"
+                    />
+
+         <ListView Name="lvProfileList" Grid.ColumnSpan="8" Margin="7,180,9,-311">
+             <ListView.View>
+                 <GridView>
+                     <GridViewColumn Header="System Accounts" DisplayMemberBinding="{Binding UserName}" Width="180"/>
+                     <GridViewColumn Header="Last Login" DisplayMemberBinding="{Binding LastLogin}" Width="135"/>
+                     <GridViewColumn Header="Currently Active" DisplayMemberBinding="{Binding Loaded}" Width="105" />
+                     <GridViewColumn Header="Domain Roaming" DisplayMemberBinding="{Binding RoamingConfigured}" Width="105"/>
+                     <GridViewColumn Header="Local Admin" DisplayMemberBinding="{Binding IsLocalAdmin}" Width="105"/>
+                     <GridViewColumn Header="Local Path" DisplayMemberBinding="{Binding LocalPath}" Width="140"/>
+                     <GridViewColumn Header="Local Profile Size" DisplayMemberBinding="{Binding LocalProfileSize}" Width="105"/>
+                 </GridView>
+             </ListView.View>
+         </ListView>
+
+         <GroupBox Header="System Migration Options"  Height="155" Width="430" FontWeight="Bold" Grid.ColumnSpan="4" HorizontalAlignment="Left" Margin="7,351,0,-481">
+             <Grid HorizontalAlignment="Left" Height="137" Margin="2,0,0,0" VerticalAlignment="Center" Width="423">
+                 <Label Content="JumpCloud Connect Key :" HorizontalAlignment="Left" Margin="3,8,0,0" VerticalAlignment="Top" AutomationProperties.HelpText="https://console.jumpcloud.com/#/systems/new" ToolTip="https://console.jumpcloud.com/#/systems/new" FontWeight="Normal"/>
+                 <TextBox Name="tbJumpCloudConnectKey" HorizontalAlignment="Left" Height="23" Margin="149,10,0,0" TextWrapping="Wrap" Text="Enter JumpCloud Connect Key" VerticalAlignment="Top" Width="263" Background="#FFC6CBCF" FontWeight="Bold" IsEnabled="False"/>
+                 <CheckBox Name="cb_forcereboot" Content="Force Reboot" HorizontalAlignment="Left" Margin="10,88,0,0" VerticalAlignment="Top" FontWeight="Normal" IsChecked="False"/>
+                 <CheckBox Name="cb_installjcagent" Content="Install JCAgent" HorizontalAlignment="Left" Margin="123,88,0,0" VerticalAlignment="Top" FontWeight="Normal" IsChecked="False"/>
+                 <CheckBox Name="cb_verbose" Content="Verbose" HorizontalAlignment="Left" Margin="249,88,0,0" VerticalAlignment="Top" FontWeight="Normal" IsChecked="False"/>
+                 <CheckBox Name="cb_leavedomain" Content="Leave Domain" HorizontalAlignment="Left" Margin="10,111,0,0" VerticalAlignment="Top" FontWeight="Normal" IsChecked="False"/>
+                 <CheckBox Name="cb_autobindjcuser" Content="Autobind JC User" HorizontalAlignment="Left" Margin="123,111,0,0" VerticalAlignment="Top" FontWeight="Normal" IsChecked="False"/>
+                 <Label Content="JumpCloud API Key :" HorizontalAlignment="Left" Margin="4,37,0,0" VerticalAlignment="Top" AutomationProperties.HelpText="https://console.jumpcloud.com/" ToolTip="https://console.jumpcloud.com/" FontWeight="Normal"/>
+                 <TextBox Name="tbJumpCloudAPIKey" HorizontalAlignment="Left" Height="23" Margin="149,39,0,0" TextWrapping="Wrap" Text="Enter JumpCloud API Key" VerticalAlignment="Top" Width="263" Background="#FFC6CBCF" FontWeight="Bold" IsEnabled="False"/>
+             </Grid>
+         </GroupBox>
+
+         <GroupBox Header="Account Migration Information" Height="92" FontWeight="Bold" Grid.ColumnSpan="3" Margin="228,351,9,-418" Grid.Column="1">
+             <Grid HorizontalAlignment="Left" Height="66.859" Margin="1.212,2.564,0,0" VerticalAlignment="Top" Width="454.842">
+                 <Grid.ColumnDefinitions>
+                     <ColumnDefinition Width="23*"/>
+                     <ColumnDefinition Width="432*"/>
+                 </Grid.ColumnDefinitions>
+                 <Label Content="Local Account Username :" HorizontalAlignment="Left" Margin="0,8,0,0" VerticalAlignment="Top" FontWeight="Normal" Grid.ColumnSpan="2"/>
+                 <Label Content="Local Account Password :" HorizontalAlignment="Left" Margin="0,36,0,0" VerticalAlignment="Top" FontWeight="Normal" Grid.ColumnSpan="2"/>
+                 <TextBox Name="tbJumpCloudUserName" HorizontalAlignment="Left" Height="23" Margin="127,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="282" Text="Username should match JumpCloud username" Background="#FFC6CBCF" FontWeight="Bold" Grid.Column="1" />
+                 <TextBox Name="tbTempPassword" HorizontalAlignment="Left" Height="23" Margin="128,39,0,0" TextWrapping="Wrap" Text="Temp123!Temp123!" VerticalAlignment="Top" Width="200" FontWeight="Normal" Grid.Column="1"/>
+             </Grid>
+         </GroupBox>
+
+         <Button Name="bDeleteProfile" Content="Select Profile" Height="23" IsEnabled="False" Grid.ColumnSpan="2" Grid.Column="6" Margin="96,463,9,-461">
+             <Button.Effect>
+                 <DropShadowEffect/>
+             </Button.Effect>
+         </Button>
+
+         <GroupBox Header="System Information" Margin="110,40,9,-140" Width="570" FontWeight="Bold" Grid.Column="1" Grid.ColumnSpan="3">
+
+             <Grid>
+                 <Grid.RowDefinitions>
+                     <RowDefinition Height="25"/>
+                     <RowDefinition Height="25"/>
+                     <RowDefinition Height="25"/>
+                     <RowDefinition Height="25"/>
+                 </Grid.RowDefinitions>
+
+                 <Grid.ColumnDefinitions>
+                     <ColumnDefinition/>
+                     <ColumnDefinition/>
+                     <ColumnDefinition/>
+                     <ColumnDefinition/>
+                 </Grid.ColumnDefinitions>
+
+                 <Label Content="Computer Name:" FontWeight="Normal" Grid.Column="0" Grid.Row="0"/>
+                 <Label Content="Domain Name:" FontWeight="Normal" Grid.Column="0" Grid.Row="1"/>
+                 <Label Content="NetBios Name:" FontWeight="Normal" Grid.Column="0" Grid.Row="2"/>
+                 <Label Content="Secure Channel Healthy:" FontWeight="Normal" Grid.Column="0" Grid.Row="3"/>
+                 <Label Name="lbComputerName" Content="" FontWeight="Normal" Grid.Column="1" Grid.Row="0"/>
+                 <Label Name="lbDomainName" Content="" FontWeight="Normal" Grid.Column="1" Grid.Row="1"/>
+                 <Label Name="lbNetBios" Content="" FontWeight="Normal" Grid.Column="1" Grid.Row="2"/>
+                 <Label Name="lbsecurechannel" Content="" FontWeight="Normal" Grid.Column="1" Grid.Row="3"/>
+
+                 <Label Content="AzureAD Joined:" FontWeight="Normal" Grid.Column="2" Grid.Row="0"/>
+                 <Label Content="Workplace Joined:" FontWeight="Normal" Grid.Column="2" Grid.Row="1"/>
+                 <Label Content="Azure Tenant Name:" FontWeight="Normal" Grid.Column="2" Grid.Row="2"/>
+                 <Label Name="lbAzureAD_Joined" Content="" FontWeight="Normal" Grid.Column="3" Grid.Row="0"/>
+                 <Label Name="lbWorkplace_Joined" Content="" FontWeight="Normal" Grid.Column="3" Grid.Row="1"/>
+                 <Label Name="lbTenantName" Content="" FontWeight="Normal" Grid.Column="3" Grid.Row="2"/>
+
+             </Grid>
+         </GroupBox>
+     </Grid>
+     <Button Name="btn_close" Content="X" Grid.Column="1" HorizontalAlignment="Left" Margin="436,0,0,0" VerticalAlignment="Center" Width="24" Height="25"/>
+ </Grid>
+       </Window>
+'       {
+            $script:bDeleteProfile.Content = "Migrate Profile"
+            $script:bDeleteProfile.IsEnabled = $true
+            Return $true
+        }
+        Elseif(($lvProfileList.selectedItem.Username -match $WmiComputerSystem.Name) -or ($lvProfileList.selectedItem.Username -eq 'UNKNOWN ACCOUNT')){
+            $script:bDeleteProfile.Content = "Select Domain Profile"
+            $script:bDeleteProfile.IsEnabled = $false
+            Return $false
+        }
+        Else
+        {
+            $script:bDeleteProfile.Content = "Correct Errors"
+            $script:bDeleteProfile.IsEnabled = $false
+            Return $false
+        }
+    }
+    Else
+    {
+        $script:bDeleteProfile.Content = "Select Profile"
+{
+        Write-progress -Activity 'Jumpcloud ADMU' -Status 'Loading Jumpcloud ADMU. Please Wait.. Checking AzureAD Status..' -PercentComplete 25
+        Write-Log 'Loading Jumpcloud ADMU. Please Wait.. Checking AzureAD Status..'
 $cb_leavedomain.IsChecked = $false
 $cb_leavedomain.IsEnabled = $false
 }
@@ -551,26 +901,12 @@ $bDeleteProfile.Add_Click( {
         Add-Member -InputObject:($FormResults) -MemberType:('NoteProperty') -Name:('CreateRestore') -Value:($CreateRestore)
         Add-Member -InputObject:($FormResults) -MemberType:('NoteProperty') -Name:('UpdateHomePath') -Value:($UpdateHomePath)
         # Add-Member -InputObject:($FormResults) -MemberType:('NoteProperty') -Name:('DomainUserName') -Value:($SelectedUserName.Substring($SelectedUserName.IndexOf('\') + 1))
-        Add-Member -InputObject:($FormResults) -MemberType:('NoteProperty') -Name:('DomainUserName') -Value:($SelectedUserName)
-        Add-Member -InputObject:($FormResults) -MemberType:('NoteProperty') -Name:('JumpCloudUserName') -Value:($tbJumpCloudUserName.Text)
-        Add-Member -InputObject:($FormResults) -MemberType:('NoteProperty') -Name:('TempPassword') -Value:($tbTempPassword.Text)
-        if(($tbJumpCloudConnectKey.Text).length -eq 40){
-            Add-Member -InputObject:($FormResults) -MemberType:('NoteProperty') -Name:('JumpCloudConnectKey') -Value:($tbJumpCloudConnectKey.Text)
-        }
-        Add-Member -InputObject:($FormResults) -MemberType:('NoteProperty') -Name:('NetBiosName') -Value:($SelectedUserName)
-        Add-Member -InputObject:($FormResults) -MemberType:('NoteProperty') -Name:('Customxml') -Value:($Customxml)
+        Write-Progress -Activity 'Jumpcloud ADMU' -Status 'Loading Jumpcloud ADMU. Please Wait.. Building Profile Group Box Query..' -PercentComplete 85
+        Write-Log 'Loading Jumpcloud ADMU. Please Wait.. Building Profile Group Box Query..'
         # Close form
         $Form.Close()
-    })
-$tb_customxml.add_TextChanged({
-    [string[]]$text = $tb_customxml.Text #or use Get-Content to read an XML File
-    $data = New-Object System.Collections.ArrayList
-    [void] $data.Add($text -join "`n")
-    $tmpDoc = New-Object System.Xml.XmlDataDocument
-    $tmpDoc.LoadXml($data -join "`n")
-    $data | Out-File ('C:\Windows\Temp\custom.xml')
-    $verifiedxml = (Test-XMLFile -xmlFilePath ('C:\Windows\Temp\custom.xml'))
-    $tab_jcadmu.IsEnabled = $false
+        Write-Progress -Activity 'Jumpcloud ADMU' -Status 'Loading Jumpcloud ADMU. Please Wait.. Done!' -PercentComplete 100
+        Write-Log 'Loading Jumpcloud ADMU. Please Wait.. Done!'
 
     if ($verifiedxml -eq $true) {
     $tb_xmlerror.Text = 'Valid XML'
