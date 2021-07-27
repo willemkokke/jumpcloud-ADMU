@@ -162,26 +162,30 @@ function DenyInteractiveLogonRight
         [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         $SID
     )
-    # Add migrating user to denylogon rights
-    $secpolFile = "$WindowsDrive\Windows\temp\ur_orig.inf"
-    if (Test-Path $secpolFile)
-    {
-        Remove-Item $secpolFile -Force
+    process{
+        # Add migrating user to denylogon rights
+        $secpolFile = "$WindowsDrive\Windows\temp\ur_orig.inf"
+        if (Test-Path $secpolFile)
+        {
+            Remove-Item $secpolFile -Force
+        }
+        secedit /export /areas USER_RIGHTS /cfg $windowsDrive\Windows\temp\ur_orig.inf
+        $secpol = (Get-Content $secpolFile)
+        $regvaluestring = $secpol | Where-Object { $_ -like "*SeDenyInteractiveLogonRight*" }
+        $regvaluestringID = [array]::IndexOf($secpol, $regvaluestring)
+        $oldvalue = (($secpol | Select-String -Pattern 'SeDenyInteractiveLogonRight' | Out-String).trim()).substring(30)
+        $newvalue = ('*' + $SID + ',' + $oldvalue.trim())
+        $secpol[$regvaluestringID] = 'SeDenyInteractiveLogonRight = ' + $newvalue
+        $secpol | out-file $windowsDrive\Windows\temp\ur_new.inf -force
+        secedit /configure /db secedit.sdb /cfg $windowsDrive\Windows\temp\ur_new.inf /areas USER_RIGHTS
     }
-    secedit /export /areas USER_RIGHTS /cfg $windowsDrive\Windows\temp\ur_orig.inf
-    $secpol = (Get-Content $secpolFile)
-    $regvaluestring = $secpol | Where-Object { $_ -like "*SeDenyInteractiveLogonRight*" }
-    $regvaluestringID = [array]::IndexOf($secpol, $regvaluestring)
-    $oldvalue = (($secpol | Select-String -Pattern 'SeDenyInteractiveLogonRight' | Out-String).trim()).substring(30)
-    $newvalue = ('*' + $SID + ',' + $oldvalue.trim())
-    $secpol[$regvaluestringID] = 'SeDenyInteractiveLogonRight = ' + $newvalue
-    $secpol | out-file $windowsDrive\Windows\temp\ur_new.inf -force
-    secedit /configure /db secedit.sdb /cfg $windowsDrive\Windows\temp\ur_new.inf /areas USER_RIGHTS
 }
 function AllowInteractiveLogonRight
 {
-    $secpolFile = "$windowsDrive\Windows\temp\ur_orig.inf"
-    secedit /configure /db secedit.sdb /cfg $secpolFile /areas USER_RIGHTS
+    process{
+        $secpolFile = "$windowsDrive\Windows\temp\ur_orig.inf"
+        secedit /configure /db secedit.sdb /cfg $secpolFile /areas USER_RIGHTS
+    }
 }
 function Register-NativeMethod
 {
@@ -2128,7 +2132,7 @@ Function Start-Migration
     {
         $FixedErrors = @();
         # if we caught any errors and need to revert based on admuTracker status, do so here:
-        if ($admuTracker | % { $_.values.fail -eq $true })
+        if ($admuTracker | ForEach-Object { $_.values.fail -eq $true })
         {
             foreach ($trackedStep in $admuTracker.Keys)
             {
