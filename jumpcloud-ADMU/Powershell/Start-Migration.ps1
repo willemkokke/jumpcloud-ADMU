@@ -1570,14 +1570,14 @@ Function Start-Migration
         $oldUserProfileImagePath = Get-ItemPropertyValue -Path ('HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\' + $SelectedUserSID) -Name 'ProfileImagePath'
 
         #TODO: move regload/unload test into begin block from below
-        Set-UserRegistryLoadState -op "UnLoad" -ProfilePath $oldUserProfileImagePath -UserSid $SelectedUserSid
+        Set-UserRegistryLoadState -op "Unload" -ProfilePath $oldUserProfileImagePath -UserSid $SelectedUserSid
         Set-UserRegistryLoadState -op "Load" -ProfilePath $oldUserProfileImagePath -UserSid $SelectedUserSid
 
         $mountedreg = 'HCU:\' + $SelectedUserSid + '_admu' + '\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders'
 
-        Test-RegValueMatch -Path $mountedreg -Value 'Templates' -stringmatch $oldUserProfileImagePath
+        Test-RegistryValueMatch -Path $mountedreg -Value 'Templates' -stringmatch $oldUserProfileImagePath
 
-        Set-UserRegistryLoadState -op "UnLoad" -ProfilePath $oldUserProfileImagePath -UserSid $SelectedUserSid
+        Set-UserRegistryLoadState -op "Unload" -ProfilePath $oldUserProfileImagePath -UserSid $SelectedUserSid
 
         #endregion Check User Shell Paths
 
