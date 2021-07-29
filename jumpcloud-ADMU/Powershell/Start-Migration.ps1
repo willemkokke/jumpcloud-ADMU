@@ -1,4 +1,87 @@
 #region Functions
+
+function Show-Results
+{
+    [CmdletBinding()]
+    param (
+        [Parameter()]
+        [string]
+        $domainUser,
+        [Parameter()]
+        [System.Object]
+        $admuTrackerInput,
+        [Parameter()]
+        [string[]]
+        $FixedErrors,
+        [Parameter()]
+        [string]
+        $profilePath,
+        [Parameter()]
+        [string]
+        $localUser,
+        [Parameter()]
+        [string]
+        $logPath,
+        [Parameter(Mandatory = $true)]
+        [bool]
+        $success
+    )
+    process
+    {
+        # process tasks
+        if ($success)
+        {
+            $message = "ADMU completed successfully:`n"
+            $message += "$domainUser was migrated to $localUser.`n"
+            $message += "$($localUser)'s Account Details:`n"
+            $message += "Profile Path: $profilePath`n"
+        }
+        else
+        {
+            $message = "ADMU did not complete sucessfully:`n"
+            $message = "$domainUser was not migrated.`n"
+            $failures = $($admuTrackerInput.Keys | Where-Object { $admuTrackerInput[$_].fail -eq $true } )
+            if ($failures)
+            {
+                $message += "`nEncounted errors on the following steps:`n"
+                foreach ($item in $failures)
+                {
+                    $message += "$item`n"
+                }
+            }
+            if ($FixedErrors)
+            {
+                $message += "`nChanges in the following steps were reverted:`n"
+                foreach ($item in $FixedErrors)
+                {
+                    $message += "$item`n"
+                }
+            }
+            #TODO: verbose messaging for errors
+            # foreach ($item in $failures)
+            # {
+            #     $message += "-------------------------------------------------------- `n"
+            #     $message += "Step Failure Reason: $($admuTrackerInput[$item].remedy) `n"
+            #     $message += "Step Description: $($admuTrackerInput[$item].description) `n"
+            #     $message += "-------------------------------------------------------- `n"
+            # }
+            # foreach ($item in $FixedErrors)
+            # {
+            #     $message += "-------------------------------------------------------- `n"
+            #     $message += "Step: $item | was reverted to its orgional state`n"
+            #     $message += "-------------------------------------------------------- `n"
+            # }
+        }
+        $message += "`nClick 'OK' to open the ADMU log"
+        $wshell = New-Object -ComObject Wscript.Shell
+        $var = $wshell.Popup("$message", 0, "ADMU Status", 0x1 + 0x40)
+        if ($var -eq 1)
+        {
+            notepad $logPath
+        }
+        # return $var
+    }
+}
 function Test-RegistryValueMatch
 {
 
@@ -163,7 +246,7 @@ function DenyInteractiveLogonRight
         $SID
     )
     process{
-        # Add migrating user to denylogon rights
+        # Add migrating user to deny logon rights
         $secpolFile = "$WindowsDrive\Windows\temp\ur_orig.inf"
         if (Test-Path $secpolFile)
         {
@@ -1494,6 +1577,7 @@ Function Start-Migration
             $ForceReboot = $InputObject.ForceReboot
             $UpdateHomePath = $inputObject.UpdateHomePath
             $netBiosName = $inputObject.NetBiosName
+            $displayGuiPrompt = $true
         }
         else
         {
@@ -2242,11 +2326,17 @@ Function Start-Migration
             # TODO: update tool options with valid params
             Write-ToLog -Message:('Script finished successfully; Log file location: ' + $jcAdmuLogFile)
             Write-ToLog -Message:('Tool options chosen were : ' + 'Install JC Agent = ' + $InstallJCAgent + ', Leave Domain = ' + $LeaveDomain + ', Force Reboot = ' + $ForceReboot + ', AzureADProfile = ' + $AzureADProfile + ', Create System Restore Point = ' + $CreateRestore)
+            if ($displayGuiPrompt){
+                Show-Results -domainUser $SelectedUserName $ -localUser "$($localComputerName)\$($JumpCloudUserName)" -success $true -profilePath $newUserProfileImagePath -logPath $jcAdmuLogFile
+            }
         }
         else
         {
             Write-ToLog -Message:("ADMU encoutered the following errors: $($admuTracker.Keys | Where-Object { $admuTracker[$_].fail -eq $true })") -Level Warn
             Write-ToLog -Message:("The following migration steps were reverted to their original state: $FixedErrors") -Level Warn
+            if ($displayGuiPrompt){
+                Show-Results -domainUser $SelectedUserName $ -localUser "$($localComputerName)\$($JumpCloudUserName)" -success $false -profilePath $newUserProfileImagePath -admuTrackerInput $admuTracker -FixedErrors $FixedErrors -logPath $jcAdmuLogFile
+            }
             throw "JumpCloud ADMU was unable to migrate $selectedUserName"
         }
     }
