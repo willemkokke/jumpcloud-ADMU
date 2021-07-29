@@ -60,7 +60,7 @@ Describe 'Migration Test Scenarios'{
     }
 
     Context 'Start-Migration Sucessfully Binds JumpCloud User to System'{
-        It 'user bound to system after migration' -skip {
+        It 'user bound to system after migration' {
             foreach ($user in $JCFunctionalHash.Values)
             {
                 $users = Get-JCSDKUser

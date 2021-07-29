@@ -50,7 +50,7 @@ $JCCommandTestingHash = @{
     # }
 }
 
-$JCReversionHash = @{
+$JCFunctionalHash = @{
     testCase1 = @{
         Description = 'Test that user is jumpcloud bound to system after migration'
         Username = 'ADMU_bind';
