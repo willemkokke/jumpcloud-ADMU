@@ -55,4 +55,30 @@ forEach ($User in $JCCommandTestingHash.Values)
         exit 1
     }
 }
+
+ForEach ($user in $JCFunctionalHash)
+{
+    "Testing Case for $($User.Username)"
+    if ((Get-LocalUser | Select-Object Name) -match $($User.Username))
+    {
+        Remove-LocalUserProfile $($User.Username)
+    }
+    $newUserPassword = ConvertTo-SecureString -String "$($User.Password)" -AsPlainText -Force
+    New-localUser -Name "$($User.Username)" -password $newUserPassword -ErrorVariable userExitCode -Description "Created By JumpCloud ADMU"
+    if ($userExitCode)
+    {
+        Write-Log -Message:("$userExitCode")
+        Write-Log -Message:("The user: $($User.Username) could not be created, exiting")
+        exit 1
+    }
+    # Initialize the Profile
+    New-LocalUserProfile -username "$($User.Username)" -ErrorVariable profileInit
+    if ($profileInit)
+    {
+        Write-Log -Message:("$profileInit")
+        Write-Log -Message:("The user: $($User.Username) could not be initalized, exiting")
+        exit 1
+    }
+
+}
 # End region for test user generation

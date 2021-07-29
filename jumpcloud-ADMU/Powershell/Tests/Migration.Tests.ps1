@@ -8,6 +8,10 @@ BeforeAll{
     # setup tests (This creates any of the users in the build vars dictionary)
     write-host "Running SetupAgent Script"
     . $PSScriptRoot\SetupAgent.ps1
+
+    $config = get-content 'C:\Program Files\JumpCloud\Plugins\Contrib\jcagent.conf'
+    $regex = 'systemKey\":\"(\w+)\"'
+    $systemKey = [regex]::Match($config, $regex).Groups[1].Value
 }
 Describe 'Migration Test Scenarios'{
     Context 'Start-Migration on local accounts (Test Functionallity)' {
@@ -44,6 +48,35 @@ Describe 'Migration Test Scenarios'{
                 Test-Path "$UserHome/NTUSER.DAT" | Should -Be $true
                 Test-Path "$UserHome/AppData/Local/Microsoft/Windows/UsrClass.DAT" | Should -Be $true
                 Test-Path "$UserHome/AppData/Local/Microsoft/Windows/UsrClass_original.DAT" | Should -Be $true
+            }
+        }
+    }
+    Context 'Start-Migration on Local Accounts Expecting Failed Results (Test Reversal Functionallity)' {
+        It "Start-Migration should reverse if jumpcloud user already exists" -Skip{
+            # TODO: Reversal should log that the user existed & delete the user after tun
+        }
+        It "Start-Migration shoud fail and recover if registry is loaded during process" -Skip{
+        }
+    }
+
+    Context 'Start-Migration Sucessfully Binds JumpCloud User to System'{
+        It 'user bound to system after migration' -skip {
+            foreach ($user in $JCFunctionalHash.Values)
+            {
+                $users = Get-JCSDKUser
+                if ("$($user.JCUsername)" -in $users.Username){
+                    $existing = $users | Where-Object {$_.username -eq "possum"}
+                    Remove-JcSdkUser -Id $existing.Id
+                }
+                New-JcSdkUser -Email:("$($user.JCUsername)@jumpcloudadmu.com") -Username:("$($user.JCUsername)") -Password:("$($user.password)")
+
+                $GeneratedUser = New-JcSdkUser -Email:("possum@jumpcloudadmu.com") -Username:("possum") -Password:("possumPassword!23")
+                write-host "Running: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)"
+                # Invoke-Command -ScriptBlock { Start-Migration -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -ConvertProfile $true} | Should -Not -Throw
+                { Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutoBindUJCUser $true -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath } | Should -Not -Throw
+                $associations = Get-JcSdkSystemAssociation -SystemId $systemKey -Targets user
+                $associations.ToId | Should -Be $GeneratedUser.Id
+                # TODO: read log/ read bound users from system and return statement
             }
         }
     }
