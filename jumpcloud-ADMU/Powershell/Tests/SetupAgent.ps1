@@ -8,7 +8,7 @@
 # For each user in testing hash, create new user with the specified password and init the account
 forEach ($User in $userTestingHash.Values)
 {
-    "Testing Case for $($User.Username)"
+    Write-Host "Buildint Profile for $($User.Username)"
     if ((Get-LocalUser | Select-Object Name) -match $($User.Username)){
         Remove-LocalUserProfile $($User.Username)
     }
@@ -33,7 +33,7 @@ forEach ($User in $userTestingHash.Values)
 # init users in second test group
 forEach ($User in $JCCommandTestingHash.Values)
 {
-    "Testing Case for $($User.Username)"
+    Write-Host "Buildint Profile for $($User.Username)"
     if ((Get-LocalUser | Select-Object Name) -match $($User.Username))
     {
         Remove-LocalUserProfile $($User.Username)
@@ -58,7 +58,7 @@ forEach ($User in $JCCommandTestingHash.Values)
 
 ForEach ($User in $JCFunctionalHash.Values)
 {
-    "Testing Case for $($User.Username)"
+    Write-Host "Buildint Profile for $($User.Username)"
     if ((Get-LocalUser | Select-Object Name) -match $($User.Username))
     {
         Remove-LocalUserProfile $($User.Username)

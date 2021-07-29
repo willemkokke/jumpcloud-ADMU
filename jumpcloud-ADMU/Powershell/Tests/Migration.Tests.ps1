@@ -65,12 +65,10 @@ Describe 'Migration Test Scenarios'{
             {
                 $users = Get-JCSDKUser
                 if ("$($user.JCUsername)" -in $users.Username){
-                    $existing = $users | Where-Object {$_.username -eq "possum"}
+                    $existing = $users | Where-Object { $_.username -eq "$($user.JCUsername)"}
                     Remove-JcSdkUser -Id $existing.Id
                 }
-                New-JcSdkUser -Email:("$($user.JCUsername)@jumpcloudadmu.com") -Username:("$($user.JCUsername)") -Password:("$($user.password)")
-
-                $GeneratedUser = New-JcSdkUser -Email:("possum@jumpcloudadmu.com") -Username:("possum") -Password:("possumPassword!23")
+                $GeneratedUser = New-JcSdkUser -Email:("$($user.JCUsername)@jumpcloudadmu.com") -Username:("$($user.JCUsername)") -Password:("$($user.password)")
                 write-host "Running: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)"
                 # Invoke-Command -ScriptBlock { Start-Migration -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -ConvertProfile $true} | Should -Not -Throw
                 { Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutoBindUJCUser $true -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath } | Should -Not -Throw
