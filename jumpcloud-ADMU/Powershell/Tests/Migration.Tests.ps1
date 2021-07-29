@@ -176,7 +176,13 @@ Start-Migration -JumpCloudUserName $JCU -SelectedUserName $ENV:COMPUTERNAME\$SU 
     }
 }
 
-
+AfterAll{
+    $systems = Get-JCsdkSystem
+    $CIsystems = $systems | Where-Object { $_.displayname -match "packer" }
+    foreach ($system in $CIsystems) {
+        Remove-JcSdkSystem -id $system.Id
+    }
+}
 # New User SID should have the correct profile path
 # User profile should be named correctly
 

@@ -56,7 +56,7 @@ forEach ($User in $JCCommandTestingHash.Values)
     }
 }
 
-ForEach ($user in $JCFunctionalHash)
+ForEach ($User in $JCFunctionalHash.Values)
 {
     "Testing Case for $($User.Username)"
     if ((Get-LocalUser | Select-Object Name) -match $($User.Username))
