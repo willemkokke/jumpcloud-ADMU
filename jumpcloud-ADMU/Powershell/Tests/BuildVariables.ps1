@@ -55,7 +55,7 @@ $JCFunctionalHash = @{
         Username       = 'ADMU_bind';
         UserSID        = '';
         Password       = $testUserPassword;
-        JCUsername     = 'ADMU_bind';
+        JCUsername     = 'ADMU_bind2';
         UpdateHomePath = $false
     }
 }
