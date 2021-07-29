@@ -28,7 +28,7 @@ Write-ToLog 'Loading Jumpcloud ADMU. Please Wait.. Loading ADMU GUI..'
 
      </StackPanel>
 
-     <Grid Background="#0F0F2D" 
+     <Grid Background="#0F0F2D"
            Grid.ColumnSpan="2">
 
          <Grid.ColumnDefinitions>
