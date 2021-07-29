@@ -15,8 +15,9 @@ Starts the JumpCloud Active Directory Migration process.
 ### cmd
 ```
 Start-Migration -JumpCloudUserName <String> -SelectedUserName <String> -TempPassword <String>
- [-LeaveDomain <Boolean>] [-ForceReboot <Boolean>] [-AzureADProfile <Boolean>] [-InstallJCAgent <Boolean>]
- [-AutobindJCUser <Boolean>] [-JumpCloudConnectKey <String>] [-JumpCloudAPIKey <String>] [<CommonParameters>] [-UpdateHomePath <Boolean>]
+ [-LeaveDomain <Boolean>] [-ForceReboot <Boolean>] [-UpdateHomePath <Boolean>] [-AzureADProfile <Boolean>]
+ [-InstallJCAgent <Boolean>] [-AutobindJCUser <Boolean>] [-JumpCloudConnectKey <String>]
+ [-JumpCloudAPIKey <String>] [<CommonParameters>]
 ```
 
 ### form
@@ -204,11 +205,11 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -JumpCloudAPIKey
-{{ Fill JumpCloudAPIKey Description }}
+### -UpdateHomePath
+If set to $true, the ADMU will attempt to rename the selected username's homepath to the jumpcloud username. Note, this could break any applications that rely on a hard coded homepath. By default this is not set and will not rename the homepath.
 
 ```yaml
-Type: System.String
+Type: System.Boolean
 Parameter Sets: cmd
 Aliases:
 
@@ -219,11 +220,11 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -UpdateHomePath
-If set to $true, the ADMU will attempt to rename the selected username's homepath to the jumpcloud username. Note, this could break any applications that rely on a hard coded homepath. By default this is not set and will not rename the homepath.
+### -JumpCloudAPIKey
+{{ Fill JumpCloudAPIKey Description }}
 
 ```yaml
-Type: System.Boolean
+Type: System.String
 Parameter Sets: cmd
 Aliases:
 
