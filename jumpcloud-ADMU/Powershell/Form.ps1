@@ -92,7 +92,7 @@ Write-ToLog 'Loading Jumpcloud ADMU. Please Wait.. Loading ADMU GUI..'
             </Button.Effect>
         </Button>
         <Image
-            Source="https://jumpcloud.com/wp-content/themes/jumpcloud/assets/images/jumpcloud-press-kit/logos/01-combination-mark-color.png" Margin="-30,12,589,363" Grid.RowSpan="2"/>
+            Source="https://jumpcloud.com/wp-content/themes/jumpcloud/assets/images/jumpcloud-press-kit/logos/01-combination-mark-color.png" Margin="-17,23,654,372" Grid.RowSpan="2"/>
     </Grid>
 </Window>
 '@
