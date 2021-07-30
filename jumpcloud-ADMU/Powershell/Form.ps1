@@ -22,12 +22,12 @@ Write-ToLog 'Loading Jumpcloud ADMU. Please Wait.. Loading ADMU GUI..'
         <Grid Row="0"
               Background="#0F0F2D"
               Grid.ColumnSpan="1">
-            <Button x:Name="btn_close" Content="X"  VerticalAlignment="Center" Width="24" Height="25" Margin="976,0,0,0"/>
+            <Button Name="btn_close" Content="X"  VerticalAlignment="Center" Width="24" Height="25" Margin="976,0,0,0"/>
         </Grid>
-        <ListView x:Name="lvProfileList" Margin="10,109,10,171" Grid.Row="1">
+        <ListView Name="lvProfileList" Margin="10,109,10,171" Grid.Row="1">
             <ListView.View>
                 <GridView>
-                    <GridViewColumn Header="System Accounts" DisplayMemberBinding="{Binding UserName}" Width="220"/>
+                    <GridViewColumn Header="System Accounts" DisplayMemberBinding="{Binding UserName}" Width="300"/>
                     <GridViewColumn Header="Last Login" DisplayMemberBinding="{Binding LastLogin}" Width="135"/>
                     <GridViewColumn Header="Currently Active" DisplayMemberBinding="{Binding Loaded}" Width="145" />
                     <GridViewColumn Header="Local Admin" DisplayMemberBinding="{Binding IsLocalAdmin}" Width="115"/>
@@ -38,13 +38,13 @@ Write-ToLog 'Loading Jumpcloud ADMU. Please Wait.. Loading ADMU GUI..'
         <GroupBox Header="System Migration Options" Width="502" FontWeight="Bold" HorizontalAlignment="Left" Margin="11,305,0,10" Grid.Row="1">
             <Grid HorizontalAlignment="Left" Height="125" Margin="2,0,0,0" VerticalAlignment="Top" Width="490">
                 <Label Content="JumpCloud Connect Key :" HorizontalAlignment="Left" Margin="3,8,0,0" VerticalAlignment="Top" AutomationProperties.HelpText="https://console.jumpcloud.com/#/systems/new" ToolTip="https://console.jumpcloud.com/#/systems/new" FontWeight="Normal"/>
-                <TextBox x:Name="tbJumpCloudConnectKey" HorizontalAlignment="Left" Height="23" Margin="149,10,0,0" Text="Enter JumpCloud Connect Key" VerticalAlignment="Top" Width="271" Background="#FFC6CBCF" FontWeight="Bold" IsEnabled="False"/>
-                <CheckBox x:Name="cb_installjcagent" Content="Install JCAgent" HorizontalAlignment="Left" Margin="123,76,0,0" VerticalAlignment="Top" FontWeight="Normal" IsChecked="False"/>
-                <CheckBox x:Name="cb_leavedomain" Content="Leave Domain" HorizontalAlignment="Left" Margin="10,98,0,0" VerticalAlignment="Top" FontWeight="Normal" IsChecked="False"/>
-                <CheckBox x:Name="cb_forcereboot" Content="Force Reboot" HorizontalAlignment="Left" Margin="10,76,0,0" VerticalAlignment="Top" FontWeight="Normal" IsChecked="False"/>
+                <TextBox Name="tbJumpCloudConnectKey" HorizontalAlignment="Left" Height="23" Margin="149,10,0,0" Text="Enter JumpCloud Connect Key" VerticalAlignment="Top" Width="271" Background="#FFC6CBCF" FontWeight="Bold" IsEnabled="False"/>
+                <CheckBox Name="cb_installjcagent" Content="Install JCAgent" HorizontalAlignment="Left" Margin="123,76,0,0" VerticalAlignment="Top" FontWeight="Normal" IsChecked="False"/>
+                <CheckBox Name="cb_leavedomain" Content="Leave Domain" HorizontalAlignment="Left" Margin="10,98,0,0" VerticalAlignment="Top" FontWeight="Normal" IsChecked="False"/>
+                <CheckBox Name="cb_forcereboot" Content="Force Reboot" HorizontalAlignment="Left" Margin="10,76,0,0" VerticalAlignment="Top" FontWeight="Normal" IsChecked="False"/>
                 <Label Content="JumpCloud API Key :" HorizontalAlignment="Left" Margin="3,34,0,0" VerticalAlignment="Top" AutomationProperties.HelpText="https://console.jumpcloud.com/" ToolTip="https://console.jumpcloud.com/" FontWeight="Normal"/>
-                <TextBox x:Name="tbJumpCloudAPIKey" HorizontalAlignment="Left" Height="23" Margin="149,40,0,0" Text="Enter JumpCloud API Key" VerticalAlignment="Top" Width="271" Background="#FFC6CBCF" FontWeight="Bold" IsEnabled="False"/>
-                <CheckBox x:Name="cb_autobindjcuser" Content="Autobind JC User" HorizontalAlignment="Left" Margin="123,98,0,0" VerticalAlignment="Top" FontWeight="Normal" IsChecked="False"/>
+                <TextBox Name="tbJumpCloudAPIKey" HorizontalAlignment="Left" Height="23" Margin="149,40,0,0" Text="Enter JumpCloud API Key" VerticalAlignment="Top" Width="271" Background="#FFC6CBCF" FontWeight="Bold" IsEnabled="False"/>
+                <CheckBox Name="cb_autobindjcuser" Content="Autobind JC User" HorizontalAlignment="Left" Margin="123,98,0,0" VerticalAlignment="Top" FontWeight="Normal" IsChecked="False"/>
             </Grid>
         </GroupBox>
         <GroupBox Header="Account Migration Information" Height="92" FontWeight="Bold" Margin="518,305,10,68" Grid.Row="1">
@@ -56,8 +56,8 @@ Write-ToLog 'Loading Jumpcloud ADMU. Please Wait.. Loading ADMU GUI..'
                 </Grid.ColumnDefinitions>
                 <Label Content="Local Account Username :" HorizontalAlignment="Left" Margin="0,8,0,0" VerticalAlignment="Top" FontWeight="Normal" Grid.ColumnSpan="2"/>
                 <Label Content="Local Account Password :" HorizontalAlignment="Left" Margin="0,36,0,0" VerticalAlignment="Top" FontWeight="Normal" Grid.ColumnSpan="2"/>
-                <TextBox x:Name="tbJumpCloudUserName" HorizontalAlignment="Left" Height="23" Margin="127,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="282" Text="Username should match JumpCloud username" Background="#FFC6CBCF" FontWeight="Bold" Grid.Column="1" Grid.ColumnSpan="2" />
-                <TextBox x:Name="tbTempPassword" HorizontalAlignment="Left" Height="23" Margin="128,39,0,0" TextWrapping="Wrap" Text="Temp123!Temp123!" VerticalAlignment="Top" Width="200" FontWeight="Normal" Grid.Column="1" Grid.ColumnSpan="2"/>
+                <TextBox Name="tbJumpCloudUserName" HorizontalAlignment="Left" Height="23" Margin="127,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="282" Text="Username should match JumpCloud username" Background="#FFC6CBCF" FontWeight="Bold" Grid.Column="1" Grid.ColumnSpan="2" />
+                <TextBox Name="tbTempPassword" HorizontalAlignment="Left" Height="23" Margin="128,39,0,0" TextWrapping="Wrap" Text="Temp123!Temp123!" VerticalAlignment="Top" Width="200" FontWeight="Normal" Grid.Column="1" Grid.ColumnSpan="2"/>
             </Grid>
         </GroupBox>
         <GroupBox Header="System Information" FontWeight="Bold" Margin="376,0,10,363" Grid.Row="1">
@@ -78,15 +78,15 @@ Write-ToLog 'Loading Jumpcloud ADMU. Please Wait.. Loading ADMU GUI..'
                 <Label Content="NetBios Name:" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top" FontWeight="Normal" Grid.Column="0" Grid.ColumnSpan="1" Grid.Row="2" />
                 <Label Content="AzureAD Joined:" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top" FontWeight="Normal" Grid.Column="2" Grid.ColumnSpan="1" Grid.Row="0" />
                 <Label Content="Tenant Name:" HorizontalAlignment="Left" Margin="0,0,0,0" VerticalAlignment="Top" FontWeight="Normal" Grid.Column="2" Grid.ColumnSpan="1" Grid.Row="1"/>
-                <Label x:Name="lbTenantName" Content="" FontWeight="Normal" Grid.Column="3" Grid.Row="1"/>
-                <Label x:Name="lbAzureAD_Joined" Content="" FontWeight="Normal" Grid.Column="3" Grid.Row="0"/>
-                <Label x:Name="lbComputerName" Content="" FontWeight="Normal" Grid.Column="1" Grid.Row="0"/>
-                <Label x:Name="lbDomainName" Content="" FontWeight="Normal" Grid.Column="1" Grid.Row="1"/>
-                <Label x:Name="lbNetBios" Content="" FontWeight="Normal" Grid.Column="1" Grid.Row="2"/>
+                <Label Name="lbTenantName" Content="" FontWeight="Normal" Grid.Column="3" Grid.Row="1"/>
+                <Label Name="lbAzureAD_Joined" Content="" FontWeight="Normal" Grid.Column="3" Grid.Row="0"/>
+                <Label Name="lbComputerName" Content="" FontWeight="Normal" Grid.Column="1" Grid.Row="0"/>
+                <Label Name="lbDomainName" Content="" FontWeight="Normal" Grid.Column="1" Grid.Row="1"/>
+                <Label Name="lbNetBios" Content="" FontWeight="Normal" Grid.Column="1" Grid.Row="2"/>
 
             </Grid>
         </GroupBox>
-        <Button x:Name="bDeleteProfile" Content="Select Profile" Height="23" IsEnabled="False" Margin="769,432,10,10" Grid.Row="1">
+        <Button Name="bDeleteProfile" Content="Select Profile" Height="23" IsEnabled="False" Margin="769,432,10,10" Grid.Row="1">
             <Button.Effect>
                 <DropShadowEffect/>
             </Button.Effect>
@@ -268,11 +268,9 @@ $lbComputerName.Content = $WmiComputerSystem.Name
 #DomainInformation
 $lbDomainName.Content = $DomainName
 $lbNetBios.Content = $NetBiosName
-$lbsecurechannel.Content = $securechannelstatus
 
 #AzureADInformation
 $lbAzureAD_Joined.Content = $AzureADStatus
-$lbWorkplace_Joined.Content = $Workplace_join
 $lbTenantName.Content = $TenantName
 
 Function Test-Button([object]$tbJumpCloudUserName, [object]$tbJumpCloudConnectKey, [object]$tbTempPassword, [object]$lvProfileList, [object]$tbJumpCloudAPIKey)
@@ -342,8 +340,6 @@ Function Test-Button([object]$tbJumpCloudUserName, [object]$tbJumpCloudConnectKe
 }
 
 ## Form changes & interactions
-# Verbose checkbox
-$cb_verbose.Add_Checked( { $VerbosePreference = 'Continue' })
 
 # Install JCAgent checkbox
 $script:InstallJCAgent = $false
@@ -495,18 +491,6 @@ $bDeleteProfile.Add_Click( {
         # Close form
         $Form.Close()
     })
-
-# JCConsole Link
-$tbjcconsole.Add_PreviewMouseDown( { [System.Diagnostics.Process]::start('https://console.jumpcloud.com/login') })
-
-# JCADMUGH Link
-$tbjcadmugh.Add_PreviewMouseDown( { [System.Diagnostics.Process]::start('https://github.com/TheJumpCloud/jumpcloud-ADMU') })
-
-# JCSupport Link
-$tbjcsupport.Add_PreviewMouseDown( { [System.Diagnostics.Process]::start('https://support.jumpcloud.com/support/s/') })
-
-# jcadmulog
-$tbjcadmulog.Add_PreviewMouseDown( { Invoke-Item "C:\Windows\Temp\JCADMU.log" })
 
 # close button
 $btn_close.Add_Click( {
