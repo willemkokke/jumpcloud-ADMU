@@ -1655,17 +1655,17 @@ Function Start-Migration
 
         # Check User Shell Paths
 
-        $oldUserProfileImagePath = Get-ItemPropertyValue -Path ('HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\' + $SelectedUserSID) -Name 'ProfileImagePath'
+        #$oldUserProfileImagePath = Get-ItemPropertyValue -Path ('HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\' + $SelectedUserSID) -Name 'ProfileImagePath'
 
         #TODO: move regload/unload test into begin block from below
-        Set-UserRegistryLoadState -op "Unload" -ProfilePath $oldUserProfileImagePath -UserSid $SelectedUserSid
-        Set-UserRegistryLoadState -op "Load" -ProfilePath $oldUserProfileImagePath -UserSid $SelectedUserSid
+        #Set-UserRegistryLoadState -op "Unload" -ProfilePath $oldUserProfileImagePath -UserSid $SelectedUserSid
+        #$Set-UserRegistryLoadState -op "Load" -ProfilePath $oldUserProfileImagePath -UserSid $SelectedUserSid
 
-        $mountedreg = 'HCU:\' + $SelectedUserSid + '_admu' + '\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders'
+        #$mountedreg = 'HCU:\' + $SelectedUserSid + '_admu' + '\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders'
 
-        Test-RegistryValueMatch -Path $mountedreg -Value 'Templates' -stringmatch $oldUserProfileImagePath
+        #Test-RegistryValueMatch -Path $mountedreg -Value 'Templates' -stringmatch $oldUserProfileImagePath
 
-        Set-UserRegistryLoadState -op "Unload" -ProfilePath $oldUserProfileImagePath -UserSid $SelectedUserSid
+        #Set-UserRegistryLoadState -op "Unload" -ProfilePath $oldUserProfileImagePath -UserSid $SelectedUserSid
 
         #endregion Check User Shell Paths
 
@@ -2143,7 +2143,14 @@ Function Start-Migration
         #region AutobindUserToJCSystem
         if ($AutobindJCUser -eq $true)
         {
+            try {
             BindUsernameToJCSystem -JcApiKey $JumpCloudAPIKey -JumpCloudUserName $JumpCloudUserName
+            Write-ToLog -Message:('jumpcloud autobind step succeeded for user ' + $JumpCloudUserName)
+
+        }
+        catch {
+            Write-ToLog -Message:('jumpcloud autobind step failed, apikey or jumpcloud username is incorrect.') -Level:('Warning')
+        }
         }
         #endregion AutobindUserToJCSystem
 
