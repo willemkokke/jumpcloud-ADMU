@@ -1571,6 +1571,10 @@ Function Start-Migration
             {
                 $JumpCloudConnectKey = $inputObject.JumpCloudConnectKey
             }
+            if (($inputObject.JumpCloudAPIKey).Length -eq 40)
+            {
+                $JumpCloudAPIKey = $inputObject.JumpCloudAPIKey
+            }
             $InstallJCAgent = $inputObject.InstallJCAgent
             $AutobindJCUser = $inputObject.AutobindJCUser
             $LeaveDomain = $InputObject.LeaveDomain
