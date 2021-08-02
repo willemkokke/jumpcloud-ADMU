@@ -53,7 +53,7 @@ Describe 'Migration Test Scenarios'{
     }
     Context 'Start-Migration on Local Accounts Expecting Failed Results (Test Reversal Functionallity)' {
         It "Start-Migration shoud fail and recover if backup step can not be compleated"{
-            foreach ($user in $JCReversionHash) {
+            foreach ($user in $JCReversionHash.Values) {
                 # Begin job to watch start-migration
                 Start-Job -ScriptBlock:( {
                         [CmdletBinding()]
