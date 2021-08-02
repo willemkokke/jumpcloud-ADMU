@@ -60,8 +60,8 @@ $JCFunctionalHash = @{
     }
 }
 
-$JCReversionHash = {
-    newUserInit = @{
+$JCReversionHash = @{
+    testCase1 = @{
         Description    = 'Test that newUserInit reversal step works'
         Username       = 'ADMU_newUserInit';
         UserSID        = '';
