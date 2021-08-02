@@ -1627,6 +1627,7 @@ Function Start-Migration
             uwpAppXPacakges     = @{'pass' = $false; 'fail' = $false }
             uwpDownloadExe      = @{'pass' = $false; 'fail' = $false }
             leaveDomain         = @{'pass' = $false; 'fail' = $false }
+            autoBind            = @{'pass' = $false; 'fail' = $false }
         }
 
         Write-ToLog -Message("The Selected Migration user is: $SelectedUserName")
@@ -2144,13 +2145,14 @@ Function Start-Migration
         if ($AutobindJCUser -eq $true)
         {
             try {
-            BindUsernameToJCSystem -JcApiKey $JumpCloudAPIKey -JumpCloudUserName $JumpCloudUserName
-            Write-ToLog -Message:('jumpcloud autobind step succeeded for user ' + $JumpCloudUserName)
-
-        }
-        catch {
-            Write-ToLog -Message:('jumpcloud autobind step failed, apikey or jumpcloud username is incorrect.') -Level:('Warning')
-        }
+                BindUsernameToJCSystem -JcApiKey $JumpCloudAPIKey -JumpCloudUserName $JumpCloudUserName
+                Write-ToLog -Message:('jumpcloud autobind step succeeded for user ' + $JumpCloudUserName)
+                $admuTracker.autoBind.pass = $true
+            }
+            catch {
+                Write-ToLog -Message:('jumpcloud autobind step failed, apikey or jumpcloud username is incorrect.') -Level:('Warning')
+                $admuTracker.autoBind.fail = $true
+            }
         }
         #endregion AutobindUserToJCSystem
 

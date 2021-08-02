@@ -52,10 +52,42 @@ Describe 'Migration Test Scenarios'{
         }
     }
     Context 'Start-Migration on Local Accounts Expecting Failed Results (Test Reversal Functionallity)' {
+        foreach ($user in $JCReversionHash) {
+            It "Start-Migration shoud fail and recover if backup step can not be compleated"{
+                # Begin job to watch start-migration
+                Start-Job -ScriptBlock:( {
+                        [CmdletBinding()]
+                        param (
+                            [Parameter()]
+                            [string]
+                            $UserName
+                        )
+                        # While user profile does not exist, sleep
+                        $path = "C:\Users\$UserName"
+                        $file = "$path\ntuser.dat"
+                        # while (!(test-path $path))
+                        # {
+                        #     $date = Get-Date -UFormat "%m-%d-%y %H:%M"
+                        #     Write-Host: "$($date) - $path directory does not exist yet"
+                        #     Start-Sleep 2
+                        # }
+                        # When user profile exists, traverse into profile
+                        while (!(test-path $file))
+                        {
+                            $date = Get-Date -UFormat "%m-%d-%y %H:%M"
+                            Write-Host: "$($date) - $file file does not exist yet"
+                            Start-Sleep 2
+                        }
+                        # As soon as new profile exists, create two files that would make the process fail
+                        rename-item $file -NewName "notyouruser.dat"
+                        # Begin job
+                    }) -ArgumentList:($user.Username)
+                # Begin job to kick off startMigration
+                { Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutobindJCUser $true -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath } | Should -Throw
+            }
+        }
         It "Start-Migration should reverse if jumpcloud user already exists" -Skip{
             # TODO: Reversal should log that the user existed & delete the user after tun
-        }
-        It "Start-Migration shoud fail and recover if registry is loaded during process" -Skip{
         }
     }
 
