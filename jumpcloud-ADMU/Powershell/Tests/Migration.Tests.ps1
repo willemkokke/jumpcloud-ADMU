@@ -26,6 +26,7 @@ Describe 'Migration Test Scenarios'{
             foreach ($user in $userTestingHash.Values)
             {
                 write-host "Running: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)"
+                write-host "`nRunning: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)`n"
                 # Invoke-Command -ScriptBlock { Start-Migration -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -ConvertProfile $true} | Should -Not -Throw
                 { Start-Migration -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath} | Should -Not -Throw
             }
@@ -52,7 +53,7 @@ Describe 'Migration Test Scenarios'{
         }
     }
     Context 'Start-Migration on Local Accounts Expecting Failed Results (Test Reversal Functionallity)' {
-        It "Start-Migration shoud fail and recover if backup step can not be compleated"{
+        It "Start-Migration shoud fail and recover if backup step can not be completed" {
             foreach ($user in $JCReversionHash.Values) {
                 # Begin job to watch start-migration
                 Start-Job -ScriptBlock:( {
@@ -62,15 +63,8 @@ Describe 'Migration Test Scenarios'{
                             [string]
                             $UserName
                         )
-                        # While user profile does not exist, sleep
                         $path = "C:\Users\$UserName"
                         $file = "$path\ntuser.dat"
-                        # while (!(test-path $path))
-                        # {
-                        #     $date = Get-Date -UFormat "%m-%d-%y %H:%M"
-                        #     Write-Host: "$($date) - $path directory does not exist yet"
-                        #     Start-Sleep 2
-                        # }
                         # When user profile exists, traverse into profile
                         while (!(test-path $file))
                         {
@@ -78,11 +72,12 @@ Describe 'Migration Test Scenarios'{
                             Write-Host: "$($date) - $file file does not exist yet"
                             Start-Sleep 2
                         }
-                        # As soon as new profile exists, create two files that would make the process fail
+                        # As soon as new profile exists, rename ntuser.dat which should trigger a failure
                         rename-item $file -NewName "notyouruser.dat"
                         # Begin job
                     }) -ArgumentList:($user.Username)
                 # Begin job to kick off startMigration
+                write-host "`nRunning: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)`n"
                 { Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutobindJCUser $true -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath } | Should -Throw
             }
         }
@@ -101,7 +96,7 @@ Describe 'Migration Test Scenarios'{
                     Remove-JcSdkUser -Id $existing.Id
                 }
                 $GeneratedUser = New-JcSdkUser -Email:("$($user.JCUsername)@jumpcloudadmu.com") -Username:("$($user.JCUsername)") -Password:("$($user.password)")
-                write-host "Running: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)"
+                write-host "`nRunning: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)`n"
                 # Invoke-Command -ScriptBlock { Start-Migration -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -ConvertProfile $true} | Should -Not -Throw
                 { Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutobindJCUser $true -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath } | Should -Not -Throw
                 $associations = Get-JcSdkSystemAssociation -SystemId $systemKey -Targets user
