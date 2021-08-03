@@ -79,8 +79,10 @@ Describe 'Migration Test Scenarios'{
                 # Begin job to kick off startMigration
                 write-host "`nRunning: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)`n"
                 { Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutobindJCUser $true -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath } | Should -Throw
-                # NewUserInit should be reverted and the new user profile path should be disabled
+                # NewUserInit should be reverted and the new user profile path should not exist
                 "C:\Users\$($user.JCUsername)" | Should -Not -Exist
+                # The original user should exist
+                "C:\Users\$($user.username)" | Should -Exist
             }
         }
         It "Start-Migration should reverse if jumpcloud user already exists" -Skip{
@@ -95,6 +97,7 @@ Describe 'Migration Test Scenarios'{
                 $users = Get-JCSDKUser
                 if ("$($user.JCUsername)" -in $users.Username){
                     $existing = $users | Where-Object { $_.username -eq "$($user.JCUsername)"}
+                    Write-Host "Found JumpCloud User, $($existing.Id) removing..."
                     Remove-JcSdkUser -Id $existing.Id
                 }
                 $GeneratedUser = New-JcSdkUser -Email:("$($user.JCUsername)@jumpcloudadmu.com") -Username:("$($user.JCUsername)") -Password:("$($user.password)")

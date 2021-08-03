@@ -67,7 +67,7 @@ $JCReversionHash = @{
         UserSID        = '';
         Password       = $testUserPassword;
         JCUsername     = 'ADMU_newUserInit2';
-        UpdateHomePath = $false;
+        UpdateHomePath = $true;
 
     }
     # renameOriginalFiles = @{

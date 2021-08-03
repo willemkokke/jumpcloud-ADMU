@@ -1905,7 +1905,7 @@ Function Start-Migration
         }
         catch
         {
-            Write-ToLog -Message("Could not rename origional registry files for backup purposes: Exiting...")
+            Write-ToLog -Message("Could not rename original registry files for backup purposes: Exiting...")
             Write-ToLog -Message($_.Exception.Message)
             $admuTracker.renameOriginalFiles.fail = $true
             return
@@ -1989,9 +1989,11 @@ Function Start-Migration
                 catch
                 {
                     Write-ToLog -Message:("Unable to rename user profile path to new name - $JumpCloudUserName.")
-                    exit 1
+                    $admuTracker.renameHomeDirectory.fail = $true
+
                 }
             }
+            $admuTracker.renameHomeDirectory.pass = $true
             # TODO: reverse track this if we fail later
         }
         else
