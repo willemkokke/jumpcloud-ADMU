@@ -8,11 +8,12 @@ Write-ToLog 'Loading Jumpcloud ADMU. Please Wait.. Loading ADMU GUI..'
 <Window
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="JumpCloud ADMU 2.0.0" Height="500" Width="1000"
-        WindowStyle="None"
+        Title="JumpCloud ADMU 2.0.0" Height="629" Width="1000"
+        WindowStyle="SingleBorderWindow"
         ResizeMode="NoResize"
         Background="White">
-    <Grid Margin="0,0,0,10">
+
+    <Grid Margin="10,10,10,10">
         <Grid.RowDefinitions>
             <RowDefinition Height="25"/>
             <RowDefinition/>
@@ -20,11 +21,8 @@ Write-ToLog 'Loading Jumpcloud ADMU. Please Wait.. Loading ADMU GUI..'
         <Grid.ColumnDefinitions>
         </Grid.ColumnDefinitions>
         <Grid Row="0"
-              Background="#0F0F2D"
-              Grid.ColumnSpan="1">
-            <Button Name="btn_close" Content="X"  VerticalAlignment="Center" Width="24" Height="25" Margin="976,0,0,0"/>
-        </Grid>
-        <ListView Name="lvProfileList" Margin="10,109,10,171" Grid.Row="1">
+              Grid.ColumnSpan="1"/>
+        <ListView Name="lvProfileList" Margin="10,223,10,188" Grid.Row="1">
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="System Accounts" DisplayMemberBinding="{Binding UserName}" Width="300"/>
@@ -35,32 +33,37 @@ Write-ToLog 'Loading Jumpcloud ADMU. Please Wait.. Loading ADMU GUI..'
                 </GridView>
             </ListView.View>
         </ListView>
-        <GroupBox Header="System Migration Options" Width="502" FontWeight="Bold" HorizontalAlignment="Left" Margin="11,305,0,10" Grid.Row="1">
-            <Grid HorizontalAlignment="Left" Height="125" Margin="2,0,0,0" VerticalAlignment="Top" Width="490">
-                <Label Content="JumpCloud Connect Key :" HorizontalAlignment="Left" Margin="3,8,0,0" VerticalAlignment="Top" AutomationProperties.HelpText="https://console.jumpcloud.com/#/systems/new" ToolTip="https://console.jumpcloud.com/#/systems/new" FontWeight="Normal"/>
-                <TextBox Name="tbJumpCloudConnectKey" HorizontalAlignment="Left" Height="23" Margin="149,10,0,0" Text="Enter JumpCloud Connect Key" VerticalAlignment="Top" Width="271" Background="#FFC6CBCF" FontWeight="Bold" IsEnabled="False"/>
+        <GroupBox Header="System Migration Options" Width="485" FontWeight="Bold" HorizontalAlignment="Left" Margin="0,395,0,0" Grid.Row="1">
+            <Grid HorizontalAlignment="Left" Height="139" Margin="10,0,0,0" VerticalAlignment="Center" Width="465">
+
+                <Label Name="lbl_connectkey" Content="JumpCloud Connect Key :" HorizontalAlignment="Left" Margin="3,6,0,0" VerticalAlignment="Top" FontWeight="Normal" />
+                <TextBox Name="tbJumpCloudConnectKey" HorizontalAlignment="Left" Height="23" Margin="167,10,0,0" Text="Enter JumpCloud Connect Key" VerticalAlignment="Top" Width="271" Background="#FFC6CBCF" FontWeight="Bold" IsEnabled="False"/>
                 <CheckBox Name="cb_installjcagent" Content="Install JCAgent" HorizontalAlignment="Left" Margin="123,76,0,0" VerticalAlignment="Top" FontWeight="Normal" IsChecked="False"/>
                 <CheckBox Name="cb_leavedomain" Content="Leave Domain" HorizontalAlignment="Left" Margin="10,98,0,0" VerticalAlignment="Top" FontWeight="Normal" IsChecked="False"/>
                 <CheckBox Name="cb_forcereboot" Content="Force Reboot" HorizontalAlignment="Left" Margin="10,76,0,0" VerticalAlignment="Top" FontWeight="Normal" IsChecked="False"/>
-                <Label Content="JumpCloud API Key :" HorizontalAlignment="Left" Margin="3,34,0,0" VerticalAlignment="Top" AutomationProperties.HelpText="https://console.jumpcloud.com/" ToolTip="https://console.jumpcloud.com/" FontWeight="Normal"/>
-                <TextBox Name="tbJumpCloudAPIKey" HorizontalAlignment="Left" Height="23" Margin="149,40,0,0" Text="Enter JumpCloud API Key" VerticalAlignment="Top" Width="271" Background="#FFC6CBCF" FontWeight="Bold" IsEnabled="False"/>
+                <Label Name="lbl_apikey" Content="JumpCloud API Key :" HorizontalAlignment="Left" Margin="3,36,0,0" VerticalAlignment="Top" AutomationProperties.HelpText="https://console.jumpcloud.com/" ToolTip="https://console.jumpcloud.com/" FontWeight="Normal" />
+                <TextBox Name="tbJumpCloudAPIKey" HorizontalAlignment="Left" Height="23" Margin="167,40,0,0" Text="Enter JumpCloud API Key" VerticalAlignment="Top" Width="271" Background="#FFC6CBCF" FontWeight="Bold" IsEnabled="False"/>
                 <CheckBox Name="cb_autobindjcuser" Content="Autobind JC User" HorizontalAlignment="Left" Margin="123,98,0,0" VerticalAlignment="Top" FontWeight="Normal" IsChecked="False"/>
+                <Image Name="img_ckey_info" HorizontalAlignment="Left" Height="19" Margin="148,11,0,0" VerticalAlignment="Top" Width="19" Source="https://i.ibb.co/1L0CRCh/info.png" Visibility="Hidden" ToolTip="https://console.jumpcloud.com/" />
+                <Image Name="img_ckey_valid" HorizontalAlignment="Left" Height="19" Margin="443,12,0,0" VerticalAlignment="Top" Width="19" Source="https://i.ibb.co/rfjgc8h/error.png" Visibility="Hidden" ToolTip="Connect Key must be 40chars &amp; not contain spaces" />
+                <Image Name="img_apikey_info" HorizontalAlignment="Left" Height="19" Margin="148,41,0,0" VerticalAlignment="Top" Width="19" Source="https://i.ibb.co/1L0CRCh/info.png" Visibility="Hidden" ToolTip="https://console.jumpcloud.com/" />
+                <Image Name="img_apikey_valid" HorizontalAlignment="Left" Height="19" Margin="443,41,0,0" VerticalAlignment="Top" Width="19" Source="https://i.ibb.co/rfjgc8h/error.png" Visibility="Hidden" ToolTip="Correct error" />
+
             </Grid>
         </GroupBox>
-        <GroupBox Header="Account Migration Information" Height="92" FontWeight="Bold" Margin="518,305,10,68" Grid.Row="1">
+        <GroupBox Header="Account Migration Information" FontWeight="Bold" Margin="490,395,10,58" Grid.Row="1">
             <Grid HorizontalAlignment="Left" Height="66" Margin="1,0,0,0" VerticalAlignment="Top" Width="461">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="23*"/>
-                    <ColumnDefinition Width="129*"/>
-                    <ColumnDefinition Width="303*"/>
-                </Grid.ColumnDefinitions>
                 <Label Content="Local Account Username :" HorizontalAlignment="Left" Margin="0,8,0,0" VerticalAlignment="Top" FontWeight="Normal" Grid.ColumnSpan="2"/>
                 <Label Content="Local Account Password :" HorizontalAlignment="Left" Margin="0,36,0,0" VerticalAlignment="Top" FontWeight="Normal" Grid.ColumnSpan="2"/>
-                <TextBox Name="tbJumpCloudUserName" HorizontalAlignment="Left" Height="23" Margin="127,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="282" Text="Username should match JumpCloud username" Background="#FFC6CBCF" FontWeight="Bold" Grid.Column="1" Grid.ColumnSpan="2" />
-                <TextBox Name="tbTempPassword" HorizontalAlignment="Left" Height="23" Margin="128,39,0,0" TextWrapping="Wrap" Text="Temp123!Temp123!" VerticalAlignment="Top" Width="200" FontWeight="Normal" Grid.Column="1" Grid.ColumnSpan="2"/>
+                <TextBox Name="tbJumpCloudUserName" HorizontalAlignment="Left" Height="23" Margin="192,10,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="235" Text="Username should match JumpCloud username" Background="#FFC6CBCF" FontWeight="Bold" />
+                <TextBox Name="tbTempPassword" HorizontalAlignment="Left" Height="23" Margin="192,38,0,0" TextWrapping="Wrap" Text="Temp123!Temp123!" VerticalAlignment="Top" Width="235" FontWeight="Normal"/>
+                <Image Name="img_localaccount_info" HorizontalAlignment="Left" Height="19" Margin="169,11,0,0" VerticalAlignment="Top" Width="19" Source="https://i.ibb.co/1L0CRCh/info.png" Visibility="Visible"/>
+                <Image Name="img_localaccount_valid" HorizontalAlignment="Left" Height="19" Margin="432,12,0,0" VerticalAlignment="Top" Width="19" Source="https://i.ibb.co/rfjgc8h/error.png" ToolTip="Local account username can't be empty, contain spaces, already exist on the local system or match the local computer name." Visibility="Visible" />
+                <Image Name="img_localaccount_password_info" HorizontalAlignment="Left" Height="19" Margin="169,40,0,0" VerticalAlignment="Top" Width="19" Source="https://i.ibb.co/1L0CRCh/info.png" Visibility="Visible"/>
+                <Image Name="img_localaccount_password_valid" HorizontalAlignment="Left" Height="19" Margin="432,40,0,0" VerticalAlignment="Top" Width="19" Source="https://i.ibb.co/dJyG1q5/check.png" Visibility="Visible"/>
             </Grid>
         </GroupBox>
-        <GroupBox Header="System Information" FontWeight="Bold" Margin="376,0,10,363" Grid.Row="1">
+        <GroupBox Header="System Information" FontWeight="Bold" Margin="397,108,10,350" Grid.Row="1">
             <Grid HorizontalAlignment="Left" Height="80" Margin="10,0,0,0" VerticalAlignment="Center" Width="594">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="125"/>
@@ -86,15 +89,18 @@ Write-ToLog 'Loading Jumpcloud ADMU. Please Wait.. Loading ADMU GUI..'
 
             </Grid>
         </GroupBox>
-        <Button Name="bDeleteProfile" Content="Select Profile" Height="23" IsEnabled="False" Margin="769,432,10,10" Grid.Row="1">
-            <Button.Effect>
-                <DropShadowEffect/>
-            </Button.Effect>
-        </Button>
         <Image
-            Source="https://jumpcloud.com/wp-content/themes/jumpcloud/assets/images/jumpcloud-press-kit/logos/01-combination-mark-color.png" Margin="-17,23,654,372" Grid.RowSpan="2"/>
+            Source="https://jumpcloud.com/wp-content/themes/jumpcloud/assets/images/jumpcloud-press-kit/logos/01-combination-mark-color.png" Margin="3,0,749,537" Grid.RowSpan="2"/>
+        <Button Name="bDeleteProfile" Content="Select Profile" HorizontalAlignment="Left" Margin="590,515,0,0" Grid.Row="1" VerticalAlignment="Top" Width="146" Height="24"/>
+
+        <GroupBox Header="Migration Steps" HorizontalAlignment="Left" Height="98" Margin="397,5,0,0" VerticalAlignment="Top" Width="573" FontWeight="Bold" Grid.Row="1">
+            <TextBlock HorizontalAlignment="Left" TextWrapping="Wrap" VerticalAlignment="Top" Height="70" Width="561" FontWeight="Normal"><Run Text="1. Select the domain or AzureAD account that you want to migrate to a local account from the list below."/><LineBreak/><Run Text="2. Enter a local account username and password to migrate the selected account to. "/><LineBreak/><Run Text="3. Enter your organizations JumpCloud system connect key."/><LineBreak/><Run Text="4. Click the "/><Run Text="Migrate Profile"/><Run Text=" button."/><LineBreak/><Run/></TextBlock>
+        </GroupBox>
+
     </Grid>
 </Window>
+
+
 '@
 
 # Read XAML
@@ -346,18 +352,95 @@ $script:InstallJCAgent = $false
 $cb_installjcagent.Add_Checked( { Test-Button -tbJumpCloudUserName:($tbJumpCloudUserName) -tbJumpCloudConnectKey:($tbJumpCloudConnectKey) -tbTempPassword:($tbTempPassword) -lvProfileList:($lvProfileList) -tbJumpCloudAPIKey:($tbJumpCloudAPIKey) })
 $cb_installjcagent.Add_Checked( { $script:InstallJCAgent = $true })
 $cb_installjcagent.Add_Checked( { $tbJumpCloudConnectKey.IsEnabled = $true })
+$cb_installjcagent.Add_Checked( { $img_ckey_info.Visibility = 'Visible'})
+$cb_installjcagent.Add_Checked( { $img_ckey_valid.Visibility = 'Visible'})
+$cb_installjcagent.Add_Checked( {
+    Test-Button -tbJumpCloudUserName:($tbJumpCloudUserName) -tbJumpCloudConnectKey:($tbJumpCloudConnectKey) -tbTempPassword:($tbTempPassword) -lvProfileList:($lvProfileList) -tbJumpCloudAPIKey:($tbJumpCloudAPIKey)
+    If (((Test-Is40chars $tbJumpCloudConnectKey.Text) -and (Test-HasNoSpace $tbJumpCloudConnectKey.Text)) -eq $false)
+    {
+        #$tbJumpCloudConnectKey.Tooltip = "Connect Key Must be 40chars & Not Contain Spaces"
+        $tbJumpCloudConnectKey.Background = "#FFC6CBCF"
+        $tbJumpCloudConnectKey.BorderBrush = "#FFF90000"
+    }
+    Else
+    {
+        $tbJumpCloudConnectKey.Background = "white"
+        $tbJumpCloudConnectKey.Tooltip = $null
+        $tbJumpCloudConnectKey.FontWeight = "Normal"
+        $tbJumpCloudConnectKey.BorderBrush = "#FFC6CBCF"
+    }
+
+})
+
 $cb_installjcagent.Add_UnChecked( { Test-Button -tbJumpCloudUserName:($tbJumpCloudUserName) -tbJumpCloudConnectKey:($tbJumpCloudConnectKey) -tbTempPassword:($tbTempPassword) -lvProfileList:($lvProfileList) -tbJumpCloudAPIKey:($tbJumpCloudAPIKey) })
 $cb_installjcagent.Add_Unchecked( { $script:InstallJCAgent = $false })
 $cb_installjcagent.Add_Unchecked( { $tbJumpCloudConnectKey.IsEnabled = $false })
+$cb_installjcagent.Add_Unchecked( {$img_ckey_info.Visibility = 'Hidden'})
+$cb_installjcagent.Add_Unchecked( {$img_ckey_valid.Visibility = 'Hidden'})
+$cb_installjcagent.Add_Unchecked( {
+    Test-Button -tbJumpCloudUserName:($tbJumpCloudUserName) -tbJumpCloudConnectKey:($tbJumpCloudConnectKey) -tbTempPassword:($tbTempPassword) -lvProfileList:($lvProfileList) -tbJumpCloudAPIKey:($tbJumpCloudAPIKey)
+    If (((Test-Is40chars $tbJumpCloudConnectKey.Text) -and (Test-HasNoSpace $tbJumpCloudConnectKey.Text) -or ($cb_installjcagent.IsEnabled)) -eq $false)
+    {
+        #$tbJumpCloudConnectKey.Tooltip = "Connect Key Must be 40chars & Not Contain Spaces"
+        $tbJumpCloudConnectKey.Background = "#FFC6CBCF"
+        $tbJumpCloudConnectKey.BorderBrush = "#FFF90000"
+    }
+    Else
+    {
+        $tbJumpCloudConnectKey.Background = "white"
+        $tbJumpCloudConnectKey.Tooltip = $null
+        $tbJumpCloudConnectKey.FontWeight = "Normal"
+        $tbJumpCloudConnectKey.BorderBrush = "#FFC6CBCF"
+    }
+})
+
 
 # Autobind JC User checkbox
 $script:AutobindJCUser = $false
 $cb_autobindjcuser.Add_Checked( { Test-Button -tbJumpCloudUserName:($tbJumpCloudUserName) -tbJumpCloudConnectKey:($tbJumpCloudConnectKey) -tbTempPassword:($tbTempPassword) -lvProfileList:($lvProfileList) -tbJumpCloudAPIKey:($tbJumpCloudAPIKey) })
 $cb_autobindjcuser.Add_Checked( { $script:AutobindJCUser = $true })
 $cb_autobindjcuser.Add_Checked( { $tbJumpCloudAPIKey.IsEnabled = $true })
+$cb_autobindjcuser.Add_Checked( { $img_apikey_info.Visibility = 'Visible'})
+$cb_autobindjcuser.Add_Checked( { $img_apikey_valid.Visibility = 'Visible'})
+$cb_autobindjcuser.Add_Checked( {
+    Test-Button -tbJumpCloudUserName:($tbJumpCloudUserName) -tbJumpCloudConnectKey:($tbJumpCloudConnectKey) -tbJumpCloudConnectAPIKey:($tbJumpCloudAPIKey) -tbTempPassword:($tbTempPassword) -lvProfileList:($lvProfileList) -tbJumpCloudAPIKey:($tbJumpCloudAPIKey)
+    If (((Test-Is40chars $tbJumpCloudAPIKey.Text) -and (Test-HasNoSpace $tbJumpCloudAPIKey.Text)) -eq $false)
+    {
+        #$tbJumpCloudAPIKey.Tooltip = "API Key Must be 40chars & Not Contain Spaces"
+        $tbJumpCloudAPIKey.Background = "#FFC6CBCF"
+        $tbJumpCloudAPIKey.BorderBrush = "#FFF90000"
+    }
+    Else
+    {
+        $tbJumpCloudAPIKey.Background = "white"
+        $tbJumpCloudAPIKey.Tooltip = $null
+        $tbJumpCloudAPIKey.FontWeight = "Normal"
+        $tbJumpCloudAPIKey.BorderBrush = "#FFC6CBCF"
+    }
+})
+
+
 $cb_autobindjcuser.Add_UnChecked( { Test-Button -tbJumpCloudUserName:($tbJumpCloudUserName) -tbJumpCloudConnectKey:($tbJumpCloudConnectKey) -tbTempPassword:($tbTempPassword) -lvProfileList:($lvProfileList) -tbJumpCloudAPIKey:($tbJumpCloudAPIKey) })
 $cb_autobindjcuser.Add_Unchecked( { $script:AutobindJCUser = $false })
 $cb_autobindjcuser.Add_Unchecked( { $tbJumpCloudAPIKey.IsEnabled = $false })
+$cb_autobindjcuser.Add_Unchecked( { $img_apikey_info.Visibility = 'Hidden'})
+$cb_autobindjcuser.Add_Unchecked( { $img_apikey_valid.Visibility = 'Hidden'})
+$cb_autobindjcuser.Add_Unchecked( { 
+    Test-Button -tbJumpCloudUserName:($tbJumpCloudUserName) -tbJumpCloudConnectKey:($tbJumpCloudConnectKey) -tbJumpCloudConnectAPIKey:($tbJumpCloudAPIKey) -tbTempPassword:($tbTempPassword) -lvProfileList:($lvProfileList) -tbJumpCloudAPIKey:($tbJumpCloudAPIKey)
+    If (((Test-Is40chars $tbJumpCloudAPIKey.Text) -and (Test-HasNoSpace $tbJumpCloudAPIKey.Text) -or ($cb_autobindjcuser.IsEnabled)) -eq $false)
+    {
+        #$tbJumpCloudAPIKey.Tooltip = "API Key Must be 40chars & Not Contain Spaces"
+        $tbJumpCloudAPIKey.Background = "#FFC6CBCF"
+        $tbJumpCloudAPIKey.BorderBrush = "#FFF90000"
+    }
+    Else
+    {
+        $tbJumpCloudAPIKey.Background = "white"
+        $tbJumpCloudAPIKey.Tooltip = $null
+        $tbJumpCloudAPIKey.FontWeight = "Normal"
+        $tbJumpCloudAPIKey.BorderBrush = "#FFC6CBCF"
+    }
+})
 
 # Leave Domain checkbox
 $script:LeaveDomain = $false
@@ -374,18 +457,18 @@ $tbJumpCloudUserName.add_TextChanged( {
         If ((Test-IsNotEmpty $tbJumpCloudUserName.Text) -or (!(Test-HasNoSpace $tbJumpCloudUserName.Text)) -or (Test-Localusername $tbJumpCloudUserName.Text))
         {
             $tbJumpCloudUserName.Background = "#FFC6CBCF"
-            $tbJumpCloudUserName.Tooltip = "Local account user name can not be empty, contain spaces or already exist on the local system."
+            $tbJumpCloudUserName.BorderBrush = "#FFF90000"
+            $img_localaccount_valid.Source = "https://i.ibb.co/rfjgc8h/error.png"
+            $img_localaccount_valid.ToolTip= "Local account username can't be empty, contain spaces, already exist on the local system or match the local computer name."
         }
         Else
         {
             $tbJumpCloudUserName.Background = "white"
-            $tbJumpCloudUserName.Tooltip = $null
             $tbJumpCloudUserName.FontWeight = "Normal"
+            $tbJumpCloudUserName.BorderBrush = "#FFC6CBCF"
+            $img_localaccount_valid.Source = "https://i.ibb.co/dJyG1q5/check.png"
+            $img_localaccount_valid.ToolTip= $null
         }
-    })
-
-$tbJumpCloudUserName.add_GotFocus( {
-        $tbJumpCloudUserName.Text = ""
     })
 
 $tbJumpCloudConnectKey.add_TextChanged( {
@@ -393,13 +476,17 @@ $tbJumpCloudConnectKey.add_TextChanged( {
         If (((Test-Is40chars $tbJumpCloudConnectKey.Text) -and (Test-HasNoSpace $tbJumpCloudConnectKey.Text)) -eq $false)
         {
             $tbJumpCloudConnectKey.Background = "#FFC6CBCF"
-            $tbJumpCloudConnectKey.Tooltip = "Connect Key Must be 40chars & Not Contain Spaces"
+            $tbJumpCloudConnectKey.BorderBrush = "#FFF90000"
+            $img_ckey_valid.Source = "https://i.ibb.co/rfjgc8h/error.png"
+            $img_ckey_valid.ToolTip= "Connect Key must be 40chars & not contain spaces."
         }
         Else
         {
             $tbJumpCloudConnectKey.Background = "white"
-            $tbJumpCloudConnectKey.Tooltip = $null
             $tbJumpCloudConnectKey.FontWeight = "Normal"
+            $tbJumpCloudConnectKey.BorderBrush = "#FFC6CBCF"
+            $img_ckey_valid.Source = "https://i.ibb.co/dJyG1q5/check.png"
+            $img_ckey_valid.ToolTip= $null
         }
     })
 
@@ -408,22 +495,20 @@ $tbJumpCloudAPIKey.add_TextChanged( {
         If (((Test-Is40chars $tbJumpCloudAPIKey.Text) -and (Test-HasNoSpace $tbJumpCloudAPIKey.Text)) -eq $false)
         {
             $tbJumpCloudAPIKey.Background = "#FFC6CBCF"
-            $tbJumpCloudAPIKey.Tooltip = "API Key Must be 40chars & Not Contain Spaces"
+            $tbJumpCloudAPIKey.BorderBrush = "#FFF90000"
+            $img_apikey_valid.Source = "https://i.ibb.co/rfjgc8h/error.png"
+            $img_apikey_valid.ToolTip= "Jumpcloud API Key must be 40chars & not contain spaces."
+
         }
         Else
         {
             $tbJumpCloudAPIKey.Background = "white"
             $tbJumpCloudAPIKey.Tooltip = $null
             $tbJumpCloudAPIKey.FontWeight = "Normal"
+            $tbJumpCloudAPIKey.BorderBrush = "#FFC6CBCF"
+            $img_apikey_valid.Source = "https://i.ibb.co/dJyG1q5/check.png"
+            $img_apikey_valid.ToolTip= $null
         }
-    })
-
-$tbJumpCloudConnectKey.add_GotFocus( {
-        $tbJumpCloudConnectKey.Text = ""
-    })
-
-$tbJumpCloudAPIKey.add_GotFocus( {
-        $tbJumpCloudAPIKey.Text = ""
     })
 
 $tbTempPassword.add_TextChanged( {
@@ -431,13 +516,18 @@ $tbTempPassword.add_TextChanged( {
         If ((!(Test-IsNotEmpty $tbTempPassword.Text) -and (Test-HasNoSpace $tbTempPassword.Text)) -eq $false)
         {
             $tbTempPassword.Background = "#FFC6CBCF"
-            $tbTempPassword.Tooltip = "Temp Password Must Not Be Empty & Not Contain Spaces"
+            $tbTempPassword.BorderBrush = "#FFF90000"
+            $img_localaccount_password_valid.Source = "https://i.ibb.co/rfjgc8h/error.png"
+            $img_localaccount_password_valid.ToolTip= "Local Account Temp Password should not be empty or contain spaces, it should also meet local password policy req. on the system."
         }
         Else
         {
             $tbTempPassword.Background = "white"
             $tbTempPassword.Tooltip = $null
             $tbTempPassword.FontWeight = "Normal"
+            $tbTempPassword.BorderBrush = "#FFC6CBCF"
+            $img_localaccount_password_valid.Source = "https://i.ibb.co/dJyG1q5/check.png"
+            $img_localaccount_password_valid.ToolTip= $null
         }
     })
 
@@ -492,10 +582,23 @@ $bDeleteProfile.Add_Click( {
         $Form.Close()
     })
 
-# close button
-$btn_close.Add_Click( {
-        $Form.Close()
+$tbJumpCloudUserName.add_GotFocus( {
+    $tbJumpCloudUserName.Text = ""
+})
+
+$tbJumpCloudConnectKey.add_GotFocus( {
+        $tbJumpCloudConnectKey.Text = ""
     })
+
+$tbJumpCloudAPIKey.add_GotFocus( {
+        $tbJumpCloudAPIKey.Text = ""
+    })
+
+# lbl_connectkey link - Mouse button event
+$lbl_connectkey.Add_PreviewMouseDown( { [System.Diagnostics.Process]::start('https://console.jumpcloud.com/#/systems/new') })
+
+# lbl_apikey link - Mouse button event
+$lbl_apikey.Add_PreviewMouseDown( { [System.Diagnostics.Process]::start('https://console.jumpcloud.com/#/home') })
 
 # move window
 $Form.Add_MouseLeftButtonDown( {
