@@ -59,3 +59,24 @@ $JCFunctionalHash = @{
         UpdateHomePath = $false
     }
 }
+
+$JCReversionHash = @{
+    testCase1 = @{
+        Description    = 'Test that newUserInit reversal step works'
+        Username       = 'ADMU_newUserInit';
+        UserSID        = '';
+        Password       = $testUserPassword;
+        JCUsername     = 'ADMU_newUserInit2';
+        UpdateHomePath = $true;
+
+    }
+    # renameOriginalFiles = @{
+    #     Description    = 'Test that newUserInit reversal step works'
+    #     Username       = 'ADMU_newUserInit';
+    #     UserSID        = '';
+    #     Password       = $testUserPassword;
+    #     JCUsername     = 'ADMU_newUserInit2';
+    #     UpdateHomePath = $false
+
+    # }
+}

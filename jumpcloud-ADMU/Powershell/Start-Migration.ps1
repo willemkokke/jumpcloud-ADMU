@@ -1627,6 +1627,7 @@ Function Start-Migration
             uwpAppXPacakges     = @{'pass' = $false; 'fail' = $false }
             uwpDownloadExe      = @{'pass' = $false; 'fail' = $false }
             leaveDomain         = @{'pass' = $false; 'fail' = $false }
+            autoBind            = @{'pass' = $false; 'fail' = $false }
         }
 
         Write-ToLog -Message("The Selected Migration user is: $SelectedUserName")
@@ -1904,7 +1905,7 @@ Function Start-Migration
         }
         catch
         {
-            Write-ToLog -Message("Could not rename origional registry files for backup purposes: Exiting...")
+            Write-ToLog -Message("Could not rename original registry files for backup purposes: Exiting...")
             Write-ToLog -Message($_.Exception.Message)
             $admuTracker.renameOriginalFiles.fail = $true
             return
@@ -1988,9 +1989,11 @@ Function Start-Migration
                 catch
                 {
                     Write-ToLog -Message:("Unable to rename user profile path to new name - $JumpCloudUserName.")
-                    exit 1
+                    $admuTracker.renameHomeDirectory.fail = $true
+
                 }
             }
+            $admuTracker.renameHomeDirectory.pass = $true
             # TODO: reverse track this if we fail later
         }
         else
@@ -2144,13 +2147,14 @@ Function Start-Migration
         if ($AutobindJCUser -eq $true)
         {
             try {
-            BindUsernameToJCSystem -JcApiKey $JumpCloudAPIKey -JumpCloudUserName $JumpCloudUserName
-            Write-ToLog -Message:('jumpcloud autobind step succeeded for user ' + $JumpCloudUserName)
-
-        }
-        catch {
-            Write-ToLog -Message:('jumpcloud autobind step failed, apikey or jumpcloud username is incorrect.') -Level:('Warning')
-        }
+                BindUsernameToJCSystem -JcApiKey $JumpCloudAPIKey -JumpCloudUserName $JumpCloudUserName
+                Write-ToLog -Message:('jumpcloud autobind step succeeded for user ' + $JumpCloudUserName)
+                $admuTracker.autoBind.pass = $true
+            }
+            catch {
+                Write-ToLog -Message:('jumpcloud autobind step failed, apikey or jumpcloud username is incorrect.') -Level:('Warning')
+                $admuTracker.autoBind.fail = $true
+            }
         }
         #endregion AutobindUserToJCSystem
 

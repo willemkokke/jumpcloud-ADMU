@@ -8,7 +8,7 @@
 # For each user in testing hash, create new user with the specified password and init the account
 forEach ($User in $userTestingHash.Values)
 {
-    Write-Host "Buildint Profile for $($User.Username)"
+    Write-Host "Building Profile for $($User.Username)"
     if ((Get-LocalUser | Select-Object Name) -match $($User.Username)){
         Remove-LocalUserProfile $($User.Username)
     }
@@ -33,7 +33,7 @@ forEach ($User in $userTestingHash.Values)
 # init users in second test group
 forEach ($User in $JCCommandTestingHash.Values)
 {
-    Write-Host "Buildint Profile for $($User.Username)"
+    Write-Host "Building Profile for $($User.Username)"
     if ((Get-LocalUser | Select-Object Name) -match $($User.Username))
     {
         Remove-LocalUserProfile $($User.Username)
@@ -58,7 +58,32 @@ forEach ($User in $JCCommandTestingHash.Values)
 
 ForEach ($User in $JCFunctionalHash.Values)
 {
-    Write-Host "Buildint Profile for $($User.Username)"
+    Write-Host "Building Profile for $($User.Username)"
+    if ((Get-LocalUser | Select-Object Name) -match $($User.Username))
+    {
+        Remove-LocalUserProfile $($User.Username)
+    }
+    $newUserPassword = ConvertTo-SecureString -String "$($User.Password)" -AsPlainText -Force
+    New-localUser -Name "$($User.Username)" -password $newUserPassword -ErrorVariable userExitCode -Description "Created By JumpCloud ADMU"
+    if ($userExitCode)
+    {
+        Write-Log -Message:("$userExitCode")
+        Write-Log -Message:("The user: $($User.Username) could not be created, exiting")
+        exit 1
+    }
+    # Initialize the Profile
+    New-LocalUserProfile -username "$($User.Username)" -ErrorVariable profileInit
+    if ($profileInit)
+    {
+        Write-Log -Message:("$profileInit")
+        Write-Log -Message:("The user: $($User.Username) could not be initalized, exiting")
+        exit 1
+    }
+
+}
+ForEach ($User in $JCReversionHash.Values)
+{
+    Write-Host "Building Profile for $($User.Username)"
     if ((Get-LocalUser | Select-Object Name) -match $($User.Username))
     {
         Remove-LocalUserProfile $($User.Username)

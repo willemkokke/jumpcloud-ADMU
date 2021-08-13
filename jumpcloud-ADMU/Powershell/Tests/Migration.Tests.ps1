@@ -25,7 +25,8 @@ Describe 'Migration Test Scenarios'{
         It "Test Convert profile migration for Local users" {
             foreach ($user in $userTestingHash.Values)
             {
-                write-host "Running: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)"
+                # write-host "Running: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)"
+                write-host "`nRunning: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)`n"
                 # Invoke-Command -ScriptBlock { Start-Migration -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -ConvertProfile $true} | Should -Not -Throw
                 { Start-Migration -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath} | Should -Not -Throw
             }
@@ -52,10 +53,40 @@ Describe 'Migration Test Scenarios'{
         }
     }
     Context 'Start-Migration on Local Accounts Expecting Failed Results (Test Reversal Functionallity)' {
+        It "Start-Migration shoud fail and recover if backup step can not be completed" {
+            foreach ($user in $JCReversionHash.Values) {
+                # Begin job to watch start-migration
+                Start-Job -ScriptBlock:( {
+                        [CmdletBinding()]
+                        param (
+                            [Parameter()]
+                            [string]
+                            $UserName
+                        )
+                        $path = "C:\Users\$UserName"
+                        $file = "$path\ntuser.dat"
+                        # When user profile exists, traverse into profile
+                        while (!(test-path $file))
+                        {
+                            $date = Get-Date -UFormat "%m-%d-%y %H:%M"
+                            Write-Host: "$($date) - $file file does not exist yet"
+                            # Start-Sleep 2
+                        }
+                        # As soon as new profile exists, rename ntuser.dat which should trigger a failure
+                        rename-item $file -NewName "notyouruser.dat"
+                        # Begin job
+                    }) -ArgumentList:($user.Username)
+                # Begin job to kick off startMigration
+                write-host "`nRunning: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)`n"
+                { Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutobindJCUser $true -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath } | Should -Throw
+                # NewUserInit should be reverted and the new user profile path should not exist
+                "C:\Users\$($user.JCUsername)" | Should -Not -Exist
+                # The original user should exist
+                "C:\Users\$($user.username)" | Should -Exist
+            }
+        }
         It "Start-Migration should reverse if jumpcloud user already exists" -Skip{
             # TODO: Reversal should log that the user existed & delete the user after tun
-        }
-        It "Start-Migration shoud fail and recover if registry is loaded during process" -Skip{
         }
     }
 
@@ -66,10 +97,11 @@ Describe 'Migration Test Scenarios'{
                 $users = Get-JCSDKUser
                 if ("$($user.JCUsername)" -in $users.Username){
                     $existing = $users | Where-Object { $_.username -eq "$($user.JCUsername)"}
+                    Write-Host "Found JumpCloud User, $($existing.Id) removing..."
                     Remove-JcSdkUser -Id $existing.Id
                 }
                 $GeneratedUser = New-JcSdkUser -Email:("$($user.JCUsername)@jumpcloudadmu.com") -Username:("$($user.JCUsername)") -Password:("$($user.password)")
-                write-host "Running: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)"
+                write-host "`nRunning: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)`n"
                 # Invoke-Command -ScriptBlock { Start-Migration -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -ConvertProfile $true} | Should -Not -Throw
                 { Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutobindJCUser $true -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath } | Should -Not -Throw
                 $associations = Get-JcSdkSystemAssociation -SystemId $systemKey -Targets user
@@ -165,7 +197,6 @@ Start-Migration -JumpCloudUserName $JCU -SelectedUserName $ENV:COMPUTERNAME\$SU 
                     $count += 1
                     start-sleep 5
                 } until ((($CommandResults.DataExitCode) -is [int]) -or ($count -eq 24))
-                # TODO: update test to match 2.0.0 revert functions
                 $CommandResults.DataExitCode | Should -Be 0
             }
 
