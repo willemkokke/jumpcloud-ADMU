@@ -350,29 +350,35 @@ function New-LocalUserProfile
         $sb = new-object System.Text.StringBuilder(260);
         $pathLen = $sb.Capacity;
 
-        Write-Verbose "Creating user profile for $Username";
-        $objUser = New-Object System.Security.Principal.NTAccount($UserName)
+        Write-ToLog "Creating user profile for $UserName";
+        if ($UserName -eq $env:computername){
+          Write-ToLog "$UserName Matches ComputerName";
+          $objUser = New-Object System.Security.Principal.NTAccount("$env:computername\$UserName")
+        }
+        else{
+          $objUser = New-Object System.Security.Principal.NTAccount($UserName)
+        }
         $strSID = $objUser.Translate([System.Security.Principal.SecurityIdentifier])
         $SID = $strSID.Value
 
-        Write-Verbose "$UserName SID: $SID"
+        Write-ToLog "$username Creation Result: $result"
         try
         {
             $result = [UserEnvCP2]::CreateProfile($SID, $Username, $sb, $pathLen)
             if ($result -eq '-2147024713')
             {
                 $status = "$userName is an existing account"
-                write-verbose "$username Creation Result: $result"
+                Write-ToLog "$username creation result: $result"
             }
             elseif ($result -eq '-2147024809')
             {
                 $status = "$username Not Found"
-                write-verbose "$username creation result: $result"
+                Write-ToLog "$username Creation Result: $result"
             }
             elseif ($result -eq 0)
             {
                 $status = "$username Profile has been created"
-                write-verbose "$username Creation Result: $result"
+                Write-ToLog "$username Creation Result: $result"
             }
             else
             {
@@ -384,7 +390,10 @@ function New-LocalUserProfile
             Write-Error $_.Exception.Message;
             # break;
         }
-        $status
+        # $status
+  }
+  end {
+    return $SID
     }
 }
 function Remove-LocalUserProfile
@@ -1115,15 +1124,18 @@ function Test-Localusername
         $win32UserProfiles = Get-WmiObject -Class:('Win32_UserProfile') -Property * | Where-Object { $_.Special -eq $false }
         $users = $win32UserProfiles | Select-Object -ExpandProperty "SID" | Convert-Sid
         $localusers = new-object system.collections.arraylist
-        foreach ($username in $users)
+        foreach ($usernamTese in $users)
         {
-            if ($username -match $env:computername)
+            $domain = ($username -split '\\')[0]
+            if ($domain -match $env:computername)
             {
                 $localusertrim = $username -creplace '^[^\\]*\\', ''
                 $localusers.Add($localusertrim) | Out-Null
             }
+
         }
     }
+
     process
     {
         if ($localusers -eq $field)
@@ -1134,7 +1146,7 @@ function Test-Localusername
         {
             Return $false
         }
-    }
+        }
     end
     {
     }
@@ -1735,8 +1747,8 @@ Function Start-Migration
             $admuTracker.newUserInit.fail = $true
             return
         }
-        # Initialize the Profile
-        New-LocalUserProfile -username $JumpCloudUserName -ErrorVariable profileInit
+      # Initialize the Profile & Set SID
+      $NewUserSID = New-LocalUserProfile -username:($JumpCloudUserName) -ErrorVariable profileInit
         if ($profileInit)
         {
             Write-ToLog -Message:("$profileInit")
@@ -1752,7 +1764,7 @@ Function Start-Migration
         Write-ToLog -Message:('Getting new profile image path')
         # Set the New User Profile Path
         # Now get NewUserSID
-        $NewUserSID = Get-SID -User $JumpCloudUserName
+        # $NewUserSID = Get-SID -User $JumpCloudUserName
         # Get profile image path for new user
         $newUserProfileImagePath = Get-ProfileImagePath -UserSid $NewUserSID
         ### Begin backup user registry for new user
