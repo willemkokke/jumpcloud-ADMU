@@ -92,6 +92,9 @@ jobs:
   Pester Tests:
     executor: win/default
     steps:
+      - slack/notify:
+          channel: solution-arch-pipeline
+          event: always
       - attach_workspace:
           at: .
       - run:
@@ -123,6 +126,7 @@ jobs:
       - store_test_results:
           name: Uploading test results for ADMU'
           path: ./jumpcloud-ADMU/test_results/
+
   Sign Executable:
     executor: win/default
     steps:
