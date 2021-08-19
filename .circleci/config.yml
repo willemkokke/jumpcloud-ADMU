@@ -123,9 +123,6 @@ jobs:
       - store_test_results:
           name: Uploading test results for ADMU'
           path: ./jumpcloud-ADMU/test_results/
-      - slack/notify:
-        channel: solution-arch-pipeline
-        event: always
   Sign Executable:
     executor: win/default
     steps:
