@@ -67,9 +67,6 @@ workflows:
   version: 2
   ci:
     jobs: *build-and-sign-ADMU
-      context:
-      - secrethub-credentials
-      - slack-orb
 
 jobs:
   Build: # name of your job
