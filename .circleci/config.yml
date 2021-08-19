@@ -7,7 +7,7 @@ parameters:
     enum: ["major", "minor", "patch"]
 orbs:
   win: circleci/windows@2.2.0
-  slack: circleci/slack@4.4.2
+  slack: circleci/slack@4.1
 
 build-and-sign-ADMU: &build-and-sign-ADMU
   - Build
@@ -67,6 +67,9 @@ workflows:
   version: 2
   ci:
     jobs: *build-and-sign-ADMU
+      context:
+      - secrethub-credentials
+      - slack-orb
 
 jobs:
   Build: # name of your job
