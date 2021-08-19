@@ -137,11 +137,11 @@ $xaml.SelectNodes("//*[@*[contains(translate(name(.),'n','N'),'Name')]]")  | For
 }
 $JCLogoImg.Source = DecodeBase64Image -ImageBase64 $JCLogoBase64
 $img_ckey_info.Source = DecodeBase64Image -ImageBase64 $BlueBase64
-$img_ckey_valid.Source = DecodeBase64Image -ImageBase64 $ActiveBase64
+$img_ckey_valid.Source = DecodeBase64Image -ImageBase64 $ErrorBase64
 $img_apikey_info.Source = DecodeBase64Image -ImageBase64 $BlueBase64
-$img_apikey_valid.Source = DecodeBase64Image -ImageBase64 $ActiveBase64
+$img_apikey_valid.Source = DecodeBase64Image -ImageBase64 $ErrorBase64
 $img_localaccount_info.Source = DecodeBase64Image -ImageBase64 $BlueBase64
-$img_localaccount_valid.Source = DecodeBase64Image -ImageBase64 $ActiveBase64
+$img_localaccount_valid.Source = DecodeBase64Image -ImageBase64 $ErrorBase64
 $img_localaccount_password_info.Source = DecodeBase64Image -ImageBase64 $BlueBase64
 $img_localaccount_password_valid.Source = DecodeBase64Image -ImageBase64 $ActiveBase64
 # Define misc static variables
