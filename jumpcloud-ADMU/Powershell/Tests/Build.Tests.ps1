@@ -42,12 +42,12 @@ Describe 'Build Tests' {
 
         It 'Start-Migration version'{
             $startMigrationPath = "$PSScriptRoot\..\Start-Migration.ps1"
-            $VersionRegex = [regex]"admuVersion = '(([0-9]+)\.([0-9]+)\.([0-9]+))'"
+            $VersionRegex = [regex]"(?<=admuVersion = ')(([0-9]+)\.([0-9]+)\.([0-9]+))"
             $admuversion = Select-String -Path:($startMigrationPath) -Pattern:($VersionRegex)
-            $branchStartMigrationVersion = [version]$admuversion.Matches.Groups[1].value
+            $branchStartMigrationVersion = [version]$admuversion.Matches.value
             $masterStartMigration = (Invoke-WebRequest https://raw.githubusercontent.com/TheJumpCloud/jumpcloud-ADMU/master/jumpcloud-ADMU/Powershell/Start-Migration.ps1 -useBasicParsing).tostring()
             $masterVersion = Select-String -inputobject:($masterStartMigration) -Pattern:($VersionRegex)
-            $masterStartMigrationVersion = [version]$masterVersion.Matches.Groups[1].value
+            $masterStartMigrationVersion = [version]$masterVersion.Matches.value
             $branchStartMigrationVersion | Should -BeGreaterThan $masterStartMigrationVersion
             $branchStartMigrationVersion.$($env:ModuleVersionType) | Should -Be ($masterStartMigrationVersion.$($env:ModuleVersionType) + 1)
         }
