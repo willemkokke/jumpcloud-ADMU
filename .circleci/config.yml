@@ -92,10 +92,6 @@ jobs:
   Pester Tests:
     executor: win/default
     steps:
-      - slack/notify:
-          channel: solution-arch-pipeline
-          event: always
-          template: basic_fail_1
       - attach_workspace:
           at: .
       - run:
