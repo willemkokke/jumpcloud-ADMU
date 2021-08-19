@@ -7,6 +7,8 @@ parameters:
     enum: ["major", "minor", "patch"]
 orbs:
   win: circleci/windows@2.2.0
+  slack: circleci/slack@4.4.2
+
 build-and-sign-ADMU: &build-and-sign-ADMU
   - Build
   - Pester Tests:
@@ -121,6 +123,9 @@ jobs:
       - store_test_results:
           name: Uploading test results for ADMU'
           path: ./jumpcloud-ADMU/test_results/
+      - slack/notify:
+        channel: solution-arch-pipeline
+        event: always
   Sign Executable:
     executor: win/default
     steps:
