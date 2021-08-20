@@ -75,7 +75,7 @@ Describe 'Migration Test Scenarios'{
                         # As soon as new profile exists, rename ntuser.dat which should trigger a failure
                         rename-item $file -NewName "notyouruser.dat"
                         # Begin job
-                    }) -ArgumentList:($user.Username)
+                    }) -ArgumentList:($user.JCUsername)
                 # Begin job to kick off startMigration
                 write-host "`nRunning: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)`n"
                 { Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutobindJCUser $true -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath } | Should -Throw
