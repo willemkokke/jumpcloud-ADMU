@@ -123,7 +123,6 @@ function Test-RegistryValueMatch
         }
     }
 }
-
 function BindUsernameToJCSystem
 {
     param
@@ -201,44 +200,6 @@ function BindUsernameToJCSystem
 
     }
 }
-function CheckUsernameorSID
-{
-    [CmdletBinding()]
-    param
-    (
-        [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
-        $usernameorsid
-    )
-    Begin
-    {
-        $sidPattern = "^S-\d-\d+-(\d+-){1,14}\d+$"
-        $registyProfiles = Get-ChildItem "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList"
-        $list = @()
-        foreach ($profile in $registyProfiles)
-        {
-            $list += Get-ItemProperty -Path $profile.PSPath | Select-Object PSChildName, ProfileImagePath
-        }
-        if (![regex]::IsMatch($usernameorsid, $sidPattern))
-        {
-            $usernameorsid = (New-Object System.Security.Principal.NTAccount($usernameorsid)).Translate( [System.Security.Principal.SecurityIdentifier]).Value
-            write-host "Attempting to convert user to sid..."
-        }
-    }
-    process
-    {
-
-        if ($usernameorsid -in $list.PSChildName)
-        {
-            write-host "Valid SID returning SID"
-            return $usernameorsid
-        }
-        else
-        {
-            Write-host "Could not find SID on this system, exiting..."
-            exit
-        }
-    }
-}
 function DenyInteractiveLogonRight
 {
     param (
@@ -261,13 +222,6 @@ function DenyInteractiveLogonRight
         $secpol[$regvaluestringID] = 'SeDenyInteractiveLogonRight = ' + $newvalue
         $secpol | out-file $windowsDrive\Windows\temp\ur_new.inf -force
         secedit /configure /db secedit.sdb /cfg $windowsDrive\Windows\temp\ur_new.inf /areas USER_RIGHTS
-    }
-}
-function AllowInteractiveLogonRight
-{
-    process{
-        $secpolFile = "$windowsDrive\Windows\temp\ur_orig.inf"
-        secedit /configure /db secedit.sdb /cfg $secpolFile /areas USER_RIGHTS
     }
 }
 function Register-NativeMethod
@@ -454,98 +408,9 @@ function Remove-LocalUserProfile
         Write-ToLog -message:("$UserName's account, profile and Registry Key SID were removed")
     }
 }
-function Enable-Privilege
-{
-    param(
-        ## The privilege to adjust. This set is taken from
-        ## http://msdn.microsoft.com/en-us/library/bb530716(VS.85).aspx
-        [ValidateSet(
-            "SeAssignPrimaryTokenPrivilege", "SeAuditPrivilege", "SeBackupPrivilege",
-            "SeChangeNotifyPrivilege", "SeCreateGlobalPrivilege", "SeCreatePagefilePrivilege",
-            "SeCreatePermanentPrivilege", "SeCreateSymbolicLinkPrivilege", "SeCreateTokenPrivilege",
-            "SeDebugPrivilege", "SeEnableDelegationPrivilege", "SeImpersonatePrivilege", "SeIncreaseBasePriorityPrivilege",
-            "SeIncreaseQuotaPrivilege", "SeIncreaseWorkingSetPrivilege", "SeLoadDriverPrivilege",
-            "SeLockMemoryPrivilege", "SeMachineAccountPrivilege", "SeManageVolumePrivilege",
-            "SeProfileSingleProcessPrivilege", "SeRelabelPrivilege", "SeRemoteShutdownPrivilege",
-            "SeRestorePrivilege", "SeSecurityPrivilege", "SeShutdownPrivilege", "SeSyncAgentPrivilege",
-            "SeSystemEnvironmentPrivilege", "SeSystemProfilePrivilege", "SeSystemtimePrivilege",
-            "SeTakeOwnershipPrivilege", "SeTcbPrivilege", "SeTimeZonePrivilege", "SeTrustedCredManAccessPrivilege",
-            "SeUndockPrivilege", "SeUnsolicitedInputPrivilege")]
-        $Privilege,
-        ## The process on which to adjust the privilege. Defaults to the current process.
-        $ProcessId = $pid,
-        ## Switch to disable the privilege, rather than enable it.
-        [Switch] $Disable
-    )
-
-    ## Taken from P/Invoke.NET with minor adjustments.
-    $definition = @'
- using System;
- using System.Runtime.InteropServices;
-
- public class AdjPriv
- {
-  [DllImport("advapi32.dll", ExactSpelling = true, SetLastError = true)]
-  internal static extern bool AdjustTokenPrivileges(IntPtr htok, bool disall,
-   ref TokPriv1Luid newst, int len, IntPtr prev, IntPtr relen);
-
-  [DllImport("advapi32.dll", ExactSpelling = true, SetLastError = true)]
-  internal static extern bool OpenProcessToken(IntPtr h, int acc, ref IntPtr phtok);
-  [DllImport("advapi32.dll", SetLastError = true)]
-  internal static extern bool LookupPrivilegeValue(string host, string name, ref long pluid);
-  [StructLayout(LayoutKind.Sequential, Pack = 1)]
-  internal struct TokPriv1Luid
-  {
-   public int Count;
-   public long Luid;
-   public int Attr;
-  }
-
-  internal const int SE_PRIVILEGE_ENABLED = 0x00000002;
-  internal const int SE_PRIVILEGE_DISABLED = 0x00000000;
-  internal const int TOKEN_QUERY = 0x00000008;
-  internal const int TOKEN_ADJUST_PRIVILEGES = 0x00000020;
-  public static bool EnablePrivilege(long processHandle, string privilege, bool disable)
-  {
-   bool retVal;
-   TokPriv1Luid tp;
-   IntPtr hproc = new IntPtr(processHandle);
-   IntPtr htok = IntPtr.Zero;
-   retVal = OpenProcessToken(hproc, TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, ref htok);
-   tp.Count = 1;
-   tp.Luid = 0;
-   if(disable)
-   {
-    tp.Attr = SE_PRIVILEGE_DISABLED;
-   }
-   else
-   {
-    tp.Attr = SE_PRIVILEGE_ENABLED;
-   }
-   retVal = LookupPrivilegeValue(null, privilege, ref tp.Luid);
-   retVal = AdjustTokenPrivileges(htok, false, ref tp, 0, IntPtr.Zero, IntPtr.Zero);
-   return retVal;
-  }
- }
-'@
-
-    $processHandle = (Get-Process -id $ProcessId).Handle
-    $type = Add-Type $definition -PassThru
-    $type[0]::EnablePrivilege($processHandle, $Privilege, $Disable)
-}
 
 # Reg Functions adapted from:
 # https://social.technet.microsoft.com/Forums/windows/en-US/9f517a39-8dc8-49d3-82b3-96671e2b6f45/powershell-set-registry-key-owner-to-the-system-user-throws-error?forum=winserverpowershell
-function Get-RegKeyOwner([string]$keyPath)
-{
-    $regRights = [System.Security.AccessControl.RegistryRights]::ReadPermissions
-    $permCheck = [Microsoft.Win32.RegistryKeyPermissionCheck]::ReadWriteSubTree
-    $Key = [Microsoft.Win32.Registry]::Users.OpenSubKey($keyPath, $permCheck, $regRights)
-    $acl = $Key.GetAccessControl([System.Security.AccessControl.AccessControlSections]::Owner)
-    $owner = $acl.GetOwner([type]::GetType([System.Security.Principal.SecurityIdentifier]))
-    $key.Close()
-    return $owner
-}
 
 function Set-ValueToKey([Microsoft.Win32.RegistryHive]$registryRoot, [string]$keyPath, [string]$name, [System.Object]$value, [Microsoft.Win32.RegistryValueKind]$regValueKind)
 {
@@ -564,133 +429,12 @@ function New-RegKey([string]$keyPath, [Microsoft.Win32.RegistryHive]$registryRoo
     $key.Close()
 }
 
-function Update-RegKeyOwner([string]$keyPath, [System.Security.Principal.SecurityIdentifier]$user)
-{
-    try
-    {
-        $regRights = [System.Security.AccessControl.RegistryRights]::takeownership
-        $permCheck = [Microsoft.Win32.RegistryKeyPermissionCheck]::ReadWriteSubTree
-        $key = [Microsoft.Win32.Registry]::Users.OpenSubKey($keyPath, $permCheck, $regRights)
-        # You must get a blank acl for the key b/c you do not currently have access
-        $acl = $key.GetAccessControl([System.Security.AccessControl.AccessControlSections]::None)
-
-        # "Changing owner of Registry key: USERS\$keyPath to `"$user`""
-        $acl.SetOwner($user)
-        $key.SetAccessControl($acl)
-    }
-    catch
-    {
-        $_.Exception.toString()
-        $key.Close()
-        return
-    }
-    $key.Close()
-}
-
-function Set-FullControlToUser([System.Security.Principal.SecurityIdentifier]$userName, [string]$keyPath)
-{
-    # "giving full access to $userName for key $keyPath"
-    $regRights = [System.Security.AccessControl.RegistryRights]::takeownership
-    $permCheck = [Microsoft.Win32.RegistryKeyPermissionCheck]::ReadWriteSubTree
-    $key = [Microsoft.Win32.Registry]::Users.OpenSubKey($keyPath, $permCheck, $regRights)
-    # After you have set owner you need to get the acl with the perms so you can modify it.
-    $acl = $key.GetAccessControl()
-    $rule = New-Object System.Security.AccessControl.RegistryAccessRule ($userName, "FullControl", @("ObjectInherit", "ContainerInherit"), "None", "Allow")
-    $acl.SetAccessRule($rule)
-    $key.SetAccessControl($acl)
-}
-
-function Set-ReadToUser([System.Security.Principal.SecurityIdentifier]$userName, [string]$keyPath)
-{
-    # "giving read access to $userName for key $keyPath"
-    $regRights = [System.Security.AccessControl.RegistryRights]::takeownership
-    $permCheck = [Microsoft.Win32.RegistryKeyPermissionCheck]::ReadWriteSubTree
-    $key = [Microsoft.Win32.Registry]::Users.OpenSubKey($keyPath, $permCheck, $regRights)
-    # After you have set owner you need to get the acl with the perms so you can modify it.
-    $acl = $key.GetAccessControl()
-    $rule = New-Object System.Security.AccessControl.RegistryAccessRule ($userName, "ReadKey", @("ObjectInherit", "ContainerInherit"), "None", "Allow")
-    $acl.SetAccessRule($rule)
-    $key.SetAccessControl($acl)
-}
-
-function Get-AdminUserSID
-{
-    $windowsKey = "SOFTWARE\Microsoft\Windows"
-    $regRights = [System.Security.AccessControl.RegistryRights]::ReadPermissions
-    $permCheck = [Microsoft.Win32.RegistryKeyPermissionCheck]::ReadWriteSubTree
-    $Key = [Microsoft.Win32.Registry]::LocalMachine.OpenSubKey($windowsKey, $permCheck, $regRights)
-    $acl = $Key.GetAccessControl([System.Security.AccessControl.AccessControlSections]::Owner)
-    $owner = $acl.GetOwner([type]::GetType([System.Security.Principal.SecurityIdentifier]))
-    # Return sid of owner
-    return $owner.Value
-}
-function Set-AccessFromDomainUserToLocal
-{
-    [CmdletBinding()]
-    param (
-        [Parameter()]
-        [System.Security.AccessControl.AccessRule]
-        $accessItem,
-        [Parameter()]
-        [System.Security.Principal.SecurityIdentifier]
-        $user,
-        [Parameter()]
-        [string]
-        $keyPath
-    )
-    $regRights = [System.Security.AccessControl.RegistryRights]::takeownership
-    $permCheck = [Microsoft.Win32.RegistryKeyPermissionCheck]::ReadWriteSubTree
-    $key = [Microsoft.Win32.Registry]::Users.OpenSubKey($keyPath, $permCheck, $regRights)
-    # Get Access Variables from passed in Acl.Access item
-    $access = [System.Security.AccessControl.RegistryRights]$accessItem.RegistryRights
-    $type = [System.Security.AccessControl.AccessControlType]$accessItem.AccessControlType
-    $inheritance = [System.Security.AccessControl.InheritanceFlags]$accessItem.InheritanceFlags
-    $propagation = [System.Security.AccessControl.PropagationFlags]$accessItem.PropagationFlags
-    $acl = $key.GetAccessControl()
-    $rule = New-Object System.Security.AccessControl.RegistryAccessRule($user, $access, $inheritance, $propagation, $type)
-    # Add new Acl.Access rule to Acl so that passed in user now has access
-    $acl.AddAccessRule($rule)
-    # Remove the old user access
-    $acl.RemoveAccessRule($accessItem) | Out-Null
-    $key.SetAccessControl($acl)
-}
-
 #username To SID Function
 function Get-SID ([string]$User)
 {
     $objUser = New-Object System.Security.Principal.NTAccount($User)
     $strSID = $objUser.Translate([System.Security.Principal.SecurityIdentifier])
     $strSID.Value
-}
-
-#Verify Domain Account Function
-Function Test-Account
-{
-    Param (
-        [Parameter(Mandatory = $true)][System.String]$userName, [System.String]$domain = $null
-    )
-    $idrefUser = $null
-    $strUsername = $userName
-    If ($domain)
-    {
-        $strUsername += [String]("@" + $domain)
-    }
-    Try
-    {
-        $idrefUser = ([System.Security.Principal.NTAccount]($strUsername)).Translate([System.Security.Principal.SecurityIdentifier])
-    }
-    Catch [System.Security.Principal.IdentityNotMappedException]
-    {
-        $idrefUser = $null
-    }
-    If ($idrefUser)
-    {
-        Return $true
-    }
-    Else
-    {
-        Return $false
-    }
 }
 
 function Set-UserRegistryLoadState
@@ -869,12 +613,6 @@ Function Get-ProfileImagePath
     {
         return $profileImagePath
     }
-}
-Function Get-WindowsDrive
-{
-    $drive = (wmic OS GET SystemDrive /VALUE)
-    $drive = [regex]::Match($drive, 'SystemDrive=(.\:)').Groups[1].Value
-    return $drive
 }
 Function Get-WindowsDrive
 {
@@ -1402,98 +1140,6 @@ function Test-UsernameOrSID
             Write-ToLog 'SID or Username is invalid'
             exit 1
         }
-    }
-}
-
-function Test-RegistryAccess
-{
-    [CmdletBinding()]
-    param (
-        [Parameter()]
-        [string]
-        $profilePath,
-        [Parameter()]
-        [string]
-        $userSID
-    )
-    begin
-    {
-        # Load keys
-        REG LOAD HKU\"testUserAccess" "$profilePath\NTUSER.DAT" *>6
-        $classes = "testUserAccess_Classes"
-        # wait just a moment mountng can take a moment
-        Start-Sleep 1
-        REG LOAD HKU\$classes "$profilePath\AppData\Local\Microsoft\Windows\UsrClass.dat" *>6
-        New-PSDrive -Name:("HKEY_USERS") -PSProvider:("Registry") -Root:("HKEY_USERS") *>6
-        $HKU = Get-Acl "HKEY_USERS:\testUserAccess"
-        $HKU_Classes = Get-Acl "HKEY_USERS:\testUserAccess_Classes"
-        $HKUKeys = @($HKU, $HKU_Classes)
-
-        try
-        {
-            $convertedSID = Convert-Sid "$userSID" -ErrorAction SilentlyContinue
-        }
-        catch
-        {
-            write-information "Could not convert user SID, testing ACLs for SID access" -InformationAction Continue
-        }
-    }
-    process
-    {
-        # Check the access for the root key
-        $sidAccessCount = 0
-        $userAccessCount = 0
-        ForEach ($rootKey in $HKUKeys.Path)
-        {
-            $acl = Get-Acl $rootKey
-            foreach ($al in $acl.Access)
-            {
-                if ($al.IdentityReference -eq "$userSID")
-                {
-                    # write-information "ACL Access identified by SID: $userSID" -InformationAction Continue
-                    $sidAccessCount += 1
-                }
-                elseif ($al.IdentityReference -eq $convertedSID)
-                {
-                    # write-information "ACL Access identified by username : $convertedSID" -InformationAction Continue
-                    $userAccessCount += 1
-                }
-            }
-        }
-        if ($sidAccessCount -eq 2)
-        {
-            # If both root keys have been verified by sid set $accessIdentity
-            write-information "Verified ACL access by SID: $userSID" -InformationAction Continue
-            $accessIdentity = $userSID
-        }
-        if ($userAccessCount -eq 2)
-        {
-            # If both root keys have been verified by sid set $accessIdentity
-            write-information "Verified ACL access by username: $convertedSID" -InformationAction Continue
-            $accessIdentity = $convertedSID
-        }
-        if ([string]::ISNullorEmpty($accessIdentity))
-        {
-            # if failed to find user access in registry, exit
-            write-information "Could not verify ACL access on root keys" -InformationAction Continue
-            exit
-        }
-        else
-        {
-            # return the $identityAccess variable for registry changes later
-            return $accessIdentity
-        }
-    }
-    end
-    {
-        # unload the registry
-        [gc]::collect()
-        Start-Sleep -Seconds 1
-        REG UNLOAD HKU\"testUserAccess" *>6
-        # sometimes this can take a moment between unloading
-        Start-Sleep -Seconds 1
-        REG UNLOAD HKU\"testUserAccess_Classes" *>6
-        $null = Remove-PSDrive -Name HKEY_USERS
     }
 }
 

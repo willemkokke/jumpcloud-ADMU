@@ -4,30 +4,6 @@ BeforeAll {
     . $PSScriptRoot\..\Start-Migration.ps1
 }
 Describe 'Functions' {
-    Context 'Test-Account Functions'{
-
-       It 'Test-Account - Real domain account bob.lazar@JCADB2.local' -Skip {
-           Test-Account -username bob.lazar -domain JCADB2.local | Should -Be $true
-       }
-
-       It 'Test-Account - Wrong account bobby.lazar@JCADB2.local' -Skip {
-           Test-Account -username bobby.lazar -domain JCADB2.local | Should -Be $false
-       }
-
-       It 'Test-Account - Real account with wrong domain bob.lazar@JCADB2.localw' -Skip {
-           Test-Account -username bob.lazar -domain JCADB2.localw | Should -Be $false
-       }
-
-       It 'Test-Account - Real local account with no domain' -Skip {
-           Test-Account -username testuser | Should -Be $true
-       }
-
-       It 'Test-Account - Wrong local account with no domain' -Skip {
-           Test-Account -username testuserq | Should -Be $false
-       }
-
-    }
-
     Context 'Write-ToLog Function'{
 
         It 'Write-ToLog - ' {
