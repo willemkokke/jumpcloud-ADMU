@@ -4,6 +4,73 @@ BeforeAll {
     . $PSScriptRoot\..\Start-Migration.ps1
 }
 Describe 'Functions' {
+    Context 'Show-Result Function'{
+
+    }
+
+    Context 'Test-RegistryValueMatch Function'{
+        It 'Value Matches' {
+            Test-RegistryValueMatch -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList' -Value 'Public' -stringmatch 'Public' | Should -Be $true
+        }
+
+        It 'Value Doesnt Match' {
+            Test-RegistryValueMatch -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList' -Value 'Public' -stringmatch 'Private' | Should -Be $false
+        }
+
+    }
+
+    Context 'BindUsernameToJCSystem Function'{
+        It 'User exists' {
+            #BindUsernameToJCSystem -JcApiKey $env:JCApiKey -JumpCloudUserName 'TESTUSER'
+        }
+
+    }
+
+    Context 'DenyInteractiveLogonRight Function'{
+        It '' {
+            DenyInteractiveLogonRight -SID 'S-1-5-21-3518420613-39764289-2461596297-1014'
+        }
+    }
+
+    Context 'Register-NativeMethod Function'{
+    }
+
+    Context 'Add-NativeMethod Function'{
+    }
+
+    Context 'New-LocalUserProfile Function'{
+    }
+
+    Context 'Remove-LocalUserProfile Function'{
+    }
+
+    Context 'Set-ValueToKey Function'{
+    }
+
+    Context 'New-RegKey Function'{
+    }
+
+    Context 'Get-SID Function'{
+    }
+
+    Context 'Set-UserRegistryLoadState Function'{
+    }
+
+    Context 'Test-UserRegistryLoadState Function'{
+    }
+
+    Context 'Backup-RegistryHive Function'{
+    }
+
+    Context 'Get-ProfileImagePath Function'{
+    }
+
+    Context 'Get-WindowsDrive Function'{
+        It 'Get-WindowsDrive - C' {
+            Get-WindowsDrive | Should -Be "C:"
+        }
+    }
+
     Context 'Write-ToLog Function'{
 
         It 'Write-ToLog - ' {
@@ -277,19 +344,33 @@ Describe 'Functions' {
 
     }
 
-    # Context 'Test-XMLFile Function'{
+    Context 'Convert-UserName Function'{
+        It '' {
 
-    #     It 'Test-XMLFile - Valid XML' {
+        }
+    }
 
-    #        Test-XMLFile -xmlFilePath 'C:\Windows\Temp\custom.xml' | Should -Be $true
-    #     }
+    Context 'Test-UsernameOrSID Function'{
+        It '' {
 
-    #     $invalidxml = Get-Content 'C:\Windows\Temp\custom.xml'
-    #     $invalidxml | ForEach-Object { $_.Replace("`>", " ") } | Set-Content 'C:\Windows\Temp\custom.xml'
+        }
+    }
 
-    #     It 'Test-XMLFile - InValid XML' {
+    Context 'Test-AgentIsOnFileSystem Function'{
+        It '' {
 
-    #         Test-XMLFile -xmlFilePath 'C:\Windows\Temp\custom.xml' | Should -Be $false
-    #     }
-    # }
+        }
+    }
+
+    Context 'Invoke-JumpCloudAgentInstall Function'{
+        It '' {
+
+        }
+    }
+
+    Context 'Restart-ComputerWithDelay Function'{
+        It '' {
+
+        }
+    }
 }
