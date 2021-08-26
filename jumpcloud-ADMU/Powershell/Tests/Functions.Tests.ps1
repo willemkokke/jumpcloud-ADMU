@@ -27,7 +27,7 @@ Describe 'Functions' {
     }
 
     Context 'DenyInteractiveLogonRight Function'{
-        It '' {
+        It '1' {
             DenyInteractiveLogonRight -SID 'S-1-5-21-3518420613-39764289-2461596297-1014'
         }
     }
@@ -345,31 +345,31 @@ Describe 'Functions' {
     }
 
     Context 'Convert-UserName Function'{
-        It '' {
+        It 'Convert-UserName' {
 
         }
     }
 
     Context 'Test-UsernameOrSID Function'{
-        It '' {
+        It 'Test-UsernameOrSID' {
 
         }
     }
 
     Context 'Test-AgentIsOnFileSystem Function'{
-        It '' {
+        It 'Test-AgentIsOnFileSystem' {
 
         }
     }
 
     Context 'Invoke-JumpCloudAgentInstall Function'{
-        It '' {
+        It 'Invoke-JumpCloudAgentInstall' {
 
         }
     }
 
     Context 'Restart-ComputerWithDelay Function'{
-        It '' {
+        It 'Restart-ComputerWithDelay' {
 
         }
     }
