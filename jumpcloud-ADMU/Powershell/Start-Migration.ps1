@@ -208,12 +208,12 @@ function DenyInteractiveLogonRight
     )
     process{
         # Add migrating user to deny logon rights
-        $secpolFile = "$WindowsDrive\Windows\temp\ur_orig.inf"
+        $secpolFile = "C:\Windows\temp\ur_orig.inf"
         if (Test-Path $secpolFile)
         {
             Remove-Item $secpolFile -Force
         }
-        secedit /export /areas USER_RIGHTS /cfg $windowsDrive\Windows\temp\ur_orig.inf
+        secedit /export /areas USER_RIGHTS /cfg C:\Windows\temp\ur_orig.inf
         $secpol = (Get-Content $secpolFile)
         $regvaluestring = $secpol | Where-Object { $_ -like "*SeDenyInteractiveLogonRight*" }
         $regvaluestringID = [array]::IndexOf($secpol, $regvaluestring)
