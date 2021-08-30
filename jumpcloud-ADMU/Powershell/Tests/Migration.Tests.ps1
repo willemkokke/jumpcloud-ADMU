@@ -61,7 +61,10 @@ Describe 'Migration Test Scenarios'{
                         param (
                             [Parameter()]
                             [string]
-                            $UserName
+                            $UserName,
+                            [Parameter()]
+                            [string]
+                            $Password
                         )
                         $path = "C:\Users\$UserName"
                         $file = "$path\ntuser.dat"
@@ -79,11 +82,14 @@ Describe 'Migration Test Scenarios'{
                         }
                         # As soon as new profile exists, rename ntuser.dat which should trigger a failure
                         $date = Get-Date -UFormat "%m-%d-%y %H:%M"
-                        Write-Host "$($date) - $file found, renaming..."
-                        rename-item $file -NewName "notyouruser.dat"
+                        Write-Host "$($date) - $file found, profile has been created"
+                        Write-Host "$($date) - staring powershell session for new user"
+                        $credentials = New-Object System.Management.Automation.PSCredential -ArgumentList @($UserName, (ConvertTo-SecureString -String $Password -AsPlainText -Force))
+                        Start-Process "C:\Windows\SysWOW64\WindowsPowerShell\v1.0\powershell.exe" -Credential ($credentials)
+                        # rename-item $file -NewName "notyouruser.dat"
                         exit 0
                         # Begin job
-                    }) -ArgumentList:($($user.JCUsername))
+                    }) -ArgumentList:($($user.JCUsername), $($user.password))
                 # Begin job to kick off startMigration
                 write-host "`nRunning: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)`n"
                 { Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutobindJCUser $false -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath } | Should -Throw
