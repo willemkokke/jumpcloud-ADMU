@@ -69,18 +69,20 @@ Describe 'Migration Test Scenarios'{
                         while (!(test-path $file))
                         {
                             $date = Get-Date -UFormat "%m-%d-%y %H:%M"
-                            Write-Host: "$($date) - $file file does not exist yet"
+                            Write-Host "$($date) - $file file does not exist yet"
                             Start-Sleep 1
                         }
                         # As soon as new profile exists, rename ntuser.dat which should trigger a failure
+                        Write-Host "$($date) - Found $UserName"
                         rename-item $file -NewName "notyouruser.dat"
                         # Begin job
-                    }) -ArgumentList:$($user.JCUsername)
+                    }) -ArgumentList:($($user.JCUsername))
                 # Begin job to kick off startMigration
                 write-host "`nRunning: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)`n"
                 { Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutobindJCUser $false -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath } | Should -Throw
                 # receive the wait-job
-                Receive-Job -Job $waitJob
+                $data = Receive-Job -Job $waitJob
+                Write-Host $data
                 # NewUserInit should be reverted and the new user profile path should not exist
                 "C:\Users\$($user.JCUsername)" | Should -Not -Exist
                 # The original user should exist
