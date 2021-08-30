@@ -56,7 +56,7 @@ Describe 'Migration Test Scenarios'{
         It "Start-Migration shoud fail and recover if backup step can not be completed" {
             foreach ($user in $JCReversionHash.Values) {
                 # Begin job to watch start-migration
-                Start-Job -ScriptBlock:( {
+                $waitJob = Start-Job -ScriptBlock:( {
                         [CmdletBinding()]
                         param (
                             [Parameter()]
@@ -70,7 +70,7 @@ Describe 'Migration Test Scenarios'{
                         {
                             $date = Get-Date -UFormat "%m-%d-%y %H:%M"
                             Write-Host: "$($date) - $file file does not exist yet"
-                            # Start-Sleep 2
+                            Start-Sleep 1
                         }
                         # As soon as new profile exists, rename ntuser.dat which should trigger a failure
                         rename-item $file -NewName "notyouruser.dat"
@@ -78,7 +78,9 @@ Describe 'Migration Test Scenarios'{
                     }) -ArgumentList:$($user.JCUsername)
                 # Begin job to kick off startMigration
                 write-host "`nRunning: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)`n"
-                { Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutobindJCUser $true -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath } | Should -Throw
+                { Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutobindJCUser $false -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath } | Should -Throw
+                # receive the wait-job
+                Receive-Job -Job $waitJob
                 # NewUserInit should be reverted and the new user profile path should not exist
                 "C:\Users\$($user.JCUsername)" | Should -Not -Exist
                 # The original user should exist
