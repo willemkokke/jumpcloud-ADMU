@@ -28,8 +28,9 @@ Describe 'Functions' {
 
     Context 'DenyInteractiveLogonRight Function'{
         It 'User exists on system' {
-            $circlecisid = (Get-SID -User "circleci")
-            DenyInteractiveLogonRight -SID (Get-SID -User $circlecisid)
+            $objUser = New-Object System.Security.Principal.NTAccount("circleci")
+            $strSID = $objUser.Translate([System.Security.Principal.SecurityIdentifier])
+            DenyInteractiveLogonRight -SID $strSID.Value
             $secpolFile = "C:\Windows\temp\ur_orig.inf"
             if (Test-Path $secpolFile)
             {
@@ -38,7 +39,7 @@ Describe 'Functions' {
             secedit /export /areas USER_RIGHTS /cfg C:\Windows\temp\ur_orig.inf
             $secpol = (Get-Content $secpolFile)
             $regvaluestring = $secpol | Where-Object { $_ -like "*SeDenyInteractiveLogonRight*" }
-            $regvaluestring.Contains($circlecisid) | Should -Be $true
+            $regvaluestring.Contains($strSID.Value) | Should -Be $true
         }
 
     }
