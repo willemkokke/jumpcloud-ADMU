@@ -66,23 +66,30 @@ Describe 'Migration Test Scenarios'{
                         $path = "C:\Users\$UserName"
                         $file = "$path\ntuser.dat"
                         # When user profile exists, traverse into profile
+                        $profileFound = $False
                         while (!(test-path $file))
                         {
-                            $date = Get-Date -UFormat "%m-%d-%y %H:%M"
-                            Write-Host "$($date) - $file file does not exist yet"
-                            Start-Sleep 1
+                            if ($path -And -Not $profileFound)
+                            {
+                                $date = Get-Date -UFormat "%m-%d-%y %H:%M"
+                                Write-Host "$($date) - User profile found, waiting..."
+                                $profileFound = $True
+                            }
+
                         }
                         # As soon as new profile exists, rename ntuser.dat which should trigger a failure
-                        Write-Host "$($date) - Found $UserName"
+                        $date = Get-Date -UFormat "%m-%d-%y %H:%M"
+                        Write-Host "$($date) - $file found, renaming..."
                         rename-item $file -NewName "notyouruser.dat"
+                        exit 0
                         # Begin job
                     }) -ArgumentList:($($user.JCUsername))
                 # Begin job to kick off startMigration
                 write-host "`nRunning: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)`n"
                 { Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutobindJCUser $false -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath } | Should -Throw
                 # receive the wait-job
-                $data = Receive-Job -Job $waitJob
-                Write-Host $data
+                Write-Host "Job Details:"
+                Receive-Job -Job $waitJob -Keep
                 # NewUserInit should be reverted and the new user profile path should not exist
                 "C:\Users\$($user.JCUsername)" | Should -Not -Exist
                 # The original user should exist

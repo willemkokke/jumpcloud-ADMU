@@ -315,7 +315,6 @@ function New-LocalUserProfile
         $strSID = $objUser.Translate([System.Security.Principal.SecurityIdentifier])
         $SID = $strSID.Value
 
-        Write-ToLog "$username Creation Result: $result"
         try
         {
             $result = [UserEnvCP2]::CreateProfile($SID, $Username, $sb, $pathLen)
