@@ -32,7 +32,6 @@ Describe 'Build Tests' {
             $VersionRegex = [regex]'(?<=Title="JumpCloud ADMU )([0-9]+)\.([0-9]+)\.([0-9]+)'
             $formversion = Select-String -Path:($formpath) -Pattern:($VersionRegex)
             $branchformversion = [version]$formversion.Matches.value
-            Write-Host $branchformversion
             $masterform = (Invoke-WebRequest https://raw.githubusercontent.com/TheJumpCloud/jumpcloud-ADMU/master/jumpcloud-ADMU/Powershell/Form.ps1 -useBasicParsing).tostring()
             $masterVersion = Select-String -inputobject:($masterform) -Pattern:($VersionRegex)
             $masterformversion = [version]$masterversion.Matches.value

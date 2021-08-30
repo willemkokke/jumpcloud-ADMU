@@ -187,7 +187,7 @@ function BindUsernameToJCSystem
             }
             else
             {
-                Write-ToLog -Message:("Cound not bind user/ JumpCloudUsername did not exist in JC Directory")
+                Write-ToLog -Message:("Could not bind user/ JumpCloudUsername did not exist in JC Directory")
             }
         }
         else
