@@ -27,9 +27,20 @@ Describe 'Functions' {
     }
 
     Context 'DenyInteractiveLogonRight Function'{
-        It '1' {
-            DenyInteractiveLogonRight -SID 'S-1-5-21-3518420613-39764289-2461596297-1014'
+        It 'User exists on system' {
+            $circlecisid = (Get-SID -User "circleci")
+            DenyInteractiveLogonRight -SID (Get-SID -User $circlecisid)
+            $secpolFile = "C:\Windows\temp\ur_orig.inf"
+            if (Test-Path $secpolFile)
+            {
+                Remove-Item $secpolFile -Force
+            }
+            secedit /export /areas USER_RIGHTS /cfg C:\Windows\temp\ur_orig.inf
+            $secpol = (Get-Content $secpolFile)
+            $regvaluestring = $secpol | Where-Object { $_ -like "*SeDenyInteractiveLogonRight*" }
+            $regvaluestring.Contains($circlecisid) | Should -Be $true
         }
+
     }
 
     Context 'Register-NativeMethod Function'{
