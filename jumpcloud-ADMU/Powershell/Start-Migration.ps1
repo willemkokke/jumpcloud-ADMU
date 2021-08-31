@@ -374,7 +374,7 @@ function Remove-LocalUserProfile
         }
         if (!$removeUser)
         {
-            throw " Username match not found, not reversing"
+            throw "Username match not found, not reversing"
         }
     }
     Process
@@ -564,7 +564,7 @@ Function Test-UserRegistryLoadState
         If ($results -match $UserSid)
         {
             Write-ToLog "REG Keys are loaded at the end of testing, exiting..."
-            exit
+            throw "REG Keys are loaded at the end of testing, exiting..."
         }
     }
 
@@ -588,8 +588,7 @@ Function Backup-RegistryHive
     {
         Write-ToLog -Message("Could Not Backup Registry Hives in $($profileImagePath): Exiting...")
         Write-ToLog -Message($_.Exception.Message)
-        # TODO: throw error from message above
-        throw "error"
+        throw "Could Not Backup Registry Hives in $($profileImagePath): Exiting..."
     }
 }
 

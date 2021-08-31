@@ -85,7 +85,7 @@ Describe 'Migration Test Scenarios'{
                         Write-Host "$($date) - $file found, profile has been created"
                         Write-Host "$($date) - staring powershell session for new user"
                         $credentials = New-Object System.Management.Automation.PSCredential -ArgumentList @($UserName, (ConvertTo-SecureString -String $Password -AsPlainText -Force))
-                        Start-Process "C:\Windows\SysWOW64\WindowsPowerShell\v1.0\powershell.exe" -Credential ($credentials)
+                        Start-Process Powershell.exe -Credential ($credentials) -WorkingDirectory "C:\windows\System32" -ArgumentList ('-WindowStyle Hidden')
                         # rename-item $file -NewName "notyouruser.dat"
                         exit 0
                         # Begin job
