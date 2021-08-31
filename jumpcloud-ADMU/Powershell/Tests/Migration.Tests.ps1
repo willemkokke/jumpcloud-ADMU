@@ -86,9 +86,6 @@ Describe 'Migration Test Scenarios'{
                         Write-Host "$($date) - staring powershell session for new user"
                         $credentials = New-Object System.Management.Automation.PSCredential -ArgumentList @($UserName, (ConvertTo-SecureString -String $Password -AsPlainText -Force))
                         Start-Process Powershell.exe -Credential ($credentials) -WorkingDirectory "C:\windows\System32" -ArgumentList ('-WindowStyle Hidden')
-                        # rename-item $file -NewName "notyouruser.dat"
-                        exit 0
-                        # Begin job
                     }) -ArgumentList:($($user.JCUsername), $($user.password))
                 # Begin job to kick off startMigration
                 write-host "`nRunning: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)`n"
