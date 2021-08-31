@@ -28,18 +28,18 @@ Describe 'Functions' {
 
     Context 'DenyInteractiveLogonRight Function'{
         It 'User exists on system' {
-            $objUser = New-Object System.Security.Principal.NTAccount("circleci")
-            $strSID = $objUser.Translate([System.Security.Principal.SecurityIdentifier])
-            DenyInteractiveLogonRight -SID $strSID.Value
-            $secpolFile = "C:\Windows\temp\ur_orig.inf"
-            if (Test-Path $secpolFile)
-            {
-                Remove-Item $secpolFile -Force
-            }
-            secedit /export /areas USER_RIGHTS /cfg C:\Windows\temp\ur_orig.inf
-            $secpol = (Get-Content $secpolFile)
-            $regvaluestring = $secpol | Where-Object { $_ -like "*SeDenyInteractiveLogonRight*" }
-            $regvaluestring.Contains($strSID.Value) | Should -Be $true
+            # $objUser = New-Object System.Security.Principal.NTAccount("circleci")
+            # $strSID = $objUser.Translate([System.Security.Principal.SecurityIdentifier])
+            # DenyInteractiveLogonRight -SID $strSID.Value
+            # $secpolFile = "C:\Windows\temp\ur_orig.inf"
+            # if (Test-Path $secpolFile)
+            # {
+            #     Remove-Item $secpolFile -Force
+            # }
+            # secedit /export /areas USER_RIGHTS /cfg C:\Windows\temp\ur_orig.inf
+            # $secpol = (Get-Content $secpolFile)
+            # $regvaluestring = $secpol | Where-Object { $_ -like "*SeDenyInteractiveLogonRight*" }
+            # $regvaluestring.Contains($strSID.Value) | Should -Be $true
         }
 
     }
@@ -51,9 +51,24 @@ Describe 'Functions' {
     }
 
     Context 'New-LocalUserProfile Function'{
+        It 'add testjc user' {
+            New-LocalUserProfile -username:('testjc')
+            (Get-LocalUser).Name -contains 'testjc' | Should -Be $true
+        }
     }
 
     Context 'Remove-LocalUserProfile Function'{
+        It 'add and remove,user shouldnt exist' {
+            New-LocalUserProfile -username:('testremovejc')
+            Remove-LocalUserProfile -username:('testremovejc')
+            (Get-LocalUser).Name -contains 'testremovejc' | Should -Be $false
+        }
+
+        It 'username does not exist and throws exception' {
+            $err = Remove-LocalUserProfile -username:('randomusernamethatdoesntexist') | Should -Throw -PassThru
+            $err.Exception.InnerException.InnerException.Message | Should -Be "  Username match not found, not reversing"
+
+        }
     }
 
     Context 'Set-ValueToKey Function'{
