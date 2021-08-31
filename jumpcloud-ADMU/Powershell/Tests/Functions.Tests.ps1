@@ -63,25 +63,32 @@ Describe 'Functions' {
         It 'add and remove,user shouldnt exist' {
             $newUserPassword = ConvertTo-SecureString -String 'Temp123!' -AsPlainText -Force
             New-localUser -Name 'testremovejc2' -password $newUserPassword -Description "Created By JumpCloud ADMU tests" -ErrorVariable userExitCode
-            New-LocalUserProfile -username:('testremovejc2') -password $newUserPassword
+            New-LocalUserProfile -username:('testremovejc2')
             Remove-LocalUserProfile -username:('testremovejc2')
             (Get-LocalUser).Name -contains 'testremovejc2' | Should -Be $false
         }
 
         It 'username does not exist and throws exception' {
-            $err = Remove-LocalUserProfile -username:('randomusernamethatdoesntexist') | Should -Throw -PassThru
-            $err.Exception.InnerException.InnerException.Message | Should -Be " Username match not found, not reversing"
-
         }
     }
 
     Context 'Set-ValueToKey Function'{
+        It 'test key set' {
+            Set-ValueToKey -registryRoot LocalMachine -keyPath 'SYSTEM\Software' -name '1' -value '1' -regValueKind DWord
+            Get-ItemPropertyValue -Path 'HKLM:\SYSTEM\Software\' -Name '1' | Should -Be '1'        }
     }
 
     Context 'New-RegKey Function'{
+        It 'test key created' {
+            New-RegKey -keyPath 'SYSTEM\1' -registryRoot LocalMachine
+            test-path 'HKLM:\SYSTEM\1' | Should -Be $true
+        }
     }
 
     Context 'Get-SID Function'{
+        It 'profile exists and sid returned' {
+            (gwmi win32_userprofile | select-object Localpath, SID | where-object Localpath -eq 'C:\Users\circleci'| select SID).SID.Length | Should -Be '45'
+        }
     }
 
     Context 'Set-UserRegistryLoadState Function'{
