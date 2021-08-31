@@ -605,7 +605,7 @@ Function Get-ProfileImagePath
     if ([System.String]::IsNullOrEmpty($profileImagePath))
     {
         Write-ToLog -Message("Could not get the profile path for $UserSid exiting...") -Level Error
-        exit
+        throw "Could not get the profile path for $UserSid exiting..."
     }
     else
     {
@@ -1136,7 +1136,7 @@ function Test-UsernameOrSID
         else
         {
             Write-ToLog 'SID or Username is invalid'
-            exit 1
+            throw 'SID or Username is invalid'
         }
     }
 }
@@ -1415,7 +1415,7 @@ Function Start-Migration
         if ([System.String]::IsNullOrEmpty($newUserProfileImagePath))
         {
             Write-ToLog -Message("Could not get the profile path for $jumpcloudusername exiting...")
-            exit 1
+            throw "Could not get the profile path for $jumpcloudusername exiting..."
         }
         # backup new user registry hives
         try
@@ -1427,7 +1427,7 @@ Function Start-Migration
         {
             Write-ToLog -Message("Could Not Backup Registry Hives in $($newUserProfileImagePath): Exiting...")
             Write-ToLog -Message($_.Exception.Message)
-            exit 1
+            throw "Could Not Backup Registry Hives in $($newUserProfileImagePath): Exiting..."
         }
 
         # Test Registry Access before edits
@@ -1439,8 +1439,8 @@ Function Start-Migration
         }
         catch
         {
-            Write-ToLog -Message:('Count not load and unload registry of migration user, exiting')
-            exit 1
+            Write-ToLog -Message:('could not load and unload registry of migration user, exiting')
+            throw 'could not load and unload registry of migration user, exiting'
         }
         # End Test Registry
         Write-ToLog -Message:('Begin new local user registry copy')
