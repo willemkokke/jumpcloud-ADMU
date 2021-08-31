@@ -52,6 +52,8 @@ Describe 'Functions' {
 
     Context 'New-LocalUserProfile Function'{
         It 'add testjc user' {
+            $newUserPassword = ConvertTo-SecureString -String 'Temp123!' -AsPlainText -Force
+            New-localUser -Name 'testjc' -password $newUserPassword -Description "Created By JumpCloud ADMU tests" -ErrorVariable userExitCode
             New-LocalUserProfile -username:('testjc')
             (Get-LocalUser).Name -contains 'testjc' | Should -Be $true
         }
@@ -59,14 +61,16 @@ Describe 'Functions' {
 
     Context 'Remove-LocalUserProfile Function'{
         It 'add and remove,user shouldnt exist' {
-            New-LocalUserProfile -username:('testremovejc')
-            Remove-LocalUserProfile -username:('testremovejc')
-            (Get-LocalUser).Name -contains 'testremovejc' | Should -Be $false
+            $newUserPassword = ConvertTo-SecureString -String 'Temp123!' -AsPlainText -Force
+            New-localUser -Name 'testremovejc2' -password $newUserPassword -Description "Created By JumpCloud ADMU tests" -ErrorVariable userExitCode
+            New-LocalUserProfile -username:('testremovejc2') -password $newUserPassword
+            Remove-LocalUserProfile -username:('testremovejc2')
+            (Get-LocalUser).Name -contains 'testremovejc2' | Should -Be $false
         }
 
         It 'username does not exist and throws exception' {
             $err = Remove-LocalUserProfile -username:('randomusernamethatdoesntexist') | Should -Throw -PassThru
-            $err.Exception.InnerException.InnerException.Message | Should -Be "  Username match not found, not reversing"
+            $err.Exception.InnerException.InnerException.Message | Should -Be " Username match not found, not reversing"
 
         }
     }
