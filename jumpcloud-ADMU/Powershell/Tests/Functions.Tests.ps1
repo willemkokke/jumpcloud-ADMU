@@ -5,15 +5,14 @@ BeforeAll {
 }
 Describe 'Functions' {
     Context 'Show-Result Function'{
-
     }
 
     Context 'Test-RegistryValueMatch Function'{
-        It 'Value Matches' {
+        It 'Value matches' {
             Test-RegistryValueMatch -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList' -Value 'Public' -stringmatch 'Public' | Should -Be $true
         }
 
-        It 'Value Doesnt Match' {
+        It 'Value does not match' {
             Test-RegistryValueMatch -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList' -Value 'Public' -stringmatch 'Private' | Should -Be $false
         }
 
@@ -21,12 +20,25 @@ Describe 'Functions' {
 
     Context 'BindUsernameToJCSystem Function'{
         It 'User exists' {
-            #BindUsernameToJCSystem -JcApiKey $env:JCApiKey -JumpCloudUserName 'TESTUSER'
+            Connect-JCOnline -JcApiKey $env:JCApiKey -JumpCloudOrgId $env:JCOrgId -Force
+            BindUsernameToJCSystem -JcApiKey $env:JCApiKey -JumpCloudUserName 'jsmith'
+            ((Get-JCAssociation -Type:user -Id:$env:JSmithUserID).id).count | Should -Be '1'
         }
 
+        It 'APIKey not valid' {
+        BindUsernameToJCSystem -JcApiKey '1234' -JumpCloudUserName 'jsmith' | Should -Throw
+        }
+
+        It 'Agent not installed' {
+            if (Test-Path -Path "C:\Program Files\JumpCloud\Plugins\Contrib\jcagent.conf" = True) {
+                Remove-Item "C:\Program Files\JumpCloud\Plugins\Contrib\jcagent.conf"
+              }
+            BindUsernameToJCSystem -JcApiKey $env:JCApiKey -JumpCloudUserName 'jsmith' | Should -Throw
+        }
     }
 
     Context 'DenyInteractiveLogonRight Function'{
+        #SeDenyInteractiveLogonRight not present in ci instance
         It 'User exists on system' {
             # $objUser = New-Object System.Security.Principal.NTAccount("circleci")
             # $strSID = $objUser.Translate([System.Security.Principal.SecurityIdentifier])
@@ -51,47 +63,62 @@ Describe 'Functions' {
     }
 
     Context 'New-LocalUserProfile Function'{
-        It 'add testjc user' {
+        It 'User created and exists on system' {
             $newUserPassword = ConvertTo-SecureString -String 'Temp123!' -AsPlainText -Force
-            New-localUser -Name 'testjc' -password $newUserPassword -Description "Created By JumpCloud ADMU tests" -ErrorVariable userExitCode
+            New-localUser -Name 'testjc' -password $newUserPassword -Description "Created By JumpCloud ADMU tests"
             New-LocalUserProfile -username:('testjc')
             (Get-LocalUser).Name -contains 'testjc' | Should -Be $true
+        }
+
+        It 'User does not exist on system and throws exception' {
+            New-LocalUserProfile -username:('userdoesntexist') | Should -Throw
         }
     }
 
     Context 'Remove-LocalUserProfile Function'{
-        It 'add and remove,user shouldnt exist' {
+        It 'Add and remove,user should not exist on system' {
             $newUserPassword = ConvertTo-SecureString -String 'Temp123!' -AsPlainText -Force
-            New-localUser -Name 'testremovejc2' -password $newUserPassword -Description "Created By JumpCloud ADMU tests" -ErrorVariable userExitCode
+            New-localUser -Name 'testremovejc2' -password $newUserPassword -Description "Created By JumpCloud ADMU tests"
             New-LocalUserProfile -username:('testremovejc2')
             Remove-LocalUserProfile -username:('testremovejc2')
-            (Get-LocalUser).Name -contains 'testremovejc2' | Should -Be $false
+            Test-Path -Path 'C:\Users\testremovejc2' -and (Get-LocalUser).Name -contains 'testremovejc2' | Should -Be $false
         }
 
-        It 'username does not exist and throws exception' {
+        It 'User does not exist on system and throws exception' {
+            Remove-LocalUserProfile -username:('randomusernamethatdoesntexist') | Should -Throw
         }
     }
 
     Context 'Set-ValueToKey Function'{
-        It 'test key set' {
+        It 'Value is set on existing key' {
             Set-ValueToKey -registryRoot LocalMachine -keyPath 'SYSTEM\Software' -name '1' -value '1' -regValueKind DWord
-            Get-ItemPropertyValue -Path 'HKLM:\SYSTEM\Software\' -Name '1' | Should -Be '1'        }
+            Get-ItemPropertyValue -Path 'HKLM:\SYSTEM\Software\' -Name '1' | Should -Be '1'
+        }
     }
 
     Context 'New-RegKey Function'{
-        It 'test key created' {
+        It 'Key is created' {
             New-RegKey -keyPath 'SYSTEM\1' -registryRoot LocalMachine
             test-path 'HKLM:\SYSTEM\1' | Should -Be $true
         }
     }
 
     Context 'Get-SID Function'{
-        It 'profile exists and sid returned' {
-            (gwmi win32_userprofile | select-object Localpath, SID | where-object Localpath -eq 'C:\Users\circleci'| select SID).SID.Length | Should -Be '45'
+        It 'Profile exists and sid returned' {
+            $circlecisid = (Get-WmiObject win32_userprofile | select-object Localpath, SID | where-object Localpath -eq 'C:\Users\circleci'| Select-Object SID).SID.Length | Should -Be '44'
+            Get-SID -User:'circleci' -eq $circlecisid | Should -Be $true
         }
     }
 
     Context 'Set-UserRegistryLoadState Function'{
+        It 'Load ' {
+            # $circlecisid = (Get-SID -User:'circleci')
+            # Set-UserRegistryLoadState -op Load -ProfilePath 'C:\Users\circleci\' -UserSid $circlecisid
+            # $path = 'HKU:\' $circlecisid_'_a
+            # Test-Path -Path 'HKU:\$($circlecisid)'
+        }
+
+        It 'Unload'
     }
 
     Context 'Test-UserRegistryLoadState Function'{
