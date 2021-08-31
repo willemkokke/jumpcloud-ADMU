@@ -64,29 +64,27 @@ Describe 'Migration Test Scenarios'{
                             $UserName,
                             [Parameter()]
                             [string]
-                            $Password
+                            $Password,
+                            [Parameter()]
+                            [string]
+                            $logString
                         )
                         $path = "C:\Users\$UserName"
                         $file = "$path\ntuser.dat"
-                        # When user profile exists, traverse into profile
-                        $profileFound = $False
-                        while (!(test-path $file))
+                        # Get last line of Log File
+                        $LogFile = "C\Windows\Temp\jcadmu.log"
+                        $lastLine = Get-Content $LogFile -Tail 1
+                        while ($logString -notmatch $lastLine)
                         {
-                            if ($path -And -Not $profileFound)
-                            {
-                                $date = Get-Date -UFormat "%m-%d-%y %H:%M"
-                                Write-Host "$($date) - User profile found, waiting..."
-                                $profileFound = $True
-                            }
-
+                            $lastLine = Get-Content $LogFile -Tail 1
+                            # Write-Host $lastLine
                         }
-                        # As soon as new profile exists, rename ntuser.dat which should trigger a failure
                         $date = Get-Date -UFormat "%m-%d-%y %H:%M"
-                        Write-Host "$($date) - $file found, profile has been created"
-                        Write-Host "$($date) - staring powershell session for new user"
+                        Write-Host "$($date) - $file found, ($logString) in $LogFile"
+                        Write-Host "$($date) - staring powershell session for new user - this should trigger failure"
                         $credentials = New-Object System.Management.Automation.PSCredential -ArgumentList @($UserName, (ConvertTo-SecureString -String $Password -AsPlainText -Force))
                         Start-Process Powershell.exe -Credential ($credentials) -WorkingDirectory "C:\windows\System32" -ArgumentList ('-WindowStyle Hidden')
-                    }) -ArgumentList:($($user.JCUsername), $($user.password))
+                    }) -ArgumentList:($($user.JCUsername), $($user.password), "Copy orig. ntuser.dat to ntuser_original.dat (backup reg step)")
                 # Begin job to kick off startMigration
                 write-host "`nRunning: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)`n"
                 { Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutobindJCUser $false -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath } | Should -Throw
