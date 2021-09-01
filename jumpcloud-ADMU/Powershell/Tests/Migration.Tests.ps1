@@ -72,7 +72,7 @@ Describe 'Migration Test Scenarios'{
                         $path = "C:\Users\$UserName"
                         $file = "$path\ntuser.dat"
                         # Get last line of Log File
-                        $LogFile = "C\Windows\Temp\jcadmu.log"
+                        $LogFile = "C:\Windows\Temp\jcadmu.log"
                         # Watch the log
                         Get-Content $LogFile -wait -Tail 1 | Where-Object { $_ -match $MatchString } | ForEach-Object { Write-Host "Log Match Found!"; break }
                         $date = Get-Date -UFormat "%m-%d-%y %H:%M"
