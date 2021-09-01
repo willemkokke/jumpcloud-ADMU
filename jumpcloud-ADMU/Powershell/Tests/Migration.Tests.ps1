@@ -98,7 +98,7 @@ Describe 'Migration Test Scenarios'{
                             }
                         }
                         Write-Host "Kicking off process for user"
-=                        # Watch the log; break when we see expected string
+                        # Watch the log; break when we see expected string
                         $credentials = New-Object System.Management.Automation.PSCredential -ArgumentList @($UserName, (ConvertTo-SecureString -String $Password -AsPlainText -Force))
                         # trigger PowerShell session
                         Start-Process Powershell.exe -Credential ($credentials) -WorkingDirectory "C:\windows\System32" -ArgumentList ('-WindowStyle Hidden')
