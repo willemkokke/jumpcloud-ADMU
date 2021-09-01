@@ -73,13 +73,21 @@ Describe 'Migration Test Scenarios'{
                         $file = "$path\ntuser.dat"
                         # Get last line of Log File
                         $LogFile = "C:\Windows\Temp\jcadmu.log"
-                        # Watch the log
-                        Get-Content $LogFile -wait -Tail 1 | Where-Object { $_ -match $MatchString } | ForEach-Object { Write-Host "Log Match Found!"; break }
-                        $date = Get-Date -UFormat "%m-%d-%y %H:%M"
-                        Write-Host "$($date) - $file found, ($logString) in $LogFile"
-                        Write-Host "$($date) - staring powershell session for new user - this should trigger failure"
-                        $credentials = New-Object System.Management.Automation.PSCredential -ArgumentList @($UserName, (ConvertTo-SecureString -String $Password -AsPlainText -Force))
-                        Start-Process Powershell.exe -Credential ($credentials) -WorkingDirectory "C:\windows\System32" -ArgumentList ('-WindowStyle Hidden')
+                        $patten = [regex]$logString
+                        # Watch the log; break when we see expected string
+                        Get-Content $LogFile -wait -Tail 1 | ForEach-Object {
+                            if ($_ -match $patten)
+                            {
+                                # write out found line
+                                Write-Host "Log Match Found: $($_)!"
+                                Write-Host "Staring powershell session for new user - this should trigger failure"
+                                $credentials = New-Object System.Management.Automation.PSCredential -ArgumentList @($UserName, (ConvertTo-SecureString -String $Password -AsPlainText -Force))
+                                # trigger PowerShell session
+                                Start-Process Powershell.exe -Credential ($credentials) -WorkingDirectory "C:\windows\System32" -ArgumentList ('-WindowStyle Hidden')
+                                # finally break out of job
+                                break
+                            }
+                        }
                     }) -ArgumentList:($($user.JCUsername), $($user.password), "Copy orig. ntuser.dat to ntuser_original.dat (backup reg step)")
                 # Begin job to kick off startMigration
                 write-host "`nRunning: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)`n"
