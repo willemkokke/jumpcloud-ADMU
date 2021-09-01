@@ -77,19 +77,30 @@ Describe 'Migration Test Scenarios'{
                         $file = "$path\ntuser.dat"
                         # Get last line of Log File
                         $LogFile = "C:\Windows\Temp\jcadmu.log"
+                        # wait for file
+                        $fileExists = $false
+                        while (!$fileExists){
+                            if (Test-Path $LogFile){
+                                Write-Host "Found: $LogFile"
+                                $fileExists = $true
+                            }
+                        }
                         $waitCondition = $false
                         while (!$waitCondition)
                         {
                             $content = Get-Content $LogFile
                             if ($content -match $logString)
                             {
+                                Write-Host "Found Match in Log: $logString"
                                 $waitCondition = $true
                             }
                         }
-                        # Watch the log; break when we see expected string
+                        Write-Host "Kicking off process for user"
+=                        # Watch the log; break when we see expected string
                         $credentials = New-Object System.Management.Automation.PSCredential -ArgumentList @($UserName, (ConvertTo-SecureString -String $Password -AsPlainText -Force))
                         # trigger PowerShell session
                         Start-Process Powershell.exe -Credential ($credentials) -WorkingDirectory "C:\windows\System32" -ArgumentList ('-WindowStyle Hidden')
+                        Write-Host "Job Completed"
                     }) -ArgumentList:($($user.JCUsername), $($user.password), "\(backup reg step\)")
                 # Begin job to kick off startMigration
                 write-host "`nRunning: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)`n"
