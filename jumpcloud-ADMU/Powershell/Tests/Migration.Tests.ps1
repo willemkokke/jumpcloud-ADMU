@@ -14,11 +14,13 @@ BeforeAll{
     $systemKey = [regex]::Match($config, $regex).Groups[1].Value
 }
 Describe 'Migration Test Scenarios'{
-    BeforeEach{
-        # Remove the log from previous runs
-        Remove-Item "C:\Windows\Temp\jcadmu.log"
-    }
     Context 'Start-Migration on local accounts (Test Functionallity)' {
+        BeforeEach{
+            # Remove the log from previous runs
+            $logPath = "C:\Windows\Temp\jcadmu.log"
+            Remove-Item $logPath
+            New-Item $logPath -Force -ItemType File
+        }
         It "username extists for testing" {
             foreach ($user in $userTestingHash.Values){
                 $user.username | Should -Not -BeNullOrEmpty
