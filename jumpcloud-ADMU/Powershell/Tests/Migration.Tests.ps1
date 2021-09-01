@@ -73,12 +73,8 @@ Describe 'Migration Test Scenarios'{
                         $file = "$path\ntuser.dat"
                         # Get last line of Log File
                         $LogFile = "C\Windows\Temp\jcadmu.log"
-                        $lastLine = Get-Content $LogFile -Tail 1
-                        while ($logString -notmatch $lastLine)
-                        {
-                            $lastLine = Get-Content $LogFile -Tail 1
-                            # Write-Host $lastLine
-                        }
+                        # Watch the log
+                        Get-Content $LogFile -wait -Tail 1 | Where-Object { $_ -match $MatchString } | ForEach-Object { Write-Host "Log Match Found!"; break }
                         $date = Get-Date -UFormat "%m-%d-%y %H:%M"
                         Write-Host "$($date) - $file found, ($logString) in $LogFile"
                         Write-Host "$($date) - staring powershell session for new user - this should trigger failure"
