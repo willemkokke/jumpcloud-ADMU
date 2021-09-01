@@ -118,7 +118,9 @@ Describe 'Functions' {
             # Test-Path -Path 'HKU:\$($circlecisid)'
         }
 
-        It 'Unload'
+        It 'Unload' -skip{
+
+        }
     }
 
     Context 'Test-UserRegistryLoadState Function'{
