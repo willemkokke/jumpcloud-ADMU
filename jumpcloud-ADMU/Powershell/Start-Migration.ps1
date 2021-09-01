@@ -563,7 +563,7 @@ Function Test-UserRegistryLoadState
         # Tests to check that the reg items are not loaded
         If ($results -match $UserSid)
         {
-            Write-ToLog "REG Keys are loaded at the end of testing, exiting..."
+            Write-ToLog "REG Keys are loaded at the end of testing, exiting..." -Level Error
             throw "REG Keys are loaded at the end of testing, exiting..."
         }
     }
@@ -1414,8 +1414,8 @@ Function Start-Migration
         ### Begin backup user registry for new user
         if ([System.String]::IsNullOrEmpty($newUserProfileImagePath))
         {
-            Write-ToLog -Message("Could not get the profile path for $jumpcloudusername exiting...")
-            throw "Could not get the profile path for $jumpcloudusername exiting..."
+            Write-ToLog -Message("Could not get the profile path for $jumpcloudusername exiting...") -Level Error
+            return
         }
         # backup new user registry hives
         try
@@ -1425,9 +1425,9 @@ Function Start-Migration
         }
         catch
         {
-            Write-ToLog -Message("Could Not Backup Registry Hives in $($newUserProfileImagePath): Exiting...")
+            Write-ToLog -Message("Could Not Backup Registry Hives in $($newUserProfileImagePath): Exiting...") -Level Error
             Write-ToLog -Message($_.Exception.Message)
-            throw "Could Not Backup Registry Hives in $($newUserProfileImagePath): Exiting..."
+            return
         }
 
         # Test Registry Access before edits
@@ -1439,8 +1439,8 @@ Function Start-Migration
         }
         catch
         {
-            Write-ToLog -Message:('could not load and unload registry of migration user, exiting')
-            throw 'could not load and unload registry of migration user, exiting'
+            Write-ToLog -Message:('could not load and unload registry of migration user, exiting') -Level Error
+            return
         }
         # End Test Registry
         Write-ToLog -Message:('Begin new local user registry copy')
@@ -1582,7 +1582,6 @@ Function Start-Migration
             return
         }
         $admuTracker.renameBackupFiles.pass = $true
-
         if ($UpdateHomePath)
         {
             Write-ToLog -Message:("Parameter to Update Home Path was set.")
@@ -1902,6 +1901,7 @@ Function Start-Migration
                             try
                             {
                                 Remove-LocalUserProfile -username $JumpCloudUserName
+                                Write-ToLog -Message:("User: $JumpCloudUserName was successfully removed from the local system")
                             }
                             catch
                             {
@@ -1909,81 +1909,82 @@ Function Start-Migration
                             }
                             $FixedErrors += "$trackedStep"
                         }
-                        'renameOriginalFiles'
-                        {
-                            Write-ToLog -Message:("Attempting to revert $($trackedStep) steps")
-                            ### Should we be using Rename-Item here or Move-Item to force overwrite?
-                            if (Test-Path "$oldUserProfileImagePath\NTUSER_original.DAT" -PathType Leaf)
-                            {
-                                try
-                                {
-                                    Rename-Item -Path "$oldUserProfileImagePath\NTUSER.DAT" -NewName "$oldUserProfileImagePath\NTUSER_failedCopy.DAT" -Force -ErrorAction Stop
-                                    Rename-Item -Path "$oldUserProfileImagePath\NTUSER_original.DAT" -NewName "$oldUserProfileImagePath\NTUSER.DAT" -Force -ErrorAction Stop
-                                }
-                                catch
-                                {
-                                    Write-ToLog -Message:("Unable to rename file $oldUserProfileImagePath\NTUSER_original.DAT") -Level Error
-                                }
-                            }
-                            if (Test-Path "$oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass_original.dat" -PathType Leaf)
-                            {
-                                try
-                                {
-                                    Rename-Item -Path "$oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass.dat" -NewName "$oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass_failedCopy.dat" -Force -ErrorAction Stop
-                                    Rename-Item -Path "$oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass_original.dat" -NewName "$oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass.dat" -Force -ErrorAction Stop
-                                }
-                                catch
-                                {
-                                    Write-ToLog -Message:("Unable to rename file $oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass_original.dat") -Level Error
-                                }
-                                $FixedErrors += "$trackedStep"
-                            }
-                        }
-                        'renameBackupFiles'
-                        {
-                            Write-ToLog -Message:("Attempting to revert $($trackedStep) steps")
-                            if (Test-Path "$oldUserProfileImagePath\NTUSER.DAT.BAK" -PathType Leaf)
-                            {
-                                try
-                                {
-                                    Rename-Item -Path "$oldUserProfileImagePath\NTUSER.DAT.BAK" -NewName "$oldUserProfileImagePath\NTUSER.DAT" -Force -ErrorAction Stop
-                                }
-                                catch
-                                {
-                                    Write-ToLog -Message:("Unable to rename file $oldUserProfileImagePath\NTUSER.DAT.BAK") -Level Error
-                                }
-                            }
-                            if (Test-Path "$oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass.dat.bak" -PathType Leaf)
-                            {
-                                try
-                                {
-                                    Rename-Item -Path "$oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass.dat.bak" -NewName "$oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass.dat" -Force -ErrorAction Stop
-                                }
-                                catch
-                                {
-                                    Write-ToLog -Message:("Unable to rename file $oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass.dat.bak") -Level Error
-                                }
-                            }
-                            $FixedErrors += "$trackedStep"
-                        }
-                        'renameHomeDirectory'
-                        {
-                            try
-                            {
-                                Write-ToLog -Message:("Attempting to revert RenameHomeDirectory steps")
-                                if (($userCompare -ne $selectedUserName) -and (test-path -Path $newUserProfileImagePath))
-                                {
-                                    # Error Action stop to treat as terminating error
-                                    Rename-Item -Path ($newUserProfileImagePath) -NewName ($selectedUserName) -ErrorAction Stop
-                                }
-                                Set-ItemProperty -Path ('HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\' + $SelectedUserSID) -Name 'ProfileImagePath' -Value "$($oldUserProfileImagePath)"
-                            }
-                            catch
-                            {
-                                Write-ToLog -Message:("Unable to restore old user profile path and profile image path.") -Level Error
-                            }
-                            $FixedErrors += "$trackedStep"
-                        }
+                        # 'renameOriginalFiles'
+                        # {
+                        #     Write-ToLog -Message:("Attempting to revert $($trackedStep) steps")
+                        #     ### Should we be using Rename-Item here or Move-Item to force overwrite?
+                        #     if (Test-Path "$oldUserProfileImagePath\NTUSER_original.DAT" -PathType Leaf)
+                        #     {
+                        #         try
+                        #         {
+                        #             Rename-Item -Path "$oldUserProfileImagePath\NTUSER.DAT" -NewName "$oldUserProfileImagePath\NTUSER_failedCopy.DAT" -Force -ErrorAction Stop
+                        #             Rename-Item -Path "$oldUserProfileImagePath\NTUSER_original.DAT" -NewName "$oldUserProfileImagePath\NTUSER.DAT" -Force -ErrorAction Stop
+                        #             Write-ToLog -Message:("User at profile path: $oldUserProfileImagePath should be able to login")
+                        #         }
+                        #         catch
+                        #         {
+                        #             Write-ToLog -Message:("Unable to rename file $oldUserProfileImagePath\NTUSER_original.DAT") -Level Error
+                        #         }
+                        #     }
+                        #     if (Test-Path "$oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass_original.dat" -PathType Leaf)
+                        #     {
+                        #         try
+                        #         {
+                        #             Rename-Item -Path "$oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass.dat" -NewName "$oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass_failedCopy.dat" -Force -ErrorAction Stop
+                        #             Rename-Item -Path "$oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass_original.dat" -NewName "$oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass.dat" -Force -ErrorAction Stop
+                        #         }
+                        #         catch
+                        #         {
+                        #             Write-ToLog -Message:("Unable to rename file $oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass_original.dat") -Level Error
+                        #         }
+                        #         $FixedErrors += "$trackedStep"
+                        #     }
+                        # }
+                        # 'renameBackupFiles'
+                        # {
+                        #     Write-ToLog -Message:("Attempting to revert $($trackedStep) steps")
+                        #     if (Test-Path "$oldUserProfileImagePath\NTUSER.DAT.BAK" -PathType Leaf)
+                        #     {
+                        #         try
+                        #         {
+                        #             Rename-Item -Path "$oldUserProfileImagePath\NTUSER.DAT.BAK" -NewName "$oldUserProfileImagePath\NTUSER.DAT" -Force -ErrorAction Stop
+                        #         }
+                        #         catch
+                        #         {
+                        #             Write-ToLog -Message:("Unable to rename file $oldUserProfileImagePath\NTUSER.DAT.BAK") -Level Error
+                        #         }
+                        #     }
+                        #     if (Test-Path "$oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass.dat.bak" -PathType Leaf)
+                        #     {
+                        #         try
+                        #         {
+                        #             Rename-Item -Path "$oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass.dat.bak" -NewName "$oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass.dat" -Force -ErrorAction Stop
+                        #         }
+                        #         catch
+                        #         {
+                        #             Write-ToLog -Message:("Unable to rename file $oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass.dat.bak") -Level Error
+                        #         }
+                        #     }
+                        #     $FixedErrors += "$trackedStep"
+                        # }
+                        # 'renameHomeDirectory'
+                        # {
+                        #     try
+                        #     {
+                        #         Write-ToLog -Message:("Attempting to revert RenameHomeDirectory steps")
+                        #         if (($userCompare -ne $selectedUserName) -and (test-path -Path $newUserProfileImagePath))
+                        #         {
+                        #             # Error Action stop to treat as terminating error
+                        #             Rename-Item -Path ($newUserProfileImagePath) -NewName ($selectedUserName) -ErrorAction Stop
+                        #         }
+                        #         Set-ItemProperty -Path ('HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\' + $SelectedUserSID) -Name 'ProfileImagePath' -Value "$($oldUserProfileImagePath)"
+                        #     }
+                        #     catch
+                        #     {
+                        #         Write-ToLog -Message:("Unable to restore old user profile path and profile image path.") -Level Error
+                        #     }
+                        #     $FixedErrors += "$trackedStep"
+                        # }
                         Default
                         {
                             # Write-ToLog -Message:("default error") -Level Error
