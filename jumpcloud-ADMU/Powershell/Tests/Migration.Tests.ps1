@@ -59,6 +59,12 @@ Describe 'Migration Test Scenarios'{
         }
     }
     Context 'Start-Migration on Local Accounts Expecting Failed Results (Test Reversal Functionallity)' {
+        BeforeEach {
+            # Remove the log from previous runs
+            $logPath = "C:\Windows\Temp\jcadmu.log"
+            Remove-Item $logPath
+            New-Item $logPath -Force -ItemType File
+        }
         It "Start-Migration shoud fail and recover if backup step can not be completed" {
             foreach ($user in $JCReversionHash.Values) {
                 # Begin job to watch start-migration
@@ -68,9 +74,6 @@ Describe 'Migration Test Scenarios'{
                             [Parameter()]
                             [string]
                             $UserName,
-                            [Parameter()]
-                            [string]
-                            $Password,
                             [Parameter()]
                             [string]
                             $logString
@@ -99,11 +102,9 @@ Describe 'Migration Test Scenarios'{
                         }
                         Write-Host "Kicking off process for user"
                         # Watch the log; break when we see expected string
-                        $credentials = New-Object System.Management.Automation.PSCredential -ArgumentList @($UserName, (ConvertTo-SecureString -String $Password -AsPlainText -Force))
-                        # trigger PowerShell session
-                        Start-Process Powershell.exe -Credential ($credentials) -WorkingDirectory "C:\windows\System32" -ArgumentList ('-WindowStyle Hidden')
+                        Rename-Item -Path $file -NewName "$path\MESSUP.DAT"
                         Write-Host "Job Completed"
-                    }) -ArgumentList:($($user.JCUsername), $($user.password), "\(backup reg step\)")
+                    }) -ArgumentList:($($user.username), "Copying merged profiles to destination profile path")
                 # Begin job to kick off startMigration
                 write-host "`nRunning: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)`n"
                 { Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutobindJCUser $false -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath } | Should -Throw
