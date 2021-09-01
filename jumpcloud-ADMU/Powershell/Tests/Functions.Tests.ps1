@@ -21,19 +21,19 @@ Describe 'Functions' {
     Context 'BindUsernameToJCSystem Function'{
         It 'User exists' {
             Connect-JCOnline -JcApiKey $env:JCApiKey -JumpCloudOrgId $env:JCOrgId -Force
-            BindUsernameToJCSystem -JcApiKey $env:JCApiKey -JumpCloudUserName 'jsmith'
+            BindUsernameToJCSystem -JumpCloudApiKey $env:JCApiKey -JumpCloudUserName 'jsmith'
             ((Get-JCAssociation -Type:user -Id:$env:JSmithUserID).id).count | Should -Be '1'
         }
 
         It 'APIKey not valid' {
-        BindUsernameToJCSystem -JcApiKey '1234' -JumpCloudUserName 'jsmith' | Should -Throw
+        BindUsernameToJCSystem -JcApiKey '1234' -JumpCloudUserName 'jsmith' | Should -Throw -ExceptionType ([ArgumentException])
         }
 
         It 'Agent not installed' {
-            if (Test-Path -Path "C:\Program Files\JumpCloud\Plugins\Contrib\jcagent.conf" = True) {
+            if (Test-Path -Path "C:\Program Files\JumpCloud\Plugins\Contrib\jcagent.conf" -eq $True) {
                 Remove-Item "C:\Program Files\JumpCloud\Plugins\Contrib\jcagent.conf"
               }
-            BindUsernameToJCSystem -JcApiKey $env:JCApiKey -JumpCloudUserName 'jsmith' | Should -Throw
+            BindUsernameToJCSystem -JcApiKey $env:JCApiKey -JumpCloudUserName 'jsmith' | Should -Throw -ExceptionType ([ArgumentException])
         }
     }
 
@@ -71,7 +71,7 @@ Describe 'Functions' {
         }
 
         It 'User does not exist on system and throws exception' {
-            New-LocalUserProfile -username:('userdoesntexist') | Should -Throw
+            New-LocalUserProfile -username:('userdoesntexist') | Should -Throw -ExceptionType ([ArgumentException])
         }
     }
 
@@ -85,7 +85,7 @@ Describe 'Functions' {
         }
 
         It 'User does not exist on system and throws exception' {
-            Remove-LocalUserProfile -username:('randomusernamethatdoesntexist') | Should -Throw
+            Remove-LocalUserProfile -username:('randomusernamethatdoesntexist') | Should -Throw -ExceptionType ([ArgumentException])
         }
     }
 
