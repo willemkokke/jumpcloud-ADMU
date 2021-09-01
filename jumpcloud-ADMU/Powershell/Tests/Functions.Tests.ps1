@@ -31,7 +31,7 @@ Describe 'Functions' {
         }
 
         It 'Agent not installed' {
-            if (Test-Path -Path "C:\Program Files\JumpCloud\Plugins\Contrib\jcagent.conf" -eq $True) {
+            if ((Test-Path -Path "C:\Program Files\JumpCloud\Plugins\Contrib\jcagent.conf") -eq $True) {
                 Remove-Item "C:\Program Files\JumpCloud\Plugins\Contrib\jcagent.conf"
               }
             {BindUsernameToJCSystem -JcApiKey $env:JCApiKey -JumpCloudUserName 'jsmith' -ErrorAction Stop} | Should -Throw
@@ -68,7 +68,7 @@ Describe 'Functions' {
             $newUserPassword = ConvertTo-SecureString -String 'Temp123!' -AsPlainText -Force
             New-localUser -Name 'testjc' -password $newUserPassword -Description "Created By JumpCloud ADMU tests"
             New-LocalUserProfile -username:('testjc')
-            (Get-LocalUser).Name -contains 'testjc' | Should -Be $true
+            Test-Path -Path 'C:\Users\testjc' | Should -Be $true
         }
 
         It 'User does not exist on system and throws exception' {
@@ -81,7 +81,7 @@ Describe 'Functions' {
             $newUserPassword = ConvertTo-SecureString -String 'Temp123!' -AsPlainText -Force
             New-localUser -Name 'testremovejc2' -password $newUserPassword -Description "Created By JumpCloud ADMU tests"
             New-LocalUserProfile -username:('testremovejc2')
-            Remove-LocalUserProfile -username:('testremovejc2')
+            #Remove-LocalUserProfile -username:('testremovejc2')
             Test-Path -Path 'C:\Users\testremovejc2' -and (Get-LocalUser).Name -contains 'testremovejc2' | Should -Be $false
         }
 
