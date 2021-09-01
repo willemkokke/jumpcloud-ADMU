@@ -65,7 +65,7 @@ Describe 'Migration Test Scenarios'{
             Remove-Item $logPath
             New-Item $logPath -Force -ItemType File
         }
-        It "Start-Migration shoud fail and recover if backup step can not be completed" {
+        It "Start-Migration remove the new user created if it encounters an error" {
             foreach ($user in $JCReversionHash.Values) {
                 # Begin job to watch start-migration
                 $waitJob = Start-Job -ScriptBlock:( {
@@ -117,7 +117,7 @@ Describe 'Migration Test Scenarios'{
                 "C:\Users\$($user.username)" | Should -Exist
             }
         }
-        It "Start-Migration should reverse if jumpcloud user already exists" -Skip{
+        It "Start-Migration should throw if the jumpcloud user already exists & not migrate anything" -Skip{
             # TODO: Reversal should log that the user existed & delete the user after tun
         }
     }
