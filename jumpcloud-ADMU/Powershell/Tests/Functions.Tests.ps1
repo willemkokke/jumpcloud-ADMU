@@ -21,19 +21,20 @@ Describe 'Functions' {
     Context 'BindUsernameToJCSystem Function'{
         It 'User exists' {
             Connect-JCOnline -JumpCloudApiKey $env:JCApiKey -JumpCloudOrgId $env:JCOrgId -Force
+            Get-JCAssociation -Type user -Id:$env:JSmithUserID | Remove-JCAssociation -Force
             BindUsernameToJCSystem -JcApiKey $env:JCApiKey -JumpCloudUserName 'jsmith'
             ((Get-JCAssociation -Type:user -Id:$env:JSmithUserID).id).count | Should -Be '1'
         }
 
         It 'APIKey not valid' {
-        BindUsernameToJCSystem -JcApiKey '1234' -JumpCloudUserName 'jsmith' -ErrorAction Stop | Should -Throw
+        {BindUsernameToJCSystem -JcApiKey '1234' -JumpCloudUserName 'jsmith' -ErrorAction Stop} | Should -Throw
         }
 
         It 'Agent not installed' {
             if (Test-Path -Path "C:\Program Files\JumpCloud\Plugins\Contrib\jcagent.conf" -eq $True) {
                 Remove-Item "C:\Program Files\JumpCloud\Plugins\Contrib\jcagent.conf"
               }
-            BindUsernameToJCSystem -JcApiKey $env:JCApiKey -JumpCloudUserName 'jsmith' -ErrorAction Stop | Should -Throw
+            {BindUsernameToJCSystem -JcApiKey $env:JCApiKey -JumpCloudUserName 'jsmith' -ErrorAction Stop} | Should -Throw
         }
     }
 
@@ -71,7 +72,7 @@ Describe 'Functions' {
         }
 
         It 'User does not exist on system and throws exception' {
-            New-LocalUserProfile -username:('userdoesntexist') -ErrorAction Stop | Should -Throw
+            {New-LocalUserProfile -username:('userdoesntexist') -ErrorAction Stop} | Should -Throw
         }
     }
 
@@ -85,7 +86,7 @@ Describe 'Functions' {
         }
 
         It 'User does not exist on system and throws exception' {
-            Remove-LocalUserProfile -username:('randomusernamethatdoesntexist') -ErrorAction Stop | Should -Throw
+            {Remove-LocalUserProfile -username:('randomusernamethatdoesntexist') -ErrorAction Stop} | Should -Throw
         }
     }
 
