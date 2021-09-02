@@ -121,6 +121,12 @@ Describe 'Migration Test Scenarios'{
                 Receive-Job -Job $waitJob -Keep
                 # NewUserInit should be reverted and the new user profile path should not exist
                 "C:\Users\$($user.JCUsername)" | Should -Not -Exist
+            }
+        }
+        It "Start-Migration should throw if the jumpcloud user already exists & not migrate anything"{
+            foreach ($user in $JCReversionHash.Values)
+            {
+                { Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutobindJCUser $false -JumpCloudUserName "$($user.username)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath } | Should -Throw
                 # The original user should exist
                 "C:\Users\$($user.username)" | Should -Exist
             }
