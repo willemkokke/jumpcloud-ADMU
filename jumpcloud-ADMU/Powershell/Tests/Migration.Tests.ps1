@@ -73,45 +73,46 @@ Describe 'Migration Test Scenarios'{
                         param (
                             [Parameter()]
                             [string]
-                            $UserName,
-                            [Parameter()]
-                            [string]
-                            $Password,
-                            [Parameter()]
-                            [string]
-                            $logString
+                            $UserName
                         )
                         $path = "C:\Users\$UserName"
                         $file = "$path\ntuser.dat"
-                        # Get last line of Log File
-                        $LogFile = "C:\Windows\Temp\jcadmu.log"
-                        # wait for file
                         $fileExists = $false
-                        while (!$fileExists){
-                            if (Test-Path $LogFile){
-                                Write-Host "Found: $LogFile"
-                                $fileExists = $true
-                            }
-                        }
-                        $waitCondition = $false
-                        while (!$waitCondition)
+                        while (!$fileExists)
                         {
-                            $content = Get-Content $LogFile
-                            if ($content -match $logString)
+                            if (Test-Path $file)
                             {
-                                Write-Host "Found Match in Log: $logString"
-                                $waitCondition = $true
+                                Write-Host "Found: $file"
+                                try{
+                                    Rename-Item -Path $file -NewName "$path\MESSUP.DAT"
+                                    $fileExists = $true
+                                }
+                                catch{
+                                    Write-Host "File in use"
+                                }
                             }
                         }
+                        # $waitCondition = $false
+                        # while (!$waitCondition)
+                        # {
+                        #     $content = Get-Content $LogFile
+                        #     if ($content -match $logString)
+                        #     {
+                        #         Write-Host "Found Match in Log: $logString"
+                        #         $waitCondition = $true
+                        #     }
+                        # }
                         Write-Host "Rename NTUser to throw migration process"
                         # Watch the log; break when we see expected string
                         Rename-Item -Path $file -NewName "$path\MESSUP.DAT" -ErrorVariable renameError
                         if ($renameError){
                             Write-Host "Could not rename item for some reason, this test will have failed by the time you see this message"
-
+                        }
+                        if (Test-Path "$path\MESSUP.DAT"){
+                            Write-Host "Renamed NTUser.dat file the process should fail"
                         }
                         Write-Host "Job Completed"
-                    }) -ArgumentList:($($user.JCUsername),"Getting new profile image path")
+                    }) -ArgumentList:($($user.JCUsername))
                 # Begin job to kick off startMigration
                 write-host "`nRunning: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)`n"
                 { Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutobindJCUser $false -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath } | Should -Throw
