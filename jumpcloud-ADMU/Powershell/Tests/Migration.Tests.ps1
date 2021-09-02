@@ -84,7 +84,7 @@ Describe 'Migration Test Scenarios'{
                             {
                                 Write-Host "Found: $file"
                                 try{
-                                    Rename-Item -Path $file -NewName "$path\MESSUP.DAT"
+                                    Rename-Item -Path $file -NewName "$path\MESSUP.DAT" -ErrorAction Stop
                                     $fileExists = $true
                                 }
                                 catch{
