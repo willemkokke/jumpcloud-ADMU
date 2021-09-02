@@ -15,7 +15,6 @@ Describe 'Functions' {
         It 'Value does not match' {
             Test-RegistryValueMatch -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList' -Value 'Public' -stringmatch 'Private' | Should -Be $false
         }
-
     }
 
     Context 'BindUsernameToJCSystem Function'{
@@ -39,7 +38,7 @@ Describe 'Functions' {
     }
 
     Context 'DenyInteractiveLogonRight Function'{
-        #SeDenyInteractiveLogonRight not present in ci instance
+        #SeDenyInteractiveLogonRight not present in circleci instance
         It 'User exists on system' {
             # $objUser = New-Object System.Security.Principal.NTAccount("circleci")
             # $strSID = $objUser.Translate([System.Security.Principal.SecurityIdentifier])
@@ -82,7 +81,7 @@ Describe 'Functions' {
             New-localUser -Name 'testremovejc2' -password $newUserPassword -Description "Created By JumpCloud ADMU tests"
             New-LocalUserProfile -username:('testremovejc2')
             #Remove-LocalUserProfile -username:('testremovejc2')
-            Test-Path -Path 'C:\Users\testremovejc2' -and (Get-LocalUser).Name -contains 'testremovejc2' | Should -Be $false
+            ((Test-Path -Path 'C:\Users\testremovejc2') -and ((Get-LocalUser).Name -contains 'testremovejc2')) | Should -Be $false
         }
 
         It 'User does not exist on system and throws exception' {
@@ -189,7 +188,6 @@ Describe 'Functions' {
                 $Log.Contains('INFO: Test Info Log Entry.') | Should -Be $true
                 remove-item -Path 'C:\windows\Temp\jcAdmu.log' -Force
         }
-
     }
 
     Context 'Remove-ItemIfExist Function'{
@@ -209,28 +207,27 @@ Describe 'Functions' {
             $Log = Get-Content 'c:\windows\temp\jcAdmu.log'
             $Log.Contains('Removal Of Temp Files & Folders Failed') | Should -Be $true
         }
-
     }
 
     Context 'Invoke-DownloadFile Function'{
 
-        # It 'Invoke-DownloadFile - ' {
-        #     if(Test-Path 'c:\windows\Temp\test\') {Remove-Item 'c:\windows\Temp\test' -Recurse -Force}
-        #     New-Item -ItemType directory -path 'c:\windows\Temp\test\'
-        #     #Invoke-DownloadFile -Link:('http://download.microsoft.com/download/0/5/6/056dcda9-d667-4e27-8001-8a0c6971d6b1/vcredist_x86.exe') -Path:('c:\windows\Temp\Test\vcredist_x86.exe')
-        #     test-path ('c:\windows\Temp\test\vcredist_x86.exe')  | Should -Be $true
-        # }
+        It 'Invoke-DownloadFile - ' {
+            if(Test-Path 'c:\windows\Temp\test\') {Remove-Item 'c:\windows\Temp\test' -Recurse -Force}
+            New-Item -ItemType directory -path 'c:\windows\Temp\test\'
+            Invoke-DownloadFile -Link:('http://download.microsoft.com/download/0/5/6/056dcda9-d667-4e27-8001-8a0c6971d6b1/vcredist_x86.exe') -Path:('c:\windows\Temp\Test\vcredist_x86.exe')
+            test-path ('c:\windows\Temp\test\vcredist_x86.exe')  | Should -Be $true
+         }
 
     }
 
     Context 'Test-ProgramInstalled Function'{
 
-        It 'Test-ProgramInstalled x64 - Google Chrome' -Skip {
-            Test-ProgramInstalled -programName 'Google Chrome' | Should -Be $true
+        It 'Test-ProgramInstalled x64 - PowerShell 7-x64' {
+            test-programinstalled -programName 'PowerShell 7-x64' | Should -Be $true
         }
 
-        It 'Test-ProgramInstalled x32 - TeamViewer 14' -Skip {
-            Test-ProgramInstalled -programName 'TeamViewer 14' | Should -Be $true
+        It 'Test-ProgramInstalled x32 - WinAppDeploy' {
+            Test-ProgramInstalled -programName 'WinAppDeploy' | Should -Be $true
         }
 
         It 'Test-ProgramInstalled - Program Name Does Not Exist' {
@@ -241,14 +238,10 @@ Describe 'Functions' {
 
     Context 'Uninstall-Program Function'{
 
-        It 'Install & Uninstall - x32 filezilla' -Skip {
-            $app = 'C:\FileZilla_3.46.3_win32.exe'
-            $arg = '/S'
-            Start-Process $app $arg
+        It 'Uninstall - aws command line interface' -Skip {
+            uninstall-program -programname 'AWS Command Line Interface'
             start-sleep -Seconds 5
-            Uninstall-Program -programName 'FileZilla Client 3.46.3'
-            start-sleep -Seconds 5
-            Test-ProgramInstalled -programName 'FileZilla' | Should -Be $false
+            Test-ProgramInstalled -programName 'AWS Command Line Interface' | Should -Be $false
         }
 
     }
