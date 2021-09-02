@@ -791,7 +791,7 @@ function Uninstall-Program($programName)
         {
             $uninst = $ver.UninstallString
             & cmd /C $uninst /Silent | Out-Null
-        } If ($ver.UninstallString -and $ver.DisplayName -match 'FileZilla Client 3.46.3')
+        } If ($ver.UninstallString -and $ver.DisplayName -match 'AWS Command Line Interface')
         {
             $uninst = $ver.UninstallString
             & cmd /c $uninst /S | Out-Null
