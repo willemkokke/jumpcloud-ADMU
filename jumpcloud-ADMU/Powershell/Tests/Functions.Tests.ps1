@@ -81,7 +81,7 @@ Describe 'Functions' {
             $newUserPassword = ConvertTo-SecureString -String 'Temp123!' -AsPlainText -Force
             New-localUser -Name 'testremovejc2' -password $newUserPassword -Description "Created By JumpCloud ADMU tests"
             New-LocalUserProfile -username:('testremovejc2')
-            #Remove-LocalUserProfile -username:('testremovejc2')
+            Remove-LocalUserProfile -username:('testremovejc2')
             (Test-Path -Path 'C:\Users\testremovejc2') | Should -Be $false
         }
 

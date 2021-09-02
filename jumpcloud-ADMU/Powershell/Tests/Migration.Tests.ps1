@@ -76,7 +76,7 @@ Describe 'Migration Test Scenarios'{
                             $UserName
                         )
                         $path = "C:\Users\$UserName"
-                        $file = "$path\ntuser.dat"
+                        $file = "$path\NTUser.dat"
                         $fileExists = $false
                         while (!$fileExists)
                         {
