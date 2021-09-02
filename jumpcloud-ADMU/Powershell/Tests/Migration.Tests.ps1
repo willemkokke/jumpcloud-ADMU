@@ -76,7 +76,7 @@ Describe 'Migration Test Scenarios'{
                             $UserName
                         )
                         $path = "C:\Users\$UserName"
-                        $file = "$path\NTUser.dat"
+                        $file = "$path\NTUSER.DAT"
                         $fileExists = $false
                         while (!$fileExists)
                         {
@@ -84,7 +84,8 @@ Describe 'Migration Test Scenarios'{
                             {
                                 Write-Host "Found: $file"
                                 try{
-                                    Rename-Item -Path $file -NewName "$path\MESSUP.DAT" -ErrorAction Stop
+                                    Write-Host "Attempting to Rename File: $file"
+                                    Rename-Item -Path $file -NewName "$path\MESSUP.DAT" -Force -ErrorAction Stop
                                     $fileExists = $true
                                 }
                                 catch{
