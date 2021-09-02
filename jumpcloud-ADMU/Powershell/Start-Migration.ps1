@@ -846,7 +846,7 @@ function Test-Localusername
         $win32UserProfiles = Get-WmiObject -Class:('Win32_UserProfile') -Property * | Where-Object { $_.Special -eq $false }
         $users = $win32UserProfiles | Select-Object -ExpandProperty "SID" | Convert-Sid
         $localusers = new-object system.collections.arraylist
-        foreach ($usernamTese in $users)
+        foreach ($username in $users)
         {
             $domain = ($username -split '\\')[0]
             if ($domain -match $env:computername)
