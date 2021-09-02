@@ -5,105 +5,60 @@
 # Dot-source start-migration
 . $PSScriptRoot\..\Start-Migration.ps1
 
+Function InitUser {
+    [CmdletBinding()]
+    param (
+        [Parameter()]
+        [System.String]
+        $UserName,
+        [Parameter()]
+        [System.String]
+        $Password
+    )
+    Process{
+        Write-Host "Building Profile for $($UserName)"
+        if ((Get-LocalUser | Select-Object Name) -match $($UserName))
+        {
+            Remove-LocalUserProfile $($UserName)
+        }
+        $newUserPassword = ConvertTo-SecureString -String "$($Password)" -AsPlainText -Force
+        New-localUser -Name "$($UserName)" -password $newUserPassword -ErrorVariable userExitCode -Description "Created By JumpCloud ADMU"
+        if ($userExitCode)
+        {
+            Write-Log -Message:("$userExitCode")
+            Write-Log -Message:("The user: $($UserName) could not be created, exiting")
+            exit 1
+        }
+        # Initialize the Profile
+        New-LocalUserProfile -username "$($UserName)" -ErrorVariable profileInit
+        if ($profileInit)
+        {
+            Write-Log -Message:("$profileInit")
+            Write-Log -Message:("The user: $($UserName) could not be initalized, exiting")
+            exit 1
+        }
+    }
+}
+
 # For each user in testing hash, create new user with the specified password and init the account
 forEach ($User in $userTestingHash.Values)
 {
-    Write-Host "Building Profile for $($User.Username)"
-    if ((Get-LocalUser | Select-Object Name) -match $($User.Username)){
-        Remove-LocalUserProfile $($User.Username)
-    }
-    $newUserPassword = ConvertTo-SecureString -String "$($User.Password)" -AsPlainText -Force
-    New-localUser -Name "$($User.Username)" -password $newUserPassword -ErrorVariable userExitCode -Description "Created By JumpCloud ADMU"
-    if ($userExitCode)
-    {
-        Write-Log -Message:("$userExitCode")
-        Write-Log -Message:("The user: $($User.Username) could not be created, exiting")
-        exit 1
-    }
-    # Initialize the Profile
-    New-LocalUserProfile -username "$($User.Username)" -ErrorVariable profileInit
-    if ($profileInit)
-    {
-        Write-Log -Message:("$profileInit")
-        Write-Log -Message:("The user: $($User.Username) could not be initalized, exiting")
-        exit 1
-    }
+    InitUser -UserName $($User.Username) -Password $($User.Password)
 }
-
-# init users in second test group
 forEach ($User in $JCCommandTestingHash.Values)
 {
-    Write-Host "Building Profile for $($User.Username)"
-    if ((Get-LocalUser | Select-Object Name) -match $($User.Username))
-    {
-        Remove-LocalUserProfile $($User.Username)
-    }
-    $newUserPassword = ConvertTo-SecureString -String "$($User.Password)" -AsPlainText -Force
-    New-localUser -Name "$($User.Username)" -password $newUserPassword -ErrorVariable userExitCode -Description "Created By JumpCloud ADMU"
-    if ($userExitCode)
-    {
-        Write-Log -Message:("$userExitCode")
-        Write-Log -Message:("The user: $($User.Username) could not be created, exiting")
-        exit 1
-    }
-    # Initialize the Profile
-    New-LocalUserProfile -username "$($User.Username)" -ErrorVariable profileInit
-    if ($profileInit)
-    {
-        Write-Log -Message:("$profileInit")
-        Write-Log -Message:("The user: $($User.Username) could not be initalized, exiting")
-        exit 1
-    }
+    InitUser -UserName $($User.Username) -Password $($User.Password)
 }
-
 ForEach ($User in $JCFunctionalHash.Values)
 {
-    Write-Host "Building Profile for $($User.Username)"
-    if ((Get-LocalUser | Select-Object Name) -match $($User.Username))
-    {
-        Remove-LocalUserProfile $($User.Username)
-    }
-    $newUserPassword = ConvertTo-SecureString -String "$($User.Password)" -AsPlainText -Force
-    New-localUser -Name "$($User.Username)" -password $newUserPassword -ErrorVariable userExitCode -Description "Created By JumpCloud ADMU"
-    if ($userExitCode)
-    {
-        Write-Log -Message:("$userExitCode")
-        Write-Log -Message:("The user: $($User.Username) could not be created, exiting")
-        exit 1
-    }
-    # Initialize the Profile
-    New-LocalUserProfile -username "$($User.Username)" -ErrorVariable profileInit
-    if ($profileInit)
-    {
-        Write-Log -Message:("$profileInit")
-        Write-Log -Message:("The user: $($User.Username) could not be initalized, exiting")
-        exit 1
-    }
-
+    InitUser -UserName $($User.Username) -Password $($User.Password)
 }
 ForEach ($User in $JCReversionHash.Values)
 {
-    Write-Host "Building Profile for $($User.Username)"
-    if ((Get-LocalUser | Select-Object Name) -match $($User.Username))
-    {
-        Remove-LocalUserProfile $($User.Username)
-    }
-    $newUserPassword = ConvertTo-SecureString -String "$($User.Password)" -AsPlainText -Force
-    New-localUser -Name "$($User.Username)" -password $newUserPassword -ErrorVariable userExitCode -Description "Created By JumpCloud ADMU"
-    if ($userExitCode)
-    {
-        Write-Log -Message:("$userExitCode")
-        Write-Log -Message:("The user: $($User.Username) could not be created, exiting")
-        exit 1
-    }
-    # Initialize the Profile
-    New-LocalUserProfile -username "$($User.Username)" -ErrorVariable profileInit
-    if ($profileInit)
-    {
-        Write-Log -Message:("$profileInit")
-        Write-Log -Message:("The user: $($User.Username) could not be initalized, exiting")
-        exit 1
-    }
-
+    InitUser -UserName $($User.Username) -Password $($User.Password)
+}
+ForEach ($User in $JCExistingHash.Values)
+{
+    InitUser -UserName $($User.Username) -Password $($User.Password)
 }
 # End region for test user generation

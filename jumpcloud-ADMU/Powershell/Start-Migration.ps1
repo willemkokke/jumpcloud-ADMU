@@ -368,6 +368,7 @@ function Remove-LocalUserProfile
         $users = Get-LocalUser
         foreach ($user in $users)
         {
+            # we only want to remove users with description "Created By JumpCloud ADMU"
             if ( $user.name -match $UserName -And $user.description -eq "Created By JumpCloud ADMU" )
             {
                 $UserSid = Get-SID -User $UserName

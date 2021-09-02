@@ -103,30 +103,32 @@ Describe 'Migration Test Scenarios'{
                                 $waitCondition = $true
                             }
                         }
-                        Write-Host "Kicking off process for user"
+                        Write-Host "Rename NTUser to throw migration process"
                         # Watch the log; break when we see expected string
-                        $credentials = New-Object System.Management.Automation.PSCredential -ArgumentList @($UserName, (ConvertTo-SecureString -String $Password -AsPlainText -Force))
-                        Start-Process Powershell.exe -Credential ($credentials) -WorkingDirectory "C:\windows\System32" -ArgumentList ('-WindowStyle Hidden') -ErrorVariable renameError
+                        Rename-Item -Path $file -NewName "$path\MESSUP.DAT" -ErrorVariable renameError
                         if ($renameError){
-                            Write-Host "Could not start process for some reason, this test will have failed by the time you see this message"
+                            Write-Host "Could not rename item for some reason, this test will have failed by the time you see this message"
 
                         }
                         Write-Host "Job Completed"
-                    }) -ArgumentList:($($user.username), $($user.password), "Getting new profile image path")
+                    }) -ArgumentList:($($user.JCUsername),"Getting new profile image path")
                 # Begin job to kick off startMigration
                 write-host "`nRunning: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)`n"
                 { Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutobindJCUser $false -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath } | Should -Throw
                 # receive the wait-job
                 Write-Host "Job Details:"
                 Receive-Job -Job $waitJob -Keep
+                # The original user should exist
+                "C:\Users\$($user.username)" | Should -Exist
                 # NewUserInit should be reverted and the new user profile path should not exist
                 "C:\Users\$($user.JCUsername)" | Should -Not -Exist
             }
         }
         It "Start-Migration should throw if the jumpcloud user already exists & not migrate anything"{
-            foreach ($user in $JCReversionHash.Values)
+            foreach ($user in $JCExistingHash.Values)
             {
-                { Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutobindJCUser $false -JumpCloudUserName "$($user.username)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath } | Should -Throw
+                # attempt to migrate to user from previous step
+                { Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutobindJCUser $false -JumpCloudUserName "ADMU_newUserInit" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath } | Should -Throw
                 # The original user should exist
                 "C:\Users\$($user.username)" | Should -Exist
             }
