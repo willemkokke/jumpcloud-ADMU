@@ -76,6 +76,9 @@ Describe 'Migration Test Scenarios'{
                             $UserName,
                             [Parameter()]
                             [string]
+                            $Password,
+                            [Parameter()]
+                            [string]
                             $logString
                         )
                         $path = "C:\Users\$UserName"
@@ -102,9 +105,14 @@ Describe 'Migration Test Scenarios'{
                         }
                         Write-Host "Kicking off process for user"
                         # Watch the log; break when we see expected string
-                        Rename-Item -Path $file -NewName "$path\MESSUP.DAT"
+                        $credentials = New-Object System.Management.Automation.PSCredential -ArgumentList @($UserName, (ConvertTo-SecureString -String $Password -AsPlainText -Force))
+                        Start-Process Powershell.exe -Credential ($credentials) -WorkingDirectory "C:\windows\System32" -ArgumentList ('-WindowStyle Hidden') -ErrorVariable renameError
+                        if ($renameError){
+                            Write-Host "Could not start process for some reason, this test will have failed by the time you see this message"
+
+                        }
                         Write-Host "Job Completed"
-                    }) -ArgumentList:($($user.username), "Copying merged profiles to destination profile path")
+                    }) -ArgumentList:($($user.username), $($user.password), "Getting new profile image path")
                 # Begin job to kick off startMigration
                 write-host "`nRunning: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)`n"
                 { Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutobindJCUser $false -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath } | Should -Throw

@@ -206,7 +206,8 @@ function DenyInteractiveLogonRight
         [Parameter(Mandatory = $true, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
         $SID
     )
-    process{
+    process
+    {
         # Add migrating user to deny logon rights
         $secpolFile = "C:\Windows\temp\ur_orig.inf"
         if (Test-Path $secpolFile)
@@ -305,12 +306,14 @@ function New-LocalUserProfile
         $pathLen = $sb.Capacity;
 
         Write-ToLog "Creating user profile for $UserName";
-        if ($UserName -eq $env:computername){
-          Write-ToLog "$UserName Matches ComputerName";
-          $objUser = New-Object System.Security.Principal.NTAccount("$env:computername\$UserName")
+        if ($UserName -eq $env:computername)
+        {
+            Write-ToLog "$UserName Matches ComputerName";
+            $objUser = New-Object System.Security.Principal.NTAccount("$env:computername\$UserName")
         }
-        else{
-          $objUser = New-Object System.Security.Principal.NTAccount($UserName)
+        else
+        {
+            $objUser = New-Object System.Security.Principal.NTAccount($UserName)
         }
         $strSID = $objUser.Translate([System.Security.Principal.SecurityIdentifier])
         $SID = $strSID.Value
@@ -344,9 +347,10 @@ function New-LocalUserProfile
             # break;
         }
         # $status
-  }
-  end {
-    return $SID
+    }
+    end
+    {
+        return $SID
     }
 }
 function Remove-LocalUserProfile
@@ -882,7 +886,7 @@ function Test-Localusername
         {
             Return $false
         }
-        }
+    }
     end
     {
     }
@@ -1269,8 +1273,10 @@ Function Start-Migration
         # $INSTALLER_BINARY_NAMES = "JumpCloudInstaller.exe,JumpCloudInstaller.tmp"
         # Track migration steps
         $admuTracker = [Ordered]@{
-            backup              = @{'pass' = $false; 'fail' = $false }
+            backupOldUserReg    = @{'pass' = $false; 'fail' = $false }
             newUserInit         = @{'pass' = $false; 'fail' = $false }
+            backupNewUserReg    = @{'pass' = $false; 'fail' = $false }
+            testRegLoadUnload   = @{'pass' = $false; 'fail' = $false }
             copyRegistry        = @{'pass' = $false; 'fail' = $false }
             copyRegistryFiles   = @{'pass' = $false; 'fail' = $false }
             renameOriginalFiles = @{'pass' = $false; 'fail' = $false }
@@ -1373,10 +1379,10 @@ Function Start-Migration
         {
             Write-ToLog -Message("Could Not Backup Registry Hives: Exiting...")
             Write-ToLog -Message($_.Exception.Message)
-            $admuTracker.backup.fail = $true
+            $admuTracker.backupOldUserReg.fail = $true
             return
         }
-        $admuTracker.backup.pass = $true
+        $admuTracker.backupOldUserReg.pass = $true
         ### End Backup Registry for Selected User ###
 
         ### Begin Create New User Region ###
@@ -1391,8 +1397,8 @@ Function Start-Migration
             $admuTracker.newUserInit.fail = $true
             return
         }
-      # Initialize the Profile & Set SID
-      $NewUserSID = New-LocalUserProfile -username:($JumpCloudUserName) -ErrorVariable profileInit
+        # Initialize the Profile & Set SID
+        $NewUserSID = New-LocalUserProfile -username:($JumpCloudUserName) -ErrorVariable profileInit
         if ($profileInit)
         {
             Write-ToLog -Message:("$profileInit")
@@ -1400,36 +1406,43 @@ Function Start-Migration
             $admuTracker.newUserInit.fail = $true
             return
         }
+        else
+        {
+            Write-ToLog -Message:('Getting new profile image path')
+            # Get profile image path for new user
+            $newUserProfileImagePath = Get-ProfileImagePath -UserSid $NewUserSID
+            if ([System.String]::IsNullOrEmpty($newUserProfileImagePath))
+            {
+                Write-ToLog -Message("Could not get the profile path for $jumpcloudusername exiting...") -Level Error
+                $admuTracker.newUserInit.fail = $true
+                return
+            }
+            else
+            {
+                Write-ToLog -Message:('New User Profile Path: ' + $newUserProfileImagePath + ' New User SID: ' + $NewUserSID)
+                Write-ToLog -Message:('Old User Profile Path: ' + $oldUserProfileImagePath + ' Old User SID: ' + $SelectedUserSID)
+            }
+        }
         $admuTracker.newUserInit.pass = $true
 
         ### End Create New User Region ###
 
-        ### Begin Regedit Block ###
-        Write-ToLog -Message:('Getting new profile image path')
-        # Set the New User Profile Path
-        # Now get NewUserSID
-        # $NewUserSID = Get-SID -User $JumpCloudUserName
-        # Get profile image path for new user
-        $newUserProfileImagePath = Get-ProfileImagePath -UserSid $NewUserSID
         ### Begin backup user registry for new user
-        if ([System.String]::IsNullOrEmpty($newUserProfileImagePath))
-        {
-            Write-ToLog -Message("Could not get the profile path for $jumpcloudusername exiting...") -Level Error
-            return
-        }
-        # backup new user registry hives
         try
         {
             Backup-RegistryHive -profileImagePath $newUserProfileImagePath
-            ### End backup user registry for new user
         }
         catch
         {
             Write-ToLog -Message("Could Not Backup Registry Hives in $($newUserProfileImagePath): Exiting...") -Level Error
             Write-ToLog -Message($_.Exception.Message)
+            $admuTracker.backupNewUserReg.fail = $true
             return
         }
+        $admuTracker.backupNewUserReg.pass = $true
+        ### End backup user registry for new user
 
+        ### Begin Test Registry Steps
         # Test Registry Access before edits
         Write-ToLog -Message:('Verifying Registry Hives can be loaded and unloaded')
         try
@@ -1440,9 +1453,12 @@ Function Start-Migration
         catch
         {
             Write-ToLog -Message:('could not load and unload registry of migration user, exiting') -Level Error
+            $admuTracker.testRegLoadUnload.fail = $true
             return
         }
-        # End Test Registry
+        $admuTracker.testRegLoadUnload.pass = $true
+        ### End Test Registry
+
         Write-ToLog -Message:('Begin new local user registry copy')
         # Give us admin rights to modify
         Write-ToLog -Message:("Take Ownership of $($newUserProfileImagePath)")
@@ -1462,8 +1478,6 @@ Function Start-Migration
         # $acl_updated = Get-Acl ($newUserProfileImagePath)
         # Write-ToLog -Message:("Updated ACLs: $($acl_updated.access)")
 
-        Write-ToLog -Message:('New User Profile Path: ' + $newUserProfileImagePath + ' New User SID: ' + $NewUserSID)
-        Write-ToLog -Message:('Old User Profile Path: ' + $oldUserProfileImagePath + ' Old User SID: ' + $SelectedUserSID)
         # Load New User Profile Registry Keys
         Set-UserRegistryLoadState -op "Load" -ProfilePath $newUserProfileImagePath -UserSid $NewUserSID
         # Load Selected User Profile Keys
@@ -1801,12 +1815,14 @@ Function Start-Migration
         #region AutobindUserToJCSystem
         if ($AutobindJCUser -eq $true)
         {
-            try {
+            try
+            {
                 BindUsernameToJCSystem -JcApiKey $JumpCloudAPIKey -JumpCloudUserName $JumpCloudUserName
                 Write-ToLog -Message:('jumpcloud autobind step succeeded for user ' + $JumpCloudUserName)
                 $admuTracker.autoBind.pass = $true
             }
-            catch {
+            catch
+            {
                 Write-ToLog -Message:('jumpcloud autobind step failed, apikey or jumpcloud username is incorrect.') -Level:('Warning')
                 $admuTracker.autoBind.fail = $true
             }
@@ -1998,7 +2014,8 @@ Function Start-Migration
             # TODO: update tool options with valid params
             Write-ToLog -Message:('Script finished successfully; Log file location: ' + $jcAdmuLogFile)
             Write-ToLog -Message:('Tool options chosen were : ' + 'Install JC Agent = ' + $InstallJCAgent + ', Leave Domain = ' + $LeaveDomain + ', Force Reboot = ' + $ForceReboot + ', AzureADProfile = ' + $AzureADProfile + ', Create System Restore Point = ' + $CreateRestore)
-            if ($displayGuiPrompt){
+            if ($displayGuiPrompt)
+            {
                 Show-Result -domainUser $SelectedUserName $ -localUser "$($localComputerName)\$($JumpCloudUserName)" -success $true -profilePath $newUserProfileImagePath -logPath $jcAdmuLogFile
             }
         }
@@ -2006,7 +2023,8 @@ Function Start-Migration
         {
             Write-ToLog -Message:("ADMU encoutered the following errors: $($admuTracker.Keys | Where-Object { $admuTracker[$_].fail -eq $true })") -Level Warn
             Write-ToLog -Message:("The following migration steps were reverted to their original state: $FixedErrors") -Level Warn
-            if ($displayGuiPrompt){
+            if ($displayGuiPrompt)
+            {
                 Show-Result -domainUser $SelectedUserName $ -localUser "$($localComputerName)\$($JumpCloudUserName)" -success $false -profilePath $newUserProfileImagePath -admuTrackerInput $admuTracker -FixedErrors $FixedErrors -logPath $jcAdmuLogFile
             }
             throw "JumpCloud ADMU was unable to migrate $selectedUserName"
