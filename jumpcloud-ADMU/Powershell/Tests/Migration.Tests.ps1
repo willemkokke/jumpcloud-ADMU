@@ -153,7 +153,8 @@ Describe 'Migration Test Scenarios'{
                 # Invoke-Command -ScriptBlock { Start-Migration -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -ConvertProfile $true} | Should -Not -Throw
                 { Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutobindJCUser $true -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath } | Should -Not -Throw
                 $associations = Get-JcSdkSystemAssociation -SystemId $systemKey -Targets user
-                $associations.ToId | Should -Be $GeneratedUser.Id
+                # GeneratedUserID should be in the associations list
+                $GeneratedUser.Id | Should -BeIn $associations.ToId
                 # TODO: read log/ read bound users from system and return statement
             }
         }
