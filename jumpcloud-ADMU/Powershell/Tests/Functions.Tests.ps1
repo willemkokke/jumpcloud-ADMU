@@ -81,7 +81,7 @@ Describe 'Functions' {
             New-localUser -Name 'testremovejc2' -password $newUserPassword -Description "Created By JumpCloud ADMU tests"
             New-LocalUserProfile -username:('testremovejc2')
             #Remove-LocalUserProfile -username:('testremovejc2')
-            ((Test-Path -Path 'C:\Users\testremovejc2') -and ((Get-LocalUser).Name -contains 'testremovejc2')) | Should -Be $false
+            (Test-Path -Path 'C:\Users\testremovejc2') | Should -Be $false
         }
 
         It 'User does not exist on system and throws exception' {
@@ -209,17 +209,6 @@ Describe 'Functions' {
         }
     }
 
-    Context 'Invoke-DownloadFile Function'{
-
-        It 'Invoke-DownloadFile - ' {
-            if(Test-Path 'c:\windows\Temp\test\') {Remove-Item 'c:\windows\Temp\test' -Recurse -Force}
-            New-Item -ItemType directory -path 'c:\windows\Temp\test\'
-            Invoke-DownloadFile -Link:('http://download.microsoft.com/download/0/5/6/056dcda9-d667-4e27-8001-8a0c6971d6b1/vcredist_x86.exe') -Path:('c:\windows\Temp\Test\vcredist_x86.exe')
-            test-path ('c:\windows\Temp\test\vcredist_x86.exe')  | Should -Be $true
-         }
-
-    }
-
     Context 'Test-ProgramInstalled Function'{
 
         It 'Test-ProgramInstalled x64 - PowerShell 7-x64' {
@@ -233,7 +222,6 @@ Describe 'Functions' {
         It 'Test-ProgramInstalled - Program Name Does Not Exist' {
             Test-ProgramInstalled -programName 'Google Chrome1' | Should -Be $false
         }
-
     }
 
     Context 'Uninstall-Program Function'{
@@ -243,7 +231,6 @@ Describe 'Functions' {
             start-sleep -Seconds 5
             Test-ProgramInstalled -programName 'AWS Command Line Interface' | Should -Be $false
         }
-
     }
 
     Context 'Start-NewProcess Function'{
@@ -265,7 +252,6 @@ Describe 'Functions' {
                $Log.Contains('Windows ADK Setup did not complete after 5mins') | Should -Be $true
                remove-item -Path 'C:\windows\Temp\jcAdmu.log' -Force
         }
-
     }
 
     Context 'Test-IsNotEmpty Function'{
@@ -281,7 +267,6 @@ Describe 'Functions' {
         It 'Test-IsNotEmpty - test string' {
             Test-IsNotEmpty -field 'test' | Should -Be $false
         }
-
     }
 
     Context 'Test-Is40chars Function'{
@@ -297,7 +282,6 @@ Describe 'Functions' {
         It 'Test-Is40chars - 40 Chars' {
             Test-Is40chars -field '1111111111111111111111111111111111111111' | Should -Be $true
         }
-
     }
 
     Context 'Test-HasNoSpace Function'{
@@ -313,7 +297,6 @@ Describe 'Functions' {
         It 'Test-HasNoSpace - spaces' {
             Test-HasNoSpace -field 'test with spaces' | Should -Be $false
         }
-
     }
 
     Context 'Add-LocalUser Function'{
@@ -323,29 +306,25 @@ Describe 'Functions' {
             net user testuser Temp123! /add
             Remove-LocalGroupMember -Group "Users" -Member "testuser"
             Add-LocalGroupMember -SID S-1-5-32-545 -Member 'testuser'
-            # ((Get-LocalGroupMember -SID S-1-5-32-545 | Select-Object Name).name -match 'testuser') -ne $null | Should -Be $true
-            # ASDI seems to work when Get-LocalGroupMember errors
             (([ADSI]"WinNT://./Users").psbase.Invoke('Members') | ForEach-Object { ([ADSI]$_).InvokeGet('AdsPath') } ) -match 'testuser' | Should -Be $true
         }
-
     }
 
     Context 'Test-Localusername Function'{
 
-        It 'Test-Localusername - exists' -skip {
+        It 'Test-Localusername - exists' {
 
-            Test-Localusername -field 'blazar' | Should -Be $true
+            Test-Localusername -field 'circleci' | Should -Be $true
         }
 
         It 'Test-Localusername - does not exist' {
 
             Test-Localusername -field 'blazarz' | Should -Be $false
         }
-
     }
 
     Context 'Test-Domainusername Function'{
-
+# Requires domainjoined system
         It 'Test-Domainusername - exists' -skip {
 
             Test-Domainusername -field 'bob.lazar' | Should -Be $true
@@ -355,18 +334,15 @@ Describe 'Functions' {
 
             Test-Domainusername -field 'bob.lazarz' | Should -Be $false
         }
-
     }
 
     Context 'Install-JumpCloudAgent Function'{
-        It 'Install-JumpCloudAgent - Verify Download JCAgent prereq Visual C++ 2013 x64' -skip {
+        It 'Install-JumpCloudAgent - Verify Download JCAgent prereq Visual C++ 2013 x64' {
             Test-path 'C:\Windows\Temp\JCADMU\vc_redist.x64.exe' | Should -Be $true
-            #TODO: why test this?
         }
 
-        It 'Install-JumpCloudAgent - Verify Download JCAgent prereq Visual C++ 2013 x86' -skip {
+        It 'Install-JumpCloudAgent - Verify Download JCAgent prereq Visual C++ 2013 x86' {
             Test-path 'C:\Windows\Temp\JCADMU\vc_redist.x86.exe' | Should -Be $true
-            #TODO: why test this?
         }
 
         It 'Install-JumpCloudAgent - Verify Download JCAgent' {
@@ -382,32 +358,28 @@ Describe 'Functions' {
         }
 
         It 'Install-JumpCloudAgent - Verify Install JCAgent' {
-        # Start-Sleep -Seconds 10
             (Test-ProgramInstalled("JumpCloud")) | Should -Be $true
         }
-
     }
 
     Context 'Get-NetBiosName Function'{
-
+# Requires domainjoined system
         It 'Get-NetBiosName - JCADB2' -Skip {
             Get-NetBiosName | Should -Be 'JCADB2'
-            #TODO: bind & test
         }
     }
 
     Context 'Convert-SID Function'{
-
-        It 'Convert-SID - Built In Administrator SID' {
-        $testusersid = (Get-WmiObject Win32_UserAccount -Filter "Name = 'testuser'").SID
-            (Convert-SID -Sid $testusersid) | Should -match 'testuser'
+        It 'Convert-SID - circleci SID' {
+            $circlecisid = (Get-WmiObject win32_userprofile | select-object Localpath, SID | where-object Localpath -eq 'C:\Users\circleci'| Select-Object SID).SID
+            (Convert-SID -Sid $circlecisid) | Should -match 'circleci'
         }
-
     }
 
     Context 'Convert-UserName Function'{
         It 'Convert-UserName' {
-
+            $circlecisid = (Get-WmiObject win32_userprofile | select-object Localpath, SID | where-object Localpath -eq 'C:\Users\circleci'| Select-Object SID).SID
+            (Convert-UserName -user:('circleci')) | Should -match $circlecisid
         }
     }
 
@@ -417,21 +389,13 @@ Describe 'Functions' {
         }
     }
 
-    Context 'Test-AgentIsOnFileSystem Function'{
-        It 'Test-AgentIsOnFileSystem' {
-
-        }
-    }
-
-    Context 'Invoke-JumpCloudAgentInstall Function'{
+    Context 'Invoke-JumpCloudAgentInstall Function' -Skip{
         It 'Invoke-JumpCloudAgentInstall' {
-
         }
     }
 
-    Context 'Restart-ComputerWithDelay Function'{
+    Context 'Restart-ComputerWithDelay Function' -Skip{
         It 'Restart-ComputerWithDelay' {
-
         }
     }
 }

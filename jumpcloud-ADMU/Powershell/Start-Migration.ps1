@@ -730,25 +730,6 @@ Function Remove-ItemIfExist
     }
 }
 
-#Download $Link to $Path
-Function Invoke-DownloadFile($Link, $Path)
-{
-    $WebClient = New-Object -TypeName:('System.Net.WebClient')
-    $IsDownloaded = $false
-    $SplatArgs = @{ InputObject = $WebClient
-        EventName               = 'DownloadFileCompleted'
-        Action                  = @{ $IsDownloaded = $true; }
-    }
-    $DownloadCompletedEventSubscriber = Register-ObjectEvent @SplatArgs
-    $WebClient.DownloadFileAsync("$Link", "$Path")
-    While (-not $IsDownloaded)
-    {
-        Start-Sleep -Seconds 3
-    } # While
-    $DownloadCompletedEventSubscriber.Dispose()
-    $WebClient.Dispose()
-}
-
 #Check if program is on system
 function Test-ProgramInstalled
 {
@@ -947,7 +928,6 @@ Function Install-JumpCloudAgent(
     {
         Write-ToLog -Message:('Downloading & Installing JCAgent prereq Visual C++ 2013 x64')
         (New-Object System.Net.WebClient).DownloadFile("${msvc2013x64Link}", ($usmtTempPath + $msvc2013x64File))
-        # Invoke-DownloadFile -Link $msvc2013x64Link -Path ($usmtTempPath + $msvc2013x64File)
         Invoke-Expression -Command:($msvc2013x64Install)
         $timeout = 0
         While (!(Test-ProgramInstalled("Microsoft Visual C\+\+ 2013 x64")))
@@ -965,7 +945,6 @@ Function Install-JumpCloudAgent(
     {
         Write-ToLog -Message:('Downloading & Installing JCAgent prereq Visual C++ 2013 x86')
         (New-Object System.Net.WebClient).DownloadFile("${msvc2013x86Link}", ($usmtTempPath + $msvc2013x86File))
-        # Invoke-DownloadFile -Link $msvc2013x86Link -Path ($usmtTempPath + $msvc2013x86File)
         Invoke-Expression -Command:($msvc2013x86Install)
         $timeout = 0
         While (!(Test-ProgramInstalled("Microsoft Visual C\+\+ 2013 x86")))
@@ -984,7 +963,6 @@ Function Install-JumpCloudAgent(
         Write-ToLog -Message:('Downloading JCAgent Installer')
         #Download Installer
         (New-Object System.Net.WebClient).DownloadFile("${AGENT_INSTALLER_URL}", ($AGENT_INSTALLER_PATH))
-        # Invoke-DownloadFile -Link $AGENT_INSTALLER_URL -Path $AGENT_INSTALLER_PATH
         Write-ToLog -Message:('JumpCloud Agent Download Complete')
         Write-ToLog -Message:('Running JCAgent Installer')
         #Run Installer
@@ -1148,10 +1126,6 @@ function Test-UsernameOrSID
 #endregion Functions
 
 #region Agent Install Helper Functions
-Function Test-AgentIsOnFileSystem()
-{
-    Test-Path -Path:(${AGENT_PATH} + '/' + ${AGENT_BINARY_NAME})
-}
 Function Invoke-JumpCloudAgentInstall()
 {
     $params = ("${AGENT_INSTALLER_PATH}", "-k ${JumpCloudConnectKey}", "/VERYSILENT", "/NORESTART", "/SUPRESSMSGBOXES", "/NOCLOSEAPPLICATIONS", "/NORESTARTAPPLICATIONS", "/LOG=$env:TEMP\jcUpdate.log")
