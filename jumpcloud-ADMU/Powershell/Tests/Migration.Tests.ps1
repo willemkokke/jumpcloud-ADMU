@@ -77,7 +77,7 @@ Describe 'Migration Test Scenarios'{
                         )
                         $path = "C:\Users\$UserName"
                         $file = "$path\NTUSER.DAT.BAK"
-                        while (!Test-Path $file)
+                        while (!(Test-Path -Path $file))
                         {
                             Write-Host "Waiting for File: $file"
                         }
