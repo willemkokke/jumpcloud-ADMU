@@ -77,40 +77,18 @@ Describe 'Migration Test Scenarios'{
                         )
                         $path = "C:\Users\$UserName"
                         $file = "$path\NTUSER.DAT.BAK"
-                        $fileExists = $false
-                        while (!$fileExists)
+                        while (!Test-Path $file)
                         {
-                            if (Test-Path $file)
-                            {
-                                Write-Host "Found: $file"
-                                try{
-                                    Write-Host "Attempting to Rename File: $file"
-                                    Rename-Item -Path $file -NewName "$path\MESSUP.DAT.BAK" -Force -ErrorAction Stop
-                                    $fileExists = $true
-                                }
-                                catch{
-                                    Write-Host "File in use"
-                                }
-                            }
+                            Write-Host "Waiting for File: $file"
                         }
-                        # $waitCondition = $false
-                        # while (!$waitCondition)
-                        # {
-                        #     $content = Get-Content $LogFile
-                        #     if ($content -match $logString)
-                        #     {
-                        #         Write-Host "Found Match in Log: $logString"
-                        #         $waitCondition = $true
-                        #     }
-                        # }
-                        Write-Host "Rename NTUser to throw migration process"
-                        # Watch the log; break when we see expected string
-                        Rename-Item -Path $file -NewName "$path\MESSUP.DAT" -ErrorVariable renameError
-                        if ($renameError){
-                            Write-Host "Could not rename item for some reason, this test will have failed by the time you see this message"
+                        try
+                        {
+                            Write-Host "Attempting to Rename File: $file"
+                            Rename-Item -Path $file -NewName "$path\MESSUP.DAT.BAK" -Force -ErrorAction Stop
                         }
-                        if (Test-Path "$path\MESSUP.DAT"){
-                            Write-Host "Renamed NTUser.dat file the process should fail"
+                        catch
+                        {
+                            Write-Host "File in use"
                         }
                         Write-Host "Job Completed"
                     }) -ArgumentList:($($user.JCUsername))
