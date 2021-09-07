@@ -76,7 +76,7 @@ Describe 'Migration Test Scenarios'{
                             $UserName
                         )
                         $file = "C:\Users\$UserName\NTUSER.DAT"
-                        while (!(Test-Path -Path $file))
+                        while (!(Test-Path -Path $file -ErrorAction SilentlyContinue))
                         {
                             Write-Host "Waiting for File: $file"
                         }
