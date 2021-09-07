@@ -582,7 +582,7 @@ Function Test-UserRegistryLoadState
         # Tests to check that the reg items are not loaded
         If ($results -match $UserSid)
         {
-            Write-ToLog "REG Keys are loaded at the end of testing, exiting..." -Level Error
+            Write-ToLog "REG Keys are loaded at the end of testing, exiting..." -level Warning
             throw "REG Keys are loaded at the end of testing, exiting..."
         }
     }
@@ -623,7 +623,7 @@ Function Get-ProfileImagePath
     $profileImagePath = Get-ItemPropertyValue -Path ('HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\' + $UserSid) -Name 'ProfileImagePath'
     if ([System.String]::IsNullOrEmpty($profileImagePath))
     {
-        Write-ToLog -Message("Could not get the profile path for $UserSid exiting...") -Level Error
+        Write-ToLog -Message("Could not get the profile path for $UserSid exiting...") -level Warning
         throw "Could not get the profile path for $UserSid exiting..."
     }
     else
@@ -1402,7 +1402,7 @@ Function Start-Migration
             $newUserProfileImagePath = Get-ProfileImagePath -UserSid $NewUserSID
             if ([System.String]::IsNullOrEmpty($newUserProfileImagePath))
             {
-                Write-ToLog -Message("Could not get the profile path for $jumpcloudusername exiting...") -Level Error
+                Write-ToLog -Message("Could not get the profile path for $jumpcloudusername exiting...") -level Warning
                 $admuTracker.newUserInit.fail = $true
                 return
             }
@@ -1423,7 +1423,7 @@ Function Start-Migration
         }
         catch
         {
-            Write-ToLog -Message("Could Not Backup Registry Hives in $($newUserProfileImagePath): Exiting...") -Level Error
+            Write-ToLog -Message("Could Not Backup Registry Hives in $($newUserProfileImagePath): Exiting...") -level Warning
             Write-ToLog -Message($_.Exception.Message)
             $admuTracker.backupNewUserReg.fail = $true
             return
@@ -1441,7 +1441,7 @@ Function Start-Migration
         }
         catch
         {
-            Write-ToLog -Message:('could not load and unload registry of migration user, exiting') -Level Error
+            Write-ToLog -Message:('could not load and unload registry of migration user, exiting') -level Warning
             $admuTracker.testRegLoadUnload.fail = $true
             return
         }
