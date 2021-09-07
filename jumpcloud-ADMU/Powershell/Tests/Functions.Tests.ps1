@@ -86,7 +86,7 @@ Describe 'Functions' {
             Test-Path -Path 'C:\Users\testremovejc2' | Should -Be $true
             New-localUser -Name 'testremovejc3' -password $newUserPassword -Description "Created By JumpCloud ADMU"
             New-LocalUserProfile -username:('testremovejc3')
-            Remove-LocalUserProfile -username:('testremovejc3')
+            Remove-LocalUserProfile -username:('testremovejc3') -ErrorAction Continue
             # This test should pass fail because the description set correctly
             Test-Path -Path 'C:\Users\testremovejc3' | Should -Be $false
         }
