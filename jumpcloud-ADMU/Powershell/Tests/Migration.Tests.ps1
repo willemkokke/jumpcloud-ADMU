@@ -17,6 +17,7 @@ Describe 'Migration Test Scenarios' {
     Context 'Start-Migration on local accounts (Test Functionallity)' {
         BeforeEach {
             # Remove the log from previous runs
+            # Not necessary but will be used in future tests to check log results
             $logPath = "C:\Windows\Temp\jcadmu.log"
             Remove-Item $logPath
             New-Item $logPath -Force -ItemType File
@@ -65,14 +66,17 @@ Describe 'Migration Test Scenarios' {
     Context 'Start-Migration on Local Accounts Expecting Failed Results (Test Reversal Functionallity)' {
         BeforeEach {
             # Remove the log from previous runs
+            # Not necessary but will be used in future tests to check log results
             $logPath = "C:\Windows\Temp\jcadmu.log"
             Remove-Item $logPath
             New-Item $logPath -Force -ItemType File
         }
-        It "Start-Migration remove the new user created if it encounters an error" {
+            # This test contains a job which will load the migration user's profile
+            # into memory and effectively break the migration process. This test
+            # simulates the case where a process is loaded 'during' migration.
             foreach ($user in $JCReversionHash.Values)
             {
-                # Begin job to watch start-migration
+                # Begin background job before Start-Migration
                 $waitJob = Start-Job -ScriptBlock:( {
                         [CmdletBinding()]
                         param (
@@ -87,8 +91,7 @@ Describe 'Migration Test Scenarios' {
                             $JCUserName
                         )
                         $file = "C:\Users\$JCUserName"
-                        $file = "C:\Users\$UserName\NTUSER.DAT.bak"
-                        # $NeName = "C:\Users\$UserName\RENAME.DAT.bak"
+                        # wait for the new user
                         while (!(Test-Path -Path $file -ErrorAction SilentlyContinue))
                         {
                             $date = Get-Date -UFormat "%D %r"
@@ -97,16 +100,17 @@ Describe 'Migration Test Scenarios' {
                         }
                         $date = Get-Date -UFormat "%D %r"
                         Write-Host "$date - Starting Process:"
-                        # Start Process
+                        # Start Process on the migration user to get the migration to fail
                         $credentials = New-Object System.Management.Automation.PSCredential -ArgumentList @($UserName, (ConvertTo-SecureString -String $Password -AsPlainText -Force))
                         # trigger PowerShell session
                         Start-Process powershell.exe -Credential ($credentials) -WorkingDirectory "C:\windows\system32" -ArgumentList ('-WindowStyle Hidden')
+                        # write out job complete, if the job completes we should see it in the ci logs
                         Write-Host "Job Completed"
                     }) -ArgumentList:($($user.Username), ($($user.password)), $($user.JCUsername))
-                # Begin job to kick off startMigration
+                # Begin job to kick off Start-Migration
                 write-host "`nRunning: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)`n"
                 { Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutobindJCUser $false -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath } | Should -Throw
-                # receive the wait-job
+                # Receive the wait-job to the ci logs
                 Write-Host "Job Details:"
                 Receive-Job -Job $waitJob -Keep
                 # The original user should exist
@@ -115,19 +119,20 @@ Describe 'Migration Test Scenarios' {
                 "C:\Users\$($user.JCUsername)" | Should -Not -Exist
             }
         }
-        It "Start-Migration should throw if the jumpcloud user already exists & not migrate anything" -Skip {
+        It "Start-Migration should throw if the jumpcloud user already exists & not migrate anything" {
             $Password = "Temp123!"
-            InitUser -UserName "existingUser" -Password $Password
-            InitUser -UserName "existingUser2" -Password $Password
+            $user1 = "ADMU_" + -join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object { [char]$_ })
+            $user2 = "ADMU_" + -join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object { [char]$_ })
+            InitUser -UserName $user1 -Password $Password
+            InitUser -UserName $user2 -Password $Password
 
             # attempt to migrate to user from previous step
-            { Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutobindJCUser $false -JumpCloudUserName "existingUser2" -SelectedUserName "$ENV:COMPUTERNAME\existingUser" -TempPassword "$($Password)" } | Should -Throw
+            { Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutobindJCUser $false -JumpCloudUserName $user2 -SelectedUserName "$ENV:COMPUTERNAME\$user1" -TempPassword "$($Password)" } | Should -Throw
             # The original user should exist
-            "C:\Users\existingUser" | Should -Exist
+            "C:\Users\$user1" | Should -Exist
+            # The user we are migrating to existed before the test, it should also exist after
+            "C:\Users\$user2" | Should -Exist
         }
-    }
-    It "Start-Migration should throw if the jumpcloud user already exists & not migrate anything" -Skip {
-        # TODO: Reversal should log that the user existed & delete the user after tun
     }
 }
 
