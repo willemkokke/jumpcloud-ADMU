@@ -75,8 +75,7 @@ Describe 'Migration Test Scenarios'{
                             [string]
                             $UserName
                         )
-                        $path = "C:\Users\$UserName"
-                        $file = "$path\NTUSER.DAT.BAK"
+                        $file = "C:\Users\$UserName\NTUSER.DAT"
                         while (!(Test-Path -Path $file))
                         {
                             Write-Host "Waiting for File: $file"
@@ -84,7 +83,7 @@ Describe 'Migration Test Scenarios'{
                         try
                         {
                             Write-Host "Attempting to Rename File: $file"
-                            Rename-Item -Path $file -NewName "$path\MESSUP.DAT.BAK" -Force -ErrorAction Stop
+                            Rename-Item -Path $file -NewName "MESSUP.DAT" -Force -ErrorAction Stop
                         }
                         catch
                         {
