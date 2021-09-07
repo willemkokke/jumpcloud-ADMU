@@ -477,7 +477,7 @@ function Set-UserRegistryLoadState
             "Load"
             {
                 Start-Sleep -Seconds 1
-                REG LOAD HKU\$($UserSid)_admu "$ProfilePath\NTUSER.DAT.BAK"
+                $results = REG LOAD HKU\$($UserSid)_admu "$ProfilePath\NTUSER.DAT.BAK" *>&1
                 if ($?)
                 {
                     Write-ToLog -Message:('Load Profile: ' + "$ProfilePath\NTUSER.DAT.BAK")
@@ -487,7 +487,7 @@ function Set-UserRegistryLoadState
                     Write-ToLog -Message:('Cound not load profile: ' + "$ProfilePath\NTUSER.DAT.BAK")
                 }
                 Start-Sleep -Seconds 1
-                REG LOAD HKU\"$($UserSid)_Classes_admu" "$ProfilePath\AppData\Local\Microsoft\Windows\UsrClass.dat.bak"
+                $results = REG LOAD HKU\"$($UserSid)_Classes_admu" "$ProfilePath\AppData\Local\Microsoft\Windows\UsrClass.dat.bak" *>&1
                 if ($?)
                 {
                     Write-ToLog -Message:('Load Profile: ' + "$ProfilePath\AppData\Local\Microsoft\Windows\UsrClass.dat.bak")
@@ -501,7 +501,7 @@ function Set-UserRegistryLoadState
             {
                 [gc]::collect()
                 Start-Sleep -Seconds 1
-                REG UNLOAD HKU\$($UserSid)_admu
+                $results = REG UNLOAD HKU\$($UserSid)_admu *>&1
                 if ($?)
                 {
                     Write-ToLog -Message:('Unloaded Profile: ' + "$ProfilePath\NTUSER.DAT.bak")
@@ -511,7 +511,7 @@ function Set-UserRegistryLoadState
                     Write-ToLog -Message:('Could not unload profile: ' + "$ProfilePath\NTUSER.DAT.bak")
                 }
                 Start-Sleep -Seconds 1
-                REG UNLOAD HKU\$($UserSid)_Classes_admu
+                $results = REG UNLOAD HKU\$($UserSid)_Classes_admu *>&1
                 if ($?)
                 {
                     Write-ToLog -Message:('Unloaded Profile: ' + "$ProfilePath\AppData\Local\Microsoft\Windows\UsrClass.dat.bak")
@@ -582,7 +582,7 @@ Function Test-UserRegistryLoadState
         # Tests to check that the reg items are not loaded
         If ($results -match $UserSid)
         {
-            Write-ToLog "REG Keys are loaded at the end of testing, exiting..." -level Warning
+            Write-ToLog "REG Keys are loaded at the end of testing, exiting..." -level Warn
             throw "REG Keys are loaded at the end of testing, exiting..."
         }
     }
@@ -623,7 +623,7 @@ Function Get-ProfileImagePath
     $profileImagePath = Get-ItemPropertyValue -Path ('HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList\' + $UserSid) -Name 'ProfileImagePath'
     if ([System.String]::IsNullOrEmpty($profileImagePath))
     {
-        Write-ToLog -Message("Could not get the profile path for $UserSid exiting...") -level Warning
+        Write-ToLog -Message("Could not get the profile path for $UserSid exiting...") -level Warn
         throw "Could not get the profile path for $UserSid exiting..."
     }
     else
@@ -1402,7 +1402,7 @@ Function Start-Migration
             $newUserProfileImagePath = Get-ProfileImagePath -UserSid $NewUserSID
             if ([System.String]::IsNullOrEmpty($newUserProfileImagePath))
             {
-                Write-ToLog -Message("Could not get the profile path for $jumpcloudusername exiting...") -level Warning
+                Write-ToLog -Message("Could not get the profile path for $jumpcloudusername exiting...") -level Warn
                 $admuTracker.newUserInit.fail = $true
                 return
             }
@@ -1423,7 +1423,7 @@ Function Start-Migration
         }
         catch
         {
-            Write-ToLog -Message("Could Not Backup Registry Hives in $($newUserProfileImagePath): Exiting...") -level Warning
+            Write-ToLog -Message("Could Not Backup Registry Hives in $($newUserProfileImagePath): Exiting...") -level Warn
             Write-ToLog -Message($_.Exception.Message)
             $admuTracker.backupNewUserReg.fail = $true
             return
@@ -1441,7 +1441,7 @@ Function Start-Migration
         }
         catch
         {
-            Write-ToLog -Message:('could not load and unload registry of migration user, exiting') -level Warning
+            Write-ToLog -Message:('could not load and unload registry of migration user, exiting') -level Warn
             $admuTracker.testRegLoadUnload.fail = $true
             return
         }
