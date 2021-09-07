@@ -1,4 +1,4 @@
-BeforeAll{
+BeforeAll {
     # import build variables for test cases
     write-host "Importing Build Variables:"
     . $PSScriptRoot\BuildVariables.ps1
@@ -13,16 +13,17 @@ BeforeAll{
     $regex = 'systemKey\":\"(\w+)\"'
     $systemKey = [regex]::Match($config, $regex).Groups[1].Value
 }
-Describe 'Migration Test Scenarios'{
+Describe 'Migration Test Scenarios' {
     Context 'Start-Migration on local accounts (Test Functionallity)' {
-        BeforeEach{
+        BeforeEach {
             # Remove the log from previous runs
             $logPath = "C:\Windows\Temp\jcadmu.log"
             Remove-Item $logPath
             New-Item $logPath -Force -ItemType File
         }
         It "username extists for testing" {
-            foreach ($user in $userTestingHash.Values){
+            foreach ($user in $userTestingHash.Values)
+            {
                 $user.username | Should -Not -BeNullOrEmpty
                 $user.JCusername | Should -Not -BeNullOrEmpty
                 Get-LocalUser $user.username | Should -Not -BeNullOrEmpty
@@ -34,18 +35,21 @@ Describe 'Migration Test Scenarios'{
                 # write-host "Running: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)"
                 write-host "`nRunning: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)`n"
                 # Invoke-Command -ScriptBlock { Start-Migration -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -ConvertProfile $true} | Should -Not -Throw
-                { Start-Migration -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath} | Should -Not -Throw
+                { Start-Migration -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath } | Should -Not -Throw
             }
         }
-        It "Test UWP_JCADMU was downloaded & exists"{
+        It "Test UWP_JCADMU was downloaded & exists" {
             Test-Path "C:\Windows\uwp_jcadmu.exe" | Should -Be $true
         }
-        It "Test Converted User Home Attribues"{
-            foreach ($user in $userTestingHash.Values){
-                if ($user.UpdateHomePath){
+        It "Test Converted User Home Attribues" {
+            foreach ($user in $userTestingHash.Values)
+            {
+                if ($user.UpdateHomePath)
+                {
                     $UserHome = "C:\Users\$($user.JCUsername)"
                 }
-                else {
+                else
+                {
                     $UserHome = "C:\Users\$($user.Username)"
                 }
                 # User Home Directory Should Exist
@@ -66,7 +70,8 @@ Describe 'Migration Test Scenarios'{
             New-Item $logPath -Force -ItemType File
         }
         It "Start-Migration remove the new user created if it encounters an error" {
-            foreach ($user in $JCReversionHash.Values) {
+            foreach ($user in $JCReversionHash.Values)
+            {
                 # Begin job to watch start-migration
                 $waitJob = Start-Job -ScriptBlock:( {
                         [CmdletBinding()]
@@ -94,8 +99,8 @@ Describe 'Migration Test Scenarios'{
                         Write-Host "$date - Starting Process:"
                         # Start Process
                         $credentials = New-Object System.Management.Automation.PSCredential -ArgumentList @($UserName, (ConvertTo-SecureString -String $Password -AsPlainText -Force))
-                                # trigger PowerShell session
-                                Start-Process powershell.exe -Credential ($credentials) -WorkingDirectory "C:\windows\system32" -ArgumentList ('-WindowStyle Hidden')
+                        # trigger PowerShell session
+                        Start-Process powershell.exe -Credential ($credentials) -WorkingDirectory "C:\windows\system32" -ArgumentList ('-WindowStyle Hidden')
                         # Remove File
                         # while (Test-Path -Path $file)
                         # {
@@ -132,7 +137,7 @@ Describe 'Migration Test Scenarios'{
                 "C:\Users\$($user.JCUsername)" | Should -Not -Exist
             }
         }
-        It "Start-Migration should throw if the jumpcloud user already exists & not migrate anything"{
+        It "Start-Migration should throw if the jumpcloud user already exists & not migrate anything" {
             $Password = "Temp123!"
             InitUser -UserName "existingUser" -Password $Password
             InitUser -UserName "existingUser2" -Password $Password
@@ -143,46 +148,47 @@ Describe 'Migration Test Scenarios'{
             "C:\Users\existingUser" | Should -Exist
         }
     }
-        It "Start-Migration should throw if the jumpcloud user already exists & not migrate anything" -Skip{
-            # TODO: Reversal should log that the user existed & delete the user after tun
-        }
+    It "Start-Migration should throw if the jumpcloud user already exists & not migrate anything" -Skip {
+        # TODO: Reversal should log that the user existed & delete the user after tun
     }
+}
 
-    Context 'Start-Migration Sucessfully Binds JumpCloud User to System'{
-        It 'user bound to system after migration' {
-            foreach ($user in $JCFunctionalHash.Values)
+Context 'Start-Migration Sucessfully Binds JumpCloud User to System' {
+    It 'user bound to system after migration' {
+        foreach ($user in $JCFunctionalHash.Values)
+        {
+            $users = Get-JCSDKUser
+            if ("$($user.JCUsername)" -in $users.Username)
             {
-                $users = Get-JCSDKUser
-                if ("$($user.JCUsername)" -in $users.Username){
-                    $existing = $users | Where-Object { $_.username -eq "$($user.JCUsername)"}
-                    Write-Host "Found JumpCloud User, $($existing.Id) removing..."
-                    Remove-JcSdkUser -Id $existing.Id
-                }
-                $GeneratedUser = New-JcSdkUser -Email:("$($user.JCUsername)@jumpcloudadmu.com") -Username:("$($user.JCUsername)") -Password:("$($user.password)")
-                write-host "`nRunning: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)`n"
-                # Invoke-Command -ScriptBlock { Start-Migration -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -ConvertProfile $true} | Should -Not -Throw
-                { Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutobindJCUser $true -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath } | Should -Not -Throw
-                $associations = Get-JcSdkSystemAssociation -SystemId $systemKey -Targets user
-                # GeneratedUserID should be in the associations list
-                $GeneratedUser.Id | Should -BeIn $associations.ToId
-                # TODO: read log/ read bound users from system and return statement
+                $existing = $users | Where-Object { $_.username -eq "$($user.JCUsername)" }
+                Write-Host "Found JumpCloud User, $($existing.Id) removing..."
+                Remove-JcSdkUser -Id $existing.Id
             }
+            $GeneratedUser = New-JcSdkUser -Email:("$($user.JCUsername)@jumpcloudadmu.com") -Username:("$($user.JCUsername)") -Password:("$($user.password)")
+            write-host "`nRunning: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)`n"
+            # Invoke-Command -ScriptBlock { Start-Migration -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -ConvertProfile $true} | Should -Not -Throw
+            { Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutobindJCUser $true -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath } | Should -Not -Throw
+            $associations = Get-JcSdkSystemAssociation -SystemId $systemKey -Targets user
+            # GeneratedUserID should be in the associations list
+            $GeneratedUser.Id | Should -BeIn $associations.ToId
+            # TODO: read log/ read bound users from system and return statement
         }
     }
-    Context 'Start-Migration kicked off through JumpCloud agent'{
-        BeforeAll{
-            # test connection to Org
-            $Org = Get-JcSdkOrganization
-            Write-Host "Connected to Pester Org: $($Org.DisplayName)"
-            # Get System Key
-            $config = get-content 'C:\Program Files\JumpCloud\Plugins\Contrib\jcagent.conf'
-            $regex = 'systemKey\":\"(\w+)\"'
-            $systemKey = [regex]::Match($config, $regex).Groups[1].Value
-            Write-Host "Running Tests on SystemID: $systemKey"
-            # Connect-JCOnline
+}
+Context 'Start-Migration kicked off through JumpCloud agent' {
+    BeforeAll {
+        # test connection to Org
+        $Org = Get-JcSdkOrganization
+        Write-Host "Connected to Pester Org: $($Org.DisplayName)"
+        # Get System Key
+        $config = get-content 'C:\Program Files\JumpCloud\Plugins\Contrib\jcagent.conf'
+        $regex = 'systemKey\":\"(\w+)\"'
+        $systemKey = [regex]::Match($config, $regex).Groups[1].Value
+        Write-Host "Running Tests on SystemID: $systemKey"
+        # Connect-JCOnline
 
-            # variables for test
-            $CommandBody = '
+        # variables for test
+        $CommandBody = '
 . C:\Users\circleci\project\jumpcloud-ADMU\Powershell\Start-Migration.ps1
 # Trim env vars with hardcoded ""
 $JCU = ${ENV:$JcUserName}.Trim([char]0x0022)
@@ -190,84 +196,87 @@ $SU = ${ENV:$SelectedUserName}.Trim([char]0x0022)
 $PW = ${ENV:$TempPassword}.Trim([char]0x0022)
 Start-Migration -JumpCloudUserName $JCU -SelectedUserName $ENV:COMPUTERNAME\$SU -TempPassword $PW
 '
-            $CommandTrigger = 'ADMU'
-            $CommandName = 'RemoteADMU'
-            # clear command results
-            $results = Get-JcSdkCommandResult
-            foreach ($result in $results)
-            {
-                # Delete Command Results
-                Write-Host "Found Command Results: $($result.id) removing..."
-                remove-jcsdkcommandresult -id $result.id
-            }
-            # Clear previous commands matching the name
-            $RemoteADMUCommands = Get-JcSdkCommand | Where-Object { $_.name -eq $CommandName }
-            foreach ($result in $RemoteADMUCommands)
-            {
-                # Delete Command Results
-                Write-Host "Found existing Command: $($result.id) removing..."
-                Remove-JcSdkCommand -id $result.id
-            }
-
-            # Create command & association to command
-            New-JcSdkCommand -Command $CommandBody -CommandType "windows" -Name $CommandName -Trigger $CommandTrigger -Shell powershell
-            $CommandID = (Get-JcSdkCommand | Where-Object { $_.Name -eq $CommandName }).Id
-            Write-Host "Setting CommandID: $CommandID associations"
-            Set-JcSdkCommandAssociation -CommandId $CommandID -Id $systemKey -Op add -Type system
+        $CommandTrigger = 'ADMU'
+        $CommandName = 'RemoteADMU'
+        # clear command results
+        $results = Get-JcSdkCommandResult
+        foreach ($result in $results)
+        {
+            # Delete Command Results
+            Write-Host "Found Command Results: $($result.id) removing..."
+            remove-jcsdkcommandresult -id $result.id
         }
-        It 'Test that system key exists'{
-            $systemKey | Should -Not -BeNullOrEmpty
+        # Clear previous commands matching the name
+        $RemoteADMUCommands = Get-JcSdkCommand | Where-Object { $_.name -eq $CommandName }
+        foreach ($result in $RemoteADMUCommands)
+        {
+            # Delete Command Results
+            Write-Host "Found existing Command: $($result.id) removing..."
+            Remove-JcSdkCommand -id $result.id
         }
-        It 'Invoke ADMU from JumpCloud Command' {
-            # clear results
-            $results = Get-JcSdkCommandResult
-            foreach ($result in $results)
-            {
-                # Delete Command Results
-                remove-jcsdkcommandresult -id $result.id
-            }
-            # begin tests
-            foreach ($user in $JCCommandTestingHash.Values) {
-                write-host "Running: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)"
-                $headers = @{
-                    'Accept'    = "application/json"
-                    'x-api-key' = $env:JCApiKey
-                }
-                $Form = @{
-                    '$JcUserName'       = $user.JCUsername;
-                    '$SelectedUserName' = $user.Username;
-                    '$TempPassword'     = $user.Password
-                } | ConvertTo-Json
-                Invoke-RestMethod -Method POST -Uri "https://console.jumpcloud.com/api/command/trigger/$($CommandTrigger)" -ContentType 'application/json' -Headers $headers -Body $Form
-                Write-Host "Invoke Command ADMU:"
-                $count = 0
-                do
-                {
-                    $invokeResults = Get-JcSdkCommandResult
-                    Write-Host "Waiting 5 seconds for system to receive command..."
-                    $count += 1
-                    start-sleep 5
-                } until (($invokeResults) -or ($count -eq 24))
-                Write-Host "Command pushed to system, waiting on results"
-                $count = 0
-                do{
-                    $CommandResults = Get-JcSdkCommandResult -id $invokeResults.Id
-                    Write-host "Waiting 5 seconds on results..."
-                    $count += 1
-                    start-sleep 5
-                } until ((($CommandResults.DataExitCode) -is [int]) -or ($count -eq 24))
-                $CommandResults.DataExitCode | Should -Be 0
-            }
 
+        # Create command & association to command
+        New-JcSdkCommand -Command $CommandBody -CommandType "windows" -Name $CommandName -Trigger $CommandTrigger -Shell powershell
+        $CommandID = (Get-JcSdkCommand | Where-Object { $_.Name -eq $CommandName }).Id
+        Write-Host "Setting CommandID: $CommandID associations"
+        Set-JcSdkCommandAssociation -CommandId $CommandID -Id $systemKey -Op add -Type system
+    }
+    It 'Test that system key exists' {
+        $systemKey | Should -Not -BeNullOrEmpty
+    }
+    It 'Invoke ADMU from JumpCloud Command' {
+        # clear results
+        $results = Get-JcSdkCommandResult
+        foreach ($result in $results)
+        {
+            # Delete Command Results
+            remove-jcsdkcommandresult -id $result.id
+        }
+        # begin tests
+        foreach ($user in $JCCommandTestingHash.Values)
+        {
+            write-host "Running: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)"
+            $headers = @{
+                'Accept'    = "application/json"
+                'x-api-key' = $env:JCApiKey
+            }
+            $Form = @{
+                '$JcUserName'       = $user.JCUsername;
+                '$SelectedUserName' = $user.Username;
+                '$TempPassword'     = $user.Password
+            } | ConvertTo-Json
+            Invoke-RestMethod -Method POST -Uri "https://console.jumpcloud.com/api/command/trigger/$($CommandTrigger)" -ContentType 'application/json' -Headers $headers -Body $Form
+            Write-Host "Invoke Command ADMU:"
+            $count = 0
+            do
+            {
+                $invokeResults = Get-JcSdkCommandResult
+                Write-Host "Waiting 5 seconds for system to receive command..."
+                $count += 1
+                start-sleep 5
+            } until (($invokeResults) -or ($count -eq 24))
+            Write-Host "Command pushed to system, waiting on results"
+            $count = 0
+            do
+            {
+                $CommandResults = Get-JcSdkCommandResult -id $invokeResults.Id
+                Write-host "Waiting 5 seconds on results..."
+                $count += 1
+                start-sleep 5
+            } until ((($CommandResults.DataExitCode) -is [int]) -or ($count -eq 24))
+            $CommandResults.DataExitCode | Should -Be 0
         }
 
     }
+
 }
 
-AfterAll{
+
+AfterAll {
     $systems = Get-JCsdkSystem
     $CIsystems = $systems | Where-Object { $_.displayname -match "packer" }
-    foreach ($system in $CIsystems) {
+    foreach ($system in $CIsystems)
+    {
         Remove-JcSdkSystem -id $system.Id
     }
 }
