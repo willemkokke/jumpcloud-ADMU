@@ -81,12 +81,12 @@ Describe 'Functions' {
             $newUserPassword = ConvertTo-SecureString -String 'Temp123!' -AsPlainText -Force
             New-localUser -Name 'testremovejc2' -password $newUserPassword -Description "Created By JumpCloud ADMU tests"
             New-LocalUserProfile -username:('testremovejc2')
-            { Remove-LocalUserProfile -username:('testremovejc2') } | Should -Throw
             # This test should be fail because the description is not correct
+            { Remove-LocalUserProfile -username:('testremovejc2') } | Should -Throw
             Test-Path -Path 'C:\Users\testremovejc2' | Should -Be $true
             New-localUser -Name 'testremovejc3' -password $newUserPassword -Description "Created By JumpCloud ADMU"
             New-LocalUserProfile -username:('testremovejc3')
-            Remove-LocalUserProfile -username:('testremovejc3') -ErrorAction Continue
+            { Remove-LocalUserProfile -username:('testremovejc3') } | Should -Not Throw
             # This test should pass fail because the description set correctly
             Test-Path -Path 'C:\Users\testremovejc3' | Should -Be $false
         }

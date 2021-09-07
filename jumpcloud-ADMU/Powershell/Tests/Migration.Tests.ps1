@@ -101,33 +101,11 @@ Describe 'Migration Test Scenarios' {
                         $credentials = New-Object System.Management.Automation.PSCredential -ArgumentList @($UserName, (ConvertTo-SecureString -String $Password -AsPlainText -Force))
                         # trigger PowerShell session
                         Start-Process powershell.exe -Credential ($credentials) -WorkingDirectory "C:\windows\system32" -ArgumentList ('-WindowStyle Hidden')
-                        # Remove File
-                        # while (Test-Path -Path $file)
-                        # {
-                        #     $date = Get-Date -UFormat "%D %r"
-                        #     Write-Host "$date - Found $file"
-                        #     Start-Sleep -Seconds:(1)
-                        #     try
-                        #     {
-                        #         Write-Host "Attempting to remove File: $file"
-                        #         # Remove-Item -Path $file -NewName $newName -Force
-                        #         Remove-Item -Path $file -Force -ErrorAction Stop
-                        #     }
-                        #     catch
-                        #     {
-                        #         $date = Get-Date -UFormat "%D %r"
-                        #         Write-Host "$date - File in use"
-                        #     }
-                        # }
-                        # if (!(Test-Path -Path $file))
-                        # {
-                        #     Write-Host "Remove Sucessful"
-                        # }
                         Write-Host "Job Completed"
                     }) -ArgumentList:($($user.Username), ($($user.password)), $($user.JCUsername))
                 # Begin job to kick off startMigration
                 write-host "`nRunning: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)`n"
-                Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutobindJCUser $false -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath -ErrorAction Continue
+                { Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutobindJCUser $false -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath } | Should -Throw
                 # receive the wait-job
                 Write-Host "Job Details:"
                 Receive-Job -Job $waitJob -Keep
