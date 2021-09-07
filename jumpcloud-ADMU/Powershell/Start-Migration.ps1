@@ -392,9 +392,23 @@ function Remove-LocalUserProfile
             # Remove the User Profile
             if (Test-Path -Path $UserPath)
             {
-                icacls $($UserPath) /grant administrators:F /T
-                takeown /f $($UserPath) /r /d y
-                Remove-Item -Path $($UserPath) -Force -Recurse
+                $Group = New-Object System.Security.Principal.NTAccount("Builtin", "Administrators")
+                $ACL = Get-ACL $UserPath
+                $ACL.SetOwner($Group)
+
+                Get-ChildItem $UserPath -Recurse -Force -errorAction SilentlyContinue | ForEach-Object {
+                    Try
+                    {
+                        Set-ACL -AclObject $ACL -Path $_.fullname -errorAction SilentlyContinue
+                    }
+                    catch [System.Management.Automation.ItemNotFoundException]
+                    {
+                        Write-Verbose 'ItemNotFound : $_'
+                    }
+                }
+                # icacls $($UserPath) /grant administrators:F /T
+                # takeown /f $($UserPath) /r /d y
+                Remove-Item -Path $($UserPath) -Force -Recurse #-ErrorAction SilentlyContinue
             }
             # Remove the User SID
             # TODO: if the profile SID is loaded in registry skip this and note in log
