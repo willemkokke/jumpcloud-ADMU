@@ -73,24 +73,53 @@ Describe 'Migration Test Scenarios'{
                         param (
                             [Parameter()]
                             [string]
-                            $UserName
+                            $UserName,
+                            [Parameter()]
+                            [string]
+                            $Password,
+                            [Parameter()]
+                            [string]
+                            $JCUserName
                         )
-                        $file = "C:\Users\$UserName\NTUSER.DAT"
+                        $file = "C:\Users\$JCUserName"
+                        $file = "C:\Users\$UserName\NTUSER.DAT.bak"
+                        # $NeName = "C:\Users\$UserName\RENAME.DAT.bak"
                         while (!(Test-Path -Path $file -ErrorAction SilentlyContinue))
                         {
-                            Write-Host "Waiting for File: $file"
+                            $date = Get-Date -UFormat "%D %r"
+                            Write-Host "$date - waiting for file:"
+                            Start-Sleep -Seconds:(1)
                         }
-                        try
-                        {
-                            Write-Host "Attempting to Rename File: $file"
-                            Rename-Item -Path $file -NewName "MESSUP.DAT" -Force -ErrorAction Stop
-                        }
-                        catch
-                        {
-                            Write-Host "File in use"
-                        }
+                        $date = Get-Date -UFormat "%D %r"
+                        Write-Host "$date - Starting Process:"
+                        # Start Process
+                        $credentials = New-Object System.Management.Automation.PSCredential -ArgumentList @($UserName, (ConvertTo-SecureString -String $Password -AsPlainText -Force))
+                                # trigger PowerShell session
+                                Start-Process powershell.exe -Credential ($credentials) -WorkingDirectory "C:\windows\system32" -ArgumentList ('-WindowStyle Hidden')
+                        # Remove File
+                        # while (Test-Path -Path $file)
+                        # {
+                        #     $date = Get-Date -UFormat "%D %r"
+                        #     Write-Host "$date - Found $file"
+                        #     Start-Sleep -Seconds:(1)
+                        #     try
+                        #     {
+                        #         Write-Host "Attempting to remove File: $file"
+                        #         # Remove-Item -Path $file -NewName $newName -Force
+                        #         Remove-Item -Path $file -Force -ErrorAction Stop
+                        #     }
+                        #     catch
+                        #     {
+                        #         $date = Get-Date -UFormat "%D %r"
+                        #         Write-Host "$date - File in use"
+                        #     }
+                        # }
+                        # if (!(Test-Path -Path $file))
+                        # {
+                        #     Write-Host "Remove Sucessful"
+                        # }
                         Write-Host "Job Completed"
-                    }) -ArgumentList:($($user.JCUsername))
+                    }) -ArgumentList:($($user.Username), ($($user.password)), $($user.JCUsername))
                 # Begin job to kick off startMigration
                 write-host "`nRunning: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)`n"
                 { Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutobindJCUser $false -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath } | Should -Throw
@@ -104,14 +133,16 @@ Describe 'Migration Test Scenarios'{
             }
         }
         It "Start-Migration should throw if the jumpcloud user already exists & not migrate anything"{
-            foreach ($user in $JCExistingHash.Values)
-            {
-                # attempt to migrate to user from previous step
-                { Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutobindJCUser $false -JumpCloudUserName "ADMU_newUserInit" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath } | Should -Throw
-                # The original user should exist
-                "C:\Users\$($user.username)" | Should -Exist
-            }
+            $Password = "Temp123!"
+            InitUser -UserName "existingUser" -Password $Password
+            InitUser -UserName "existingUser2" -Password $Password
+
+            # attempt to migrate to user from previous step
+            { Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutobindJCUser $false -JumpCloudUserName "existingUser2" -SelectedUserName "$ENV:COMPUTERNAME\existingUser" -TempPassword "$($Password)" } | Should -Throw
+            # The original user should exist
+            "C:\Users\existingUser" | Should -Exist
         }
+    }
         It "Start-Migration should throw if the jumpcloud user already exists & not migrate anything" -Skip{
             # TODO: Reversal should log that the user existed & delete the user after tun
         }
