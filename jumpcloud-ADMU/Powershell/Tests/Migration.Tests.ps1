@@ -115,7 +115,7 @@ Describe 'Migration Test Scenarios' {
                 "C:\Users\$($user.JCUsername)" | Should -Not -Exist
             }
         }
-        It "Start-Migration should throw if the jumpcloud user already exists & not migrate anything" - skip{
+        It "Start-Migration should throw if the jumpcloud user already exists & not migrate anything" -Skip {
             $Password = "Temp123!"
             InitUser -UserName "existingUser" -Password $Password
             InitUser -UserName "existingUser2" -Password $Password
