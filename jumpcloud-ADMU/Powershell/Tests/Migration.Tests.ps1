@@ -15,13 +15,6 @@ BeforeAll {
 }
 Describe 'Migration Test Scenarios' {
     Context 'Start-Migration on local accounts (Test Functionallity)' {
-        BeforeEach {
-            # Remove the log from previous runs
-            # Not necessary but will be used in future tests to check log results
-            $logPath = "C:\Windows\Temp\jcadmu.log"
-            Remove-Item $logPath
-            New-Item $logPath -Force -ItemType File
-        }
         It "username extists for testing" {
             foreach ($user in $userTestingHash.Values)
             {
@@ -33,18 +26,16 @@ Describe 'Migration Test Scenarios' {
         It "Test Convert profile migration for Local users" {
             foreach ($user in $userTestingHash.Values)
             {
-                # write-host "Running: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)"
+                # Remove log before testing
+                $logPath = "C:\Windows\Temp\jcadmu.log"
+                if (Test-Path -Path $logPath){
+                    Remove-Item $logPath
+                    New-Item $logPath -Force -ItemType File
+                }
                 write-host "`nRunning: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)`n"
-                # Invoke-Command -ScriptBlock { Start-Migration -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -ConvertProfile $true} | Should -Not -Throw
+                # Begin Test
                 { Start-Migration -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath } | Should -Not -Throw
-            }
-        }
-        It "Test UWP_JCADMU was downloaded & exists" {
-            Test-Path "C:\Windows\uwp_jcadmu.exe" | Should -Be $true
-        }
-        It "Test Converted User Home Attribues" {
-            foreach ($user in $userTestingHash.Values)
-            {
+                # Depending on the user in the UserTestingHash, the home path will differ
                 if ($user.UpdateHomePath)
                 {
                     $UserHome = "C:\Users\$($user.JCUsername)"
@@ -53,14 +44,26 @@ Describe 'Migration Test Scenarios' {
                 {
                     $UserHome = "C:\Users\$($user.Username)"
                 }
+                # Read the log and get date data
+                $log = "C:\Windows\Temp\jcadmu.log"
+                $regex = [regex]"ntuser_original_([0-9]+-[0-9]+-[0-9]+-[0-9]+[0-9]+[0-9]+)"
+                $match = Select-String -Path:($log) -Pattern:($regex)
+                # Get the date appended to the backup registry files:
+                $dateMatch = $match.Matches.Groups[1].Value
+                # For testing write out the date
+                # Write-Host "SEARCHING FOR : $dateMatch in $UserHome"
                 # User Home Directory Should Exist
                 Test-Path "$UserHome" | Should -Be $true
                 # Backup Registry & Registry Files Should Exist
-                Test-Path "$UserHome/NTUSER_original.DAT" | Should -Be $true
+                # Timestamp from log should exist on registry backup files
+                Test-Path "$UserHome/NTUSER_original_$dateMatch.DAT" | Should -Be $true
                 Test-Path "$UserHome/NTUSER.DAT" | Should -Be $true
                 Test-Path "$UserHome/AppData/Local/Microsoft/Windows/UsrClass.DAT" | Should -Be $true
-                Test-Path "$UserHome/AppData/Local/Microsoft/Windows/UsrClass_original.DAT" | Should -Be $true
+                Test-Path "$UserHome/AppData/Local/Microsoft/Windows/UsrClass_original_$dateMatch.DAT" | Should -Be $true
             }
+        }
+        It "Test UWP_JCADMU was downloaded & exists" {
+            Test-Path "C:\Windows\uwp_jcadmu.exe" | Should -Be $true
         }
     }
     Context 'Start-Migration on Local Accounts Expecting Failed Results (Test Reversal Functionallity)' {

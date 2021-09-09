@@ -1263,6 +1263,7 @@ Function Start-Migration
         # Track migration steps
         $admuTracker = [Ordered]@{
             backupOldUserReg    = @{'pass' = $false; 'fail' = $false }
+            newUserCreate       = @{'pass' = $false; 'fail' = $false }
             newUserInit         = @{'pass' = $false; 'fail' = $false }
             backupNewUserReg    = @{'pass' = $false; 'fail' = $false }
             testRegLoadUnload   = @{'pass' = $false; 'fail' = $false }
@@ -1383,9 +1384,10 @@ Function Start-Migration
         {
             Write-ToLog -Message:("$userExitCode")
             Write-ToLog -Message:("The user: $JumpCloudUserName could not be created, exiting")
-            $admuTracker.newUserInit.fail = $true
+            $admuTracker.newUserCreate.fail = $true
             return
         }
+        $admuTracker.newUserCreate.pass = $true
         # Initialize the Profile & Set SID
         $NewUserSID = New-LocalUserProfile -username:($JumpCloudUserName) -ErrorVariable profileInit
         if ($profileInit)
@@ -1556,11 +1558,12 @@ Function Start-Migration
 
 
         # Rename original ntuser & usrclass .dat files to ntuser_original.dat & usrclass_original.dat for backup and reversal if needed
-        Write-ToLog -Message:('Copy orig. ntuser.dat to ntuser_original.dat (backup reg step)')
+        $renameDate = Get-Date -UFormat "%Y-%m-%d-%H%M%S"
+        Write-ToLog -Message:("Copy orig. ntuser.dat to ntuser_original_$($renameDate).dat (backup reg step)")
         try
         {
-            Rename-Item -Path "$oldUserProfileImagePath\NTUSER.DAT" -NewName "$oldUserProfileImagePath\NTUSER_original.DAT" -Force -ErrorAction Stop
-            Rename-Item -Path "$oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass.dat" -NewName "$oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass_original.dat" -Force -ErrorAction Stop
+            Rename-Item -Path "$oldUserProfileImagePath\NTUSER.DAT" -NewName "$oldUserProfileImagePath\NTUSER_original_$renameDate.DAT" -Force -ErrorAction Stop
+            Rename-Item -Path "$oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass.dat" -NewName "$oldUserProfileImagePath\AppData\Local\Microsoft\Windows\UsrClass_original_$renameDate.dat" -Force -ErrorAction Stop
         }
         catch
         {
