@@ -1524,8 +1524,16 @@ Function Start-Migration
         $ADMUKEY = "HKEY_USERS:\$($newusersid)_admu\SOFTWARE\JCADMU"
         if (Get-Item $ADMUKEY -ErrorAction SilentlyContinue)
         {
-            # If the registry Key exists (it wont)
+            # If the registry Key exists (it wont unless it's been previously migrated)
             Write-ToLog "The Key Already Exists"
+            # TODO: Note that the account was previously migrated
+            # collect unused references in memory and clear
+            [gc]::collect()
+            # Attempt to unload
+            $UnloadReg = REG UNLOAD "HKU\$($newusersid)_admu" *>&1
+            if ($UnloadReg){
+                Write-ToLog "This account has been previously migrated"
+            }
         }
         else
         {

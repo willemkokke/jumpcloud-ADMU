@@ -122,6 +122,28 @@ Describe 'Migration Test Scenarios' {
             "C:\Users\$($user.JCUsername)" | Should -Not -Exist
         }
     }
+    It "Account of a prior migration can be sucessfully migrated again and not overwrite registry backup files"{
+        $Password = "Temp123!"
+        $user1 = "ADMU_" + -join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object { [char]$_ })
+        $user2 = "ADMU_" + -join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object { [char]$_ })
+        $user3 = "ADMU_" + -join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object { [char]$_ })
+        # Initialize a single user to migrate:
+        InitUser -UserName $user1 -Password $Password
+        # Migrate the initialized user to the second username
+        { Start-Migration -AutobindJCUser $false -JumpCloudUserName $user2 -SelectedUserName "$ENV:COMPUTERNAME\$user1" -TempPassword "$($Password)" } | Should -Not -Throw
+        # Migrate the migrated account to the third username
+        { Start-Migration -AutobindJCUser $false -JumpCloudUserName $user3 -SelectedUserName "$ENV:COMPUTERNAME\$user2" -TempPassword "$($Password)" } | Should -Not -Throw
+        # The original user1 home directory should exist
+        "C:\Users\$user1" | Should -Exist
+        # The original user1 home directory should exist
+        "C:\Users\$user2" | Should -Not -Exist
+        # The original user1 home directory should exist
+        "C:\Users\$user3" | Should -Not -Exist
+        # This user should contain two backup files.
+        (Get-ChildItem "C:\Users\$user1" -Hidden | Where-Object { $_.Name -match "NTUSER_original" }).Count | Should -Be 2
+        (Get-ChildItem "C:\Users\$user1\AppData\Local\Microsoft\Windows\" -Hidden | Where-Object { $_.Name -match "UsrClass_original" }).Count | Should -Be 2
+
+    }
     It "Start-Migration should throw if the jumpcloud user already exists & not migrate anything" {
         $Password = "Temp123!"
         $user1 = "ADMU_" + -join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object { [char]$_ })
