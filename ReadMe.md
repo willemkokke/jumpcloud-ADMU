@@ -6,7 +6,8 @@ The JumpCloud Active Directory Migration Utility (ADMU) is designed to migrate A
 
 To see an example of an account migration view the quick video demo below:
 
-<iframe allowtransparency="true" title="Wistia video player" allowFullscreen frameborder="0" scrolling="no" class="wistia_embed" name="wistia_embed" src="https://fast.wistia.net/embed/iframe/573eial3qa" width="400" height="225"></iframe>
+<a href="https://fast.wistia.net/embed/iframe/573eial3qa" rel="ADMU video demo">![admu-video-image](https://github.com/TheJumpCloud/jumpcloud-ADMU/wiki/images/video_background.png)</a>
+
 
 ### Why do I need it?
 
