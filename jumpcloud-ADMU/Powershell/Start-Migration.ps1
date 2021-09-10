@@ -1530,10 +1530,14 @@ Function Start-Migration
             # collect unused references in memory and clear
             [gc]::collect()
             # Attempt to unload
-            $UnloadReg = REG UNLOAD "HKU\$($newusersid)_admu" *>&1
-            if ($UnloadReg){
+            try {
+                REG UNLOAD "HKU\$($newusersid)_admu" 2>&1 | out-null
+            }
+            catch{
                 Write-ToLog "This account has been previously migrated"
             }
+            # if ($UnloadReg){
+            # }
         }
         else
         {
