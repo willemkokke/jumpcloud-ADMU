@@ -1,16 +1,12 @@
-# JumpCloud Active Directory Migration Utility - JCADMU
+# JumpCloud Active Directory Migration Utility
 
 ![admu-landging-image](https://github.com/TheJumpCloud/jumpcloud-ADMU/wiki/images/ADMU-landing.png)
 
-Active directory accounts on a system cannot be directly taken-over by the JumpCloud agent. Those account must first be converted to a local account before the JumpCloud agent can take-over and manage that account on a given system.
+The JumpCloud Active Directory Migration Utility (ADMU) is designed to migrate Active Directory or Azure Active Directory accounts to local account for subsequent JumpCloud takeover and management. Active Directory accounts on a system can not be directly taken over by the JumpCloud Agent. Those accounts must first be converted to a local account before the JumpCloud agent can take-over and manage that account on a given system. The ADMU aims to help admins automate the otherwise tedious process of account migration.
 
-### Who should use it?
+To see an example of an account migration view the quick video demo below:
 
-Admins who currently manage AD systems & users and want to migrate can use the JumpCloud ADMU to automate the otherwise tedious tasks that would be required to onboard AD-managed systems and users to JumpCloud. The ADMU can migrate systems off AD or Azure AD and onto JumpCloud while keeping user profiles intact.
-
-### What is it?
-
-The JumpCloud Active Directory Migration Utility or ADMU is designed to convert Windows non-local user profiles to local profiles which can then be managed by JumpCloud. At a high level, net-new user accounts are provisioned and given access to a AD-managed user's data and preferences.
+<script src="https://fast.wistia.com/embed/medias/573eial3qa.jsonp" async></script><script src="https://fast.wistia.com/assets/external/E-v1.js" async></script><div class="wistia_responsive_padding" style="padding:56.25% 0 0 0;position:relative;"><div class="wistia_responsive_wrapper" style="height:100%;left:0;position:absolute;top:0;width:100%;"><div class="wistia_embed wistia_async_573eial3qa videoFoam=true" style="height:100%;position:relative;width:100%"><div class="wistia_swatch" style="height:100%;left:0;opacity:0;overflow:hidden;position:absolute;top:0;transition:opacity 200ms;width:100%;"><img src="https://fast.wistia.com/embed/medias/573eial3qa/swatch" style="filter:blur(5px);height:100%;object-fit:contain;width:100%;" alt="" aria-hidden="true" onload="this.parentNode.style.opacity=1;" /></div></div></div></div>
 
 ### Why do I need it?
 
