@@ -32,26 +32,17 @@ The Start-Migration function allows the starting of the JumpCloud Active Directo
 
 ### Example 1
 ```powershell
-PS C:\> Start-Migration -JumpCloudUserName 'john.smith' -SelectedUserName 'DOMAIN\jsmith' -TempPassword 'Temp123!' -AcceptEULA $true -LeaveDomain $true -ForceReboot $true -AZureADProfile $false -Customxml $false -InstallJCAgent $true -JumpCloudConnectKey 'CONNECTKEYHERE'.
+PS C:\> Start-Migration -SelectedUserName 'DOMAIN\bobfay' -JumpCloudUserName 'bob.fay' -TempPassword 'Temp123!Temp123!' -LeaveDomain $true -ForceReboot $true -InstallJCAgent $true -JumpCloudConnectKey 'ConnectKEY' -AutobindJCUser $true -JumpCloudAPIKey 'APIKEY'
 ```
 
-This example would run the `Start-Migration` function on a domain user `DOMAIN\jsmith` and create a new local user account `COMPUTERNAME\john.smith`. Using a temporary password `Temp123!`, accepting the EULA so no interactive prompts would display, the system would leave the bound domain and reboot, It is not converting a AzureAD profile or using a CustomXML for migration, It will also install the JumpCloud Agent and use the JumpCloud connect key provided.
+This example would run the `Start-Migration` function on a domain user `DOMAIN\bobfay` and create a new local user account `COMPUTERNAME\bob.fay`. Using a temporary password `Temp123!Temp123!`. The JumpCloud Agent would be installed. After migration the JumpCloud user `bob.fay` would be bound to the system. Finally, the system would leave the bound domain and reboot.
 
 ### Example 2
 ```powershell
-PS C:\> Start-Migration -JumpCloudUserName 'john.smith' -SelectedUserName 'DOMAIN\jsmith' -TempPassword 'Temp123!' -AcceptEULA $true -LeaveDomain $false -ForceReboot $false -InstallJCAgent $false
+PS C:\> Start-Migration -SelectedUserName 'DOMAIN\bobfay' -JumpCloudUserName 'bob.fay' -TempPassword 'Temp123!Temp123!' $false -ForceReboot $false -InstallJCAgent $false
 ```
 
-This example would run the `Start-Migration` function on a domain user `DOMAIN\jsmith` and create a new local user account `COMPUTERNAME\john.smith`. Using a temporary password `Temp123!`, accepting the EULA so no interactive prompts would display, the system would remain bound to the current domain, no reboot or JumpCloud Agent would be installed. This would allow the administrator to run the converted account in parallel for testing.
-
-### Example 3
-```powershell
-PS C:\> Start-Migration -JumpCloudUserName 'john.smith' -SelectedUserName 'DOMAIN\jsmith' -TempPassword 'Temp123!' -AcceptEULA $true -LeaveDomain $false -ForceReboot $false -InstallJCAgent $false -Customxml $true
-```
-
-This example would run the `Start-Migration` function on a domain user `DOMAIN\jsmith` and create a new local user account `COMPUTERNAME\john.smith`. Using a temporary password `Temp123!`, accepting the EULA so no interactive prompts would display, the system would remain bound to the current domain, no reboot or JumpCloud Agent would be installed. This would allow the administrator to run the converted account in parallel for testing, A `Custom.XML` file would be used in the migration process from the location `C:\Windows\Temp\custom.xml` this could be edited from the default xml provided or the GUI utility could be used to edit.
-
-`C:\Windows\Temp\custom.xml`
+This example would run the `Start-Migration` function on a domain user `DOMAIN\jsmith` and create a new local user account `COMPUTERNAME\john.smith`. Using a temporary password `Temp123!Temp123!`, the system would remain bound to the current domain and not reboot. The JumpCloud Agent would not be installed. This would allow the administrator to run the converted account in parallel for testing.
 
 ## PARAMETERS
 
@@ -191,7 +182,7 @@ Accept wildcard characters: False
 ```
 
 ### -AutobindJCUser
-{{ Fill AutobindJCUser Description }}
+This parameter will bind the username specified in the `JumpCloudUserName` field to the current system after Migration.
 
 ```yaml
 Type: System.Boolean
@@ -221,7 +212,7 @@ Accept wildcard characters: False
 ```
 
 ### -JumpCloudAPIKey
-{{ Fill JumpCloudAPIKey Description }}
+The Read/Write API key of a JumpCloud Administrator. This parameter is required if the AutoBind JC User parameter is specified.
 
 ```yaml
 Type: System.String
