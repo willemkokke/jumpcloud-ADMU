@@ -924,6 +924,51 @@ function Test-Domainusername
     }
 }
 
+function Test-JumpCloudUsername{
+    [CmdletBinding()]
+    param (
+        [Parameter()]
+        [System.String]
+        $JumpCloudApiKey,
+        [Parameter()]
+        [System.String]
+        $Username
+    )
+    Begin{
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        $Headers = @{
+            'Accept'       = 'application/json';
+            'Content-Type' = 'application/json';
+            'x-api-key'    = $JumpCloudApiKey;
+        }
+        $Form = @{
+            'filter' = "username:eq:$($Username)"
+            "fields" = "username"
+        }
+        $Body = $Form | ConvertTo-Json
+    }
+    Process{
+        Try{
+            # Write-ToLog "Searching JC for: $Username"
+            $Response = Invoke-WebRequest -Method 'Post' -Uri "https://console.jumpcloud.com/api/search/systemusers" -Headers $Headers -Body $Body
+            $Results = $Response.Content | ConvertFrom-Json
+            # write-host $Response
+            $StatusCode = $Response.StatusCode
+        }
+        catch
+        {
+            $StatusCode = $_.Exception.Response.StatusCode.value__
+        }
+    }
+    End{
+        If ($Results.totalCount -eq 1 -and $($Results.results[0].username) -eq $Username) {
+            return $true
+        }
+        else {
+            Return $false
+        }
+    }
+}
 Function Install-JumpCloudAgent(
     [System.String]$msvc2013x64Link
     , [System.String]$msvc2013Path
