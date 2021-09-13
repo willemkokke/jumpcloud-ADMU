@@ -84,6 +84,7 @@ jobs:
           name: Build
           shell: powershell.exe
           command: |
+            $ErrorActionPreference = 'Stop'
             ./Deploy/Build.ps1 $env:CIRCLE_WORKING_DIRECTORY
       - persist_to_workspace:
           root: .
