@@ -590,6 +590,15 @@ $lvProfileList.Add_SelectionChanged( {
     })
 
 $bDeleteProfile.Add_Click( {
+        if ($tbJumpCloudAPIKey.Text -And $tbJumpCloudUserName.Text){
+            if (Test-JumpCloudUsername -JumpCloudApiKey $tbJumpCloudAPIKey.Text -Username $tbJumpCloudUserName.Text -Prompt $true){
+                Write-ToLog "Matched $($tbJumpCloudUserName.Text) with user in the JumpCloud Console"
+            }
+            else{
+                Write-ToLog "$($tbJumpCloudUserName.Text) not found in the JumpCloud console"
+                return
+            }
+        }
         # Build FormResults object
         Add-Member -InputObject:($FormResults) -MemberType:('NoteProperty') -Name:('InstallJCAgent') -Value:($InstallJCAgent)
         Add-Member -InputObject:($FormResults) -MemberType:('NoteProperty') -Name:('AutobindJCUser') -Value:($AutobindJCUser)

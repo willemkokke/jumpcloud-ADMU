@@ -21,12 +21,12 @@ Describe 'Functions' {
         It 'User exists' {
             Connect-JCOnline -JumpCloudApiKey $env:JCApiKey -JumpCloudOrgId $env:JCOrgId -Force
             Get-JCAssociation -Type user -Id:$env:JSmithUserID | Remove-JCAssociation -Force
-            BindUsernameToJCSystem -JcApiKey $env:JCApiKey -JumpCloudUserName 'jsmith'
+            { BindUsernameToJCSystem -JcApiKey $env:JCApiKey -JumpCloudUserName 'jsmith' } | Should -Be $true
             ((Get-JCAssociation -Type:user -Id:$env:JSmithUserID).id).count | Should -Be '1'
         }
 
         It 'APIKey not valid' {
-        {BindUsernameToJCSystem -JcApiKey '1234' -JumpCloudUserName 'jsmith' -ErrorAction Stop} | Should -Throw
+        { BindUsernameToJCSystem -JcApiKey '1234' -JumpCloudUserName 'jsmith' -ErrorAction Stop } | Should -Be $false
         }
 
         It 'Agent not installed' -skip{

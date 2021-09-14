@@ -135,10 +135,17 @@ function BindUsernameToJCSystem
         $config = get-content "$WindowsDrive\Program Files\JumpCloud\Plugins\Contrib\jcagent.conf"
         $regex = 'systemKey\":\"(\w+)\"'
         $systemKey = [regex]::Match($config, $regex).Groups[1].Value
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        If (!$systemKey)
+        {
+            Write-ToLog -Message:("Could not find systemKey, aborting bind step") -Level:('Warn')
+        }
     }
     Process
     {
-        if ($systemKey)
+        # Get UserID from JumpCloud Console
+        $ret, $id = Test-JumpCloudUsername -JumpCloudApiKey $JcApiKey -Username $JumpCloudUserName
+        if ($ret -And $id)
         {
             $Headers = @{
                 'Accept'       = 'application/json';
@@ -146,58 +153,37 @@ function BindUsernameToJCSystem
                 'x-api-key'    = $JcApiKey;
             }
             $Form = @{
-                'filter' = "username:eq:$($JumpcloudUserName)"
-            }
+                'op'   = 'add';
+                'type' = 'system';
+                'id'   = "$systemKey"
+            } | ConvertTo-Json
             Try
             {
-                Write-ToLog -Message:("Getting information from SystemID: $systemKey")
-                [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-                $Response = Invoke-WebRequest -Method 'Get' -Uri "https://console.jumpcloud.com/api/systemusers" -Headers $Headers -Body $Form -UseBasicParsing
+                $Response = Invoke-WebRequest -Method 'Post' -Uri "https://console.jumpcloud.com/api/v2/users/$id/associations" -Headers $Headers -Body $Form -UseBasicParsing
                 $StatusCode = $Response.StatusCode
             }
             catch
             {
                 $StatusCode = $_.Exception.Response.StatusCode.value__
-            }
-            # Get Results, convert from Json
-            $Results = $Response.Content | ConvertFrom-JSON
-            $JcUserId = $Results.results.id
-            # Bind Step
-            if ($JcUserId)
-            {
-                $Headers = @{
-                    'Accept'    = 'application/json';
-                    'x-api-key' = $JcApiKey
-                }
-                $Form = @{
-                    'op'   = 'add';
-                    'type' = 'system';
-                    'id'   = "$systemKey"
-                } | ConvertTo-Json
-                Try
-                {
-                    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-                    $Response = Invoke-WebRequest -Method 'Post' -Uri "https://console.jumpcloud.com/api/v2/users/$JcUserId/associations" -Headers $Headers -Body $Form -ContentType 'application/json' -UseBasicParsing
-                    $StatusCode = $Response.StatusCode
-                }
-                catch
-                {
-                    $StatusCode = $_.Exception.Response.StatusCode.value__
-                }
-            }
-            else
-            {
-                Write-ToLog -Message:("Could not bind user/ JumpCloudUsername did not exist in JC Directory")
+                Write-ToLog -Message:("Could not bind user to system") -Level:('Warn')
             }
         }
         else
         {
-            Write-ToLog -Message:("Could not find systemKey, aborting bind step")
+            Write-ToLog -Message:("JumpCloud Username did not exist in JumpCloud Directory") -Level:('Warn')
         }
     }
     End
     {
-
+        # Associations post should return 204 success no content
+        if ($StatusCode -eq 204)
+        {
+            return $true
+        }
+        else
+        {
+            return $false
+        }
     }
 }
 function DenyInteractiveLogonRight
@@ -924,17 +910,24 @@ function Test-Domainusername
     }
 }
 
-function Test-JumpCloudUsername{
+function Test-JumpCloudUsername
+{
     [CmdletBinding()]
+    [OutputType([System.Boolean])]
+    [OutputType([System.Object[]])]
     param (
         [Parameter()]
         [System.String]
         $JumpCloudApiKey,
         [Parameter()]
         [System.String]
-        $Username
+        $Username,
+        [Parameter()]
+        [System.Boolean]
+        $prompt = $false
     )
-    Begin{
+    Begin
+    {
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         $Headers = @{
             'Accept'       = 'application/json';
@@ -947,12 +940,13 @@ function Test-JumpCloudUsername{
         }
         $Body = $Form | ConvertTo-Json
     }
-    Process{
-        Try{
+    Process
+    {
+        Try
+        {
             # Write-ToLog "Searching JC for: $Username"
-            $Response = Invoke-WebRequest -Method 'Post' -Uri "https://console.jumpcloud.com/api/search/systemusers" -Headers $Headers -Body $Body
+            $Response = Invoke-WebRequest -Method 'Post' -Uri "https://console.jumpcloud.com/api/search/systemusers" -Headers $Headers -Body $Body -UseBasicParsing
             $Results = $Response.Content | ConvertFrom-Json
-            # write-host $Response
             $StatusCode = $Response.StatusCode
         }
         catch
@@ -960,12 +954,27 @@ function Test-JumpCloudUsername{
             $StatusCode = $_.Exception.Response.StatusCode.value__
         }
     }
-    End{
-        If ($Results.totalCount -eq 1 -and $($Results.results[0].username) -eq $Username) {
-            return $true
+    End
+    {
+        # Search User should return 200 success
+        If ($StatusCode -ne 200)
+        {
+            Return $false, $null
         }
-        else {
-            Return $false
+        If ($Results.totalCount -eq 1 -and $($Results.results[0].username) -eq $Username)
+        {
+            # write-host $Results.results[0]._id
+            return $true, $Results.results[0]._id
+        }
+        else
+        {
+            if ($prompt)
+            {
+                $message += "$Username is not a valid JumpCloud User`nPlease enter a valid JumpCloud Username"
+                $wshell = New-Object -ComObject Wscript.Shell
+                $var = $wshell.Popup("$message", 0, "ADMU Status", 0x0 + 0x40)
+            }
+            Return $false, $null
         }
     }
 }
@@ -2062,7 +2071,7 @@ Function Start-Migration
         {
             # TODO: update tool options with valid params
             Write-ToLog -Message:('Script finished successfully; Log file location: ' + $jcAdmuLogFile)
-            Write-ToLog -Message:('Tool options chosen were : ' + 'Install JC Agent = ' + $InstallJCAgent + ', Leave Domain = ' + $LeaveDomain + ', Force Reboot = ' + $ForceReboot + ', AzureADProfile = ' + $AzureADProfile + ', Create System Restore Point = ' + $CreateRestore)
+            Write-ToLog -Message:('Tool options chosen were : ' + 'Install JC Agent = ' + $InstallJCAgent + ', Leave Domain = ' + $LeaveDomain + ', Force Reboot = ' + $ForceReboot + ', AzureADProfile = ' + $AzureADProfile)
             if ($displayGuiPrompt)
             {
                 Show-Result -domainUser $SelectedUserName $ -localUser "$($localComputerName)\$($JumpCloudUserName)" -success $true -profilePath $newUserProfileImagePath -logPath $jcAdmuLogFile
