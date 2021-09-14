@@ -1873,13 +1873,13 @@ Function Start-Migration
         #region AutobindUserToJCSystem
         if ($AutobindJCUser -eq $true)
         {
-            try
+            $bindResult = BindUsernameToJCSystem -JcApiKey $JumpCloudAPIKey -JumpCloudUserName $JumpCloudUserName
+            if ($bindResult)
             {
-                BindUsernameToJCSystem -JcApiKey $JumpCloudAPIKey -JumpCloudUserName $JumpCloudUserName
                 Write-ToLog -Message:('jumpcloud autobind step succeeded for user ' + $JumpCloudUserName)
                 $admuTracker.autoBind.pass = $true
             }
-            catch
+            else
             {
                 Write-ToLog -Message:('jumpcloud autobind step failed, apikey or jumpcloud username is incorrect.') -Level:('Warn')
                 # $admuTracker.autoBind.fail = $true

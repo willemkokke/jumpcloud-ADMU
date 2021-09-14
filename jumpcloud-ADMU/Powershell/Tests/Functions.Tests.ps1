@@ -19,10 +19,25 @@ Describe 'Functions' {
 
     Context 'BindUsernameToJCSystem Function'{
         It 'User exists' {
+            # Generate New User
             Connect-JCOnline -JumpCloudApiKey $env:JCApiKey -JumpCloudOrgId $env:JCOrgId -Force
-            Get-JCAssociation -Type user -Id:$env:JSmithUserID | Remove-JCAssociation -Force
-            { BindUsernameToJCSystem -JcApiKey $env:JCApiKey -JumpCloudUserName 'jsmith' } | Should -Be $true
-            ((Get-JCAssociation -Type:user -Id:$env:JSmithUserID).id).count | Should -Be '1'
+            $Password = "Temp123!"
+            $user1 = "ADMU_" + -join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object { [char]$_ })
+            # If User Exists, remove from the org
+            $users = Get-JCSDKUser
+                if ("$($user.JCUsername)" -in $users.Username)
+                {
+                    $existing = $users | Where-Object { $_.username -eq "$($user.JCUsername)" }
+                    Write-Host "Found JumpCloud User, $($existing.Id) removing..."
+                    Remove-JcSdkUser -Id $existing.Id
+                }
+            $GeneratedUser = New-JcSdkUser -Email:("$($user1)@jumpcloudadmu.com") -Username:("$($user1)") -Password:("$($Password)")
+            # Begin Test
+            Get-JCAssociation -Type user -Id:($($GeneratedUser.Id)) | Remove-JCAssociation -Force
+            { BindUsernameToJCSystem -JcApiKey $env:JCApiKey -JumpCloudUserName $user1 } | Should -Be $true
+            ((Get-JCAssociation -Type:user -Id:($($GeneratedUser.Id))).id).count | Should -Be '1'
+            # Clean Up
+            Remove-JcSdkUser -Id $GeneratedUser.Id
         }
 
         It 'APIKey not valid' {
