@@ -17,7 +17,7 @@ Describe 'Functions' {
             Test-RegistryValueMatch -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList' -Value 'Public' -stringmatch 'Private' | Should -Be $false
         }
     }
-    Context 'Test-JumpCloudUsername Function' -Skip {
+    Context 'Test-JumpCloudUsername Function' {
         It 'Valid Username Returns True'{
             # Get the first user
             $user = Get-JcSdkUser | Select-Object -First 1
