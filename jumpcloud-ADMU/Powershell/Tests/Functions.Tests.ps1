@@ -16,6 +16,14 @@ Describe 'Functions' {
             Test-RegistryValueMatch -Path 'HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\ProfileList' -Value 'Public' -stringmatch 'Private' | Should -Be $false
         }
     }
+    Context 'Test-JumpCloudUsername Function' -Skip {
+        It 'Valid Username Returns True'{
+            # TODO: Implement Test
+        }
+        It 'Invalid Username Returns False'{
+            # TODO: Implement Test
+        }
+    }
 
     Context 'BindUsernameToJCSystem Function'{
         It 'User exists' {
@@ -34,14 +42,16 @@ Describe 'Functions' {
             $GeneratedUser = New-JcSdkUser -Email:("$($user1)@jumpcloudadmu.com") -Username:("$($user1)") -Password:("$($Password)")
             # Begin Test
             Get-JCAssociation -Type user -Id:($($GeneratedUser.Id)) | Remove-JCAssociation -Force
-            { BindUsernameToJCSystem -JcApiKey $env:JCApiKey -JumpCloudUserName $user1 } | Should -Be $true
+            $bind = BindUsernameToJCSystem -JcApiKey $env:JCApiKey -JumpCloudUserName $user1
+            $bind | Should -Be $true
             ((Get-JCAssociation -Type:user -Id:($($GeneratedUser.Id))).id).count | Should -Be '1'
             # Clean Up
             Remove-JcSdkUser -Id $GeneratedUser.Id
         }
 
         It 'APIKey not valid' {
-        { BindUsernameToJCSystem -JcApiKey '1234' -JumpCloudUserName 'jsmith' -ErrorAction Stop } | Should -Be $false
+            $bind = BindUsernameToJCSystem -JcApiKey '1234122341234234123412341234123412341234' -JumpCloudUserName 'jsmith'
+            $bind | Should -Be $false
         }
 
         It 'Agent not installed' -skip{
