@@ -19,10 +19,22 @@ Describe 'Functions' {
     }
     Context 'Test-JumpCloudUsername Function' -Skip {
         It 'Valid Username Returns True'{
-            # TODO: Implement Test
+            # Get the first user
+            $user = Get-JcSdkUser | Select-Object -First 1
+            # Test function
+            $testResult, $userID = Test-JumpCloudUsername -JumpCloudApiKey $env:JCApiKey -Username $user.Username
+            $testResult | Should -Be $true
+            $userID | Should -Be $user.Id
         }
         It 'Invalid Username Returns False'{
-            # TODO: Implement Test
+            # Get the first user
+            $user = Get-JcSdkUser | Select-Object -First 1
+            # Append random string to username
+            $newUsername = $user.Username + "jdksf45kjfds"
+            # Test function
+            $testResult, $userID = Test-JumpCloudUsername -JumpCloudApiKey $env:JCApiKey -Username $newUsername
+            $testResult | Should -Be $false
+            $userID | Should -Be $null
         }
     }
 
