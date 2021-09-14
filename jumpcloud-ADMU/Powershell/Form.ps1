@@ -590,8 +590,9 @@ $lvProfileList.Add_SelectionChanged( {
     })
 
 $bDeleteProfile.Add_Click( {
-        if ($tbJumpCloudAPIKey.Text -And $tbJumpCloudUserName.Text){
-            if (Test-JumpCloudUsername -JumpCloudApiKey $tbJumpCloudAPIKey.Text -Username $tbJumpCloudUserName.Text -Prompt $true){
+        if ($tbJumpCloudAPIKey.Text -And $tbJumpCloudUserName.Text -And $AutobindJCUser) {
+            $testResult, $userID = Test-JumpCloudUsername -JumpCloudApiKey $tbJumpCloudAPIKey.Text -Username $tbJumpCloudUserName.Text -Prompt $true
+            if ($testResult) {
                 Write-ToLog "Matched $($tbJumpCloudUserName.Text) with user in the JumpCloud Console"
             }
             else{

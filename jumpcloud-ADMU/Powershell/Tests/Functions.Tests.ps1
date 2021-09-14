@@ -2,6 +2,7 @@ BeforeAll {
     Write-Host "Script Location: $PSScriptRoot"
     Write-Host "Dot-Sourcing Start-Migration Script"
     . $PSScriptRoot\..\Start-Migration.ps1
+    Connect-JCOnline -JumpCloudApiKey $env:JCApiKey -JumpCloudOrgId $env:JCOrgId -Force
 }
 Describe 'Functions' {
     Context 'Show-Result Function'{
@@ -28,7 +29,6 @@ Describe 'Functions' {
     Context 'BindUsernameToJCSystem Function'{
         It 'User exists' {
             # Generate New User
-            Connect-JCOnline -JumpCloudApiKey $env:JCApiKey -JumpCloudOrgId $env:JCOrgId -Force
             $Password = "Temp123!"
             $user1 = "ADMU_" + -join ((65..90) + (97..122) | Get-Random -Count 5 | ForEach-Object { [char]$_ })
             # If User Exists, remove from the org

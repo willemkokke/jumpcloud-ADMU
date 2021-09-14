@@ -970,7 +970,7 @@ function Test-JumpCloudUsername
         {
             if ($prompt)
             {
-                $message += "$Username is not a valid JumpCloud User`nPlease enter a valid JumpCloud Username"
+                $message += "$Username is not a valid JumpCloud User`nPlease enter a valid JumpCloud Username`nUsernames are case sensitive"
                 $wshell = New-Object -ComObject Wscript.Shell
                 $var = $wshell.Popup("$message", 0, "ADMU Status", 0x0 + 0x40)
             }
