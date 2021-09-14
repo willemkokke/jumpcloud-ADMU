@@ -112,8 +112,12 @@ Describe 'Functions' {
 
     Context 'Get-SID Function'{
         It 'Profile exists and sid returned' {
-            $circlecisid = (Get-WmiObject win32_userprofile | select-object Localpath, SID | where-object Localpath -eq 'C:\Users\circleci'| Select-Object SID).SID.Length | Should -Be '44'
-            Get-SID -User:'circleci' -eq $circlecisid | Should -Be $true
+            # TODO: testing that the SID length is 44 isn't testing the Get-SID function, nor can we expect the SID length to be 44 each time.
+            # $circlecisid = (Get-WmiObject win32_userprofile | select-object Localpath, SID | where-object Localpath -eq 'C:\Users\circleci'| Select-Object SID).SID.Length | Should -Be '44'
+            # Get-SID -User:'circleci' -eq $circlecisid | Should -Be $true
+            # TODO: Agree on new test
+            # SID of circleCI user should match SID regex pattern
+            Get-SID -User:'circleci' -cnotmatch "^S-\d-\d+-(\d+-){1,14}\d+$" | Should -Be $true
         }
     }
 

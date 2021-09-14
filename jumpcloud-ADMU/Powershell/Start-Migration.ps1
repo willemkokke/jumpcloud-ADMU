@@ -1872,8 +1872,8 @@ Function Start-Migration
             }
             catch
             {
-                Write-ToLog -Message:('jumpcloud autobind step failed, apikey or jumpcloud username is incorrect.') -Level:('Warning')
-                $admuTracker.autoBind.fail = $true
+                Write-ToLog -Message:('jumpcloud autobind step failed, apikey or jumpcloud username is incorrect.') -Level:('Warn')
+                # $admuTracker.autoBind.fail = $true
             }
         }
         #endregion AutobindUserToJCSystem
@@ -1897,13 +1897,13 @@ Function Start-Migration
                     }
                     catch
                     {
-                        Write-ToLog -Message:('Unable to leave domain, JumpCloud agent will not start until resolved') -Level:('Error')
+                        Write-ToLog -Message:('Unable to leave domain, JumpCloud agent will not start until resolved') -Level:('Warn')
                         # TODO: instead of exit, return and note the error in the logs (Non Terminating?)
                         # Exit;
                         # $admuTracker.leaveDomain.fail = $true
                         # return
                         # TODO: exit?
-                        Exit;
+                        # Exit;
                     }
                 }
             }
@@ -1916,13 +1916,13 @@ Function Start-Migration
                 }
                 Catch
                 {
-                    Write-ToLog -Message:('Unable to leave domain, JumpCloud agent will not start until resolved') -Level:('Error')
+                    Write-ToLog -Message:('Unable to leave domain, JumpCloud agent will not start until resolved') -Level:('Warn')
                     # TODO: instead of exit, return and note the error in the logs (Non Terminating?)
                     # Exit;
                     # $admuTracker.leaveDomain.fail = $true
                     # return
                     # TODO: exit?
-                    Exit;
+                    # Exit;
                 }
             }
             $admuTracker.leaveDomain.pass = $true
