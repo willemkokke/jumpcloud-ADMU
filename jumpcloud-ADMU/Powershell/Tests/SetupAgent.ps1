@@ -5,6 +5,8 @@
 # Dot-source start-migration
 . $PSScriptRoot\..\Start-Migration.ps1
 
+# This helper function creates new local users and initializes their home directories
+# If the user exists and was created by the ADMU, the tool will attempt to remove the profile
 Function InitUser {
     [CmdletBinding()]
     param (

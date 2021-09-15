@@ -1529,7 +1529,6 @@ Function Start-Migration
         Set-UserRegistryLoadState -op "Load" -ProfilePath $oldUserProfileImagePath -UserSid $SelectedUserSID
         # Copy from "SelectedUser" to "NewUser"
 
-        # TODO: Turn this into a function
         reg copy HKU\$($SelectedUserSID)_admu HKU\$($NewUserSID)_admu /s /f
         if ($?)
         {
@@ -1557,7 +1556,6 @@ Function Start-Migration
         # Copy the profile containing the correct access and data to the destination profile
         Write-ToLog -Message:('Copying merged profiles to destination profile path')
 
-        #TODO: Turn this into a function
         # Set Registry Check Key for New User
         # Check that the installed components key does not exist
         if ((Get-psdrive | select-object name) -notmatch "HKEY_USERS")
@@ -1572,7 +1570,6 @@ Function Start-Migration
             $rootlessKey = $ADMU_PackageKey.Replace('HKEY_USERS:\', '')
             Set-ValueToKey -registryRoot Users -KeyPath $rootlessKey -name Version -value "0,0,00,0" -regValueKind String
         }
-        # TODO: test Key exists, non terminating error here if we can't set Active Setup Keys
         # $admuTracker.activeSetupHKU = $true
         # Set the trigger to reset Appx Packages on first login
         $ADMUKEY = "HKEY_USERS:\$($newusersid)_admu\SOFTWARE\JCADMU"
@@ -1580,7 +1577,6 @@ Function Start-Migration
         {
             # If the registry Key exists (it wont unless it's been previously migrated)
             Write-ToLog "The Key Already Exists"
-            # TODO: Note that the account was previously migrated
             # collect unused references in memory and clear
             [gc]::collect()
             # Attempt to unload
@@ -1600,7 +1596,6 @@ Function Start-Migration
             Set-ValueToKey -registryRoot Users -keyPath "$($newusersid)_admu\SOFTWARE\JCADMU" -Name "previousSID" -value "$SelectedUserSID" -regValueKind String
             Set-ValueToKey -registryRoot Users -keyPath "$($newusersid)_admu\SOFTWARE\JCADMU" -Name "previousProfilePath" -value "$oldUserProfileImagePath" -regValueKind String
         }
-        # TODO: test Key exists, non terminating error here if we can't set previous SID/ ProfilePath
         ### End reg key check for new user
 
         # Unload "Selected" and "NewUser"
@@ -1802,7 +1797,6 @@ Function Start-Migration
                 }
             }
         }
-        # TODO: test and note error if failure
         # $admuTracker.activeSetupHKLM = $true
         ### End Active Setup Registry Entry Region ###
 
@@ -1840,11 +1834,6 @@ Function Start-Migration
         # TODO: Test and return non terminating error here if failure
         # $admuTracker.uwpAppXPackages = $true
 
-        # load registry items back for the last time.
-        # TODO: remove load step
-        # Set-UserRegistryLoadState -op "Load" -ProfilePath $newUserProfileImagePath -UserSid $NewUserSID
-        # Unload the Reg Hives
-        # Set-UserRegistryLoadState -op "Unload" -ProfilePath $newUserProfileImagePath -UserSid $NewUserSID
 
         # Download the appx register exe
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
@@ -1907,12 +1896,7 @@ Function Start-Migration
                     catch
                     {
                         Write-ToLog -Message:('Unable to leave domain, JumpCloud agent will not start until resolved') -Level:('Warn')
-                        # TODO: instead of exit, return and note the error in the logs (Non Terminating?)
-                        # Exit;
                         # $admuTracker.leaveDomain.fail = $true
-                        # return
-                        # TODO: exit?
-                        # Exit;
                     }
                 }
             }
@@ -1926,12 +1910,7 @@ Function Start-Migration
                 Catch
                 {
                     Write-ToLog -Message:('Unable to leave domain, JumpCloud agent will not start until resolved') -Level:('Warn')
-                    # TODO: instead of exit, return and note the error in the logs (Non Terminating?)
-                    # Exit;
                     # $admuTracker.leaveDomain.fail = $true
-                    # return
-                    # TODO: exit?
-                    # Exit;
                 }
             }
             $admuTracker.leaveDomain.pass = $true
@@ -2069,9 +2048,8 @@ Function Start-Migration
         }
         if ([System.String]::IsNullOrEmpty($($admuTracker.Keys | Where-Object { $admuTracker[$_].fail -eq $true })))
         {
-            # TODO: update tool options with valid params
             Write-ToLog -Message:('Script finished successfully; Log file location: ' + $jcAdmuLogFile)
-            Write-ToLog -Message:('Tool options chosen were : ' + 'Install JC Agent = ' + $InstallJCAgent + ', Leave Domain = ' + $LeaveDomain + ', Force Reboot = ' + $ForceReboot + ', AzureADProfile = ' + $AzureADProfile)
+            Write-ToLog -Message:('Tool options chosen were : ' + "`nInstall JC Agent = " + $InstallJCAgent + "`nLeave Domain = " + $LeaveDomain + "`nForce Reboot = " + $ForceReboot + "`nAzureADProfile = " + $AzureADProfile + "`nUpdate Home Path" + $UpdateHomePath + "Autobind JC User" + $AutobindJCUser)
             if ($displayGuiPrompt)
             {
                 Show-Result -domainUser $SelectedUserName $ -localUser "$($localComputerName)\$($JumpCloudUserName)" -success $true -profilePath $newUserProfileImagePath -logPath $jcAdmuLogFile

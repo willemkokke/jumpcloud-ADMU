@@ -172,12 +172,10 @@ Describe 'Migration Test Scenarios' {
                 }
                 $GeneratedUser = New-JcSdkUser -Email:("$($user.JCUsername)@jumpcloudadmu.com") -Username:("$($user.JCUsername)") -Password:("$($user.password)")
                 write-host "`nRunning: Start-Migration -JumpCloudUserName $($user.JCUsername) -SelectedUserName $($user.username) -TempPassword $($user.password)`n"
-                # Invoke-Command -ScriptBlock { Start-Migration -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -ConvertProfile $true} | Should -Not -Throw
                 { Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutobindJCUser $true -JumpCloudUserName "$($user.JCUsername)" -SelectedUserName "$ENV:COMPUTERNAME\$($user.username)" -TempPassword "$($user.password)" -UpdateHomePath $user.UpdateHomePath } | Should -Not -Throw
                 $associations = Get-JcSdkSystemAssociation -SystemId $systemKey -Targets user
                 # GeneratedUserID should be in the associations list
                 $GeneratedUser.Id | Should -BeIn $associations.ToId
-                # TODO: read log/ read bound users from system and return statement
             }
         }
     }
@@ -189,7 +187,6 @@ Describe 'Migration Test Scenarios' {
             InitUser -UserName $user1 -Password $Password
             write-host "`nRunning: Start-Migration -JumpCloudUserName $($user2) -SelectedUserName $($user1) -TempPassword $($Password)`n"
             { Start-Migration -JumpCloudAPIKey $env:JCApiKey -AutobindJCUser $true -JumpCloudUserName "$($user2)" -SelectedUserName "$ENV:COMPUTERNAME\$($user1)" -TempPassword "$($Password)" } | Should -Not -Throw
-            # TODO: read log/ read bound users from system and return statement
             $log = "C:\Windows\Temp\jcadmu.log"
             $regex = [regex]"jumpcloud autobind step failed"
             $match = Select-String -Path:($log) -Pattern:($regex)
